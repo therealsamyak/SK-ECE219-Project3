@@ -489,6 +489,9 @@ def generate_batch(
                 **inputs,
                 max_new_tokens=2048,
                 do_sample=False,
+                temperature=None,
+                top_p=None,
+                top_k=None,
             )
 
         # Extract only new tokens (skip prompt)
@@ -1470,6 +1473,9 @@ def generate_fewshot_batch(
                 **inputs,
                 max_new_tokens=2048,
                 do_sample=False,
+                temperature=None,
+                top_p=None,
+                top_k=None,
             )
 
         for j in range(len(batch_questions)):
@@ -1866,14 +1872,110 @@ def evaluate_responses(test_data: list[dict], responses: list[str]) -> tuple[int
 
 def main():
     """
-    Main orchestrator function that can optionally run experiments.
+    Main orchestrator - runs ALL Part 1 experiments automatically.
+
+    Total runtime: ~5-7 hours on T4 GPU
     """
-    logger.info("Part 1: LoRA SFT for GSM8K")
+    logger.info("=" * 70)
+    logger.info("PART 1: LoRA SFT for GSM8K - Full Experiment Suite")
+    logger.info("=" * 70)
+    logger.info("This will run ALL experiments automatically.")
+    logger.info("Estimated total runtime: 5-7 hours on T4 GPU")
+    logger.info("=" * 70)
 
-    # Placeholder for running experiments - extend as needed
-    # Example: baseline_results = run_baseline_evaluation()
+    start_time = time.time()
 
-    logger.info("main() function ready - add experiment calls as needed")
+    # PHASE 1: BASELINE EVALUATION (Q1-Q2)
+    logger.info("\n" + "=" * 70)
+    logger.info("PHASE 1: Baseline Evaluation (Q1-Q2)")
+    logger.info("=" * 70)
+    logger.info("Estimated time: 20-25 minutes")
+
+    baseline_results = run_baseline_evaluation()
+    baseline_accuracy = baseline_results["accuracy"]
+    logger.info(f"Baseline accuracy: {baseline_accuracy:.4f}")
+
+    # PHASE 2: PARAMETER COUNTS (Q4)
+    logger.info("\n" + "=" * 70)
+    logger.info("PHASE 2: Parameter Counts (Q4)")
+    logger.info("=" * 70)
+    logger.info("Estimated time: 2-3 minutes")
+
+    model, tokenizer = load_base_model()
+    save_hyperparameter_info(model)
+    cleanup(model, tokenizer)
+
+    # PHASE 3: SFT TRAINING EXPERIMENTS (Q5-Q7)
+    logger.info("\n" + "=" * 70)
+    logger.info("PHASE 3: SFT Training Experiments (Q5-Q7)")
+    logger.info("=" * 70)
+    logger.info("Estimated time: 3-4 hours total")
+
+    sft_results = run_sft_experiments(baseline_accuracy=baseline_accuracy)
+
+    logger.info("\nGenerating scaling plot...")
+    generate_scaling_plot(
+        sft_results["train_sizes"],
+        sft_results["accuracies"],
+        sft_results["training_times"],
+    )
+
+    # PHASE 4: FAILURE ANALYSIS (Q8-Q9)
+    logger.info("\n" + "=" * 70)
+    logger.info("PHASE 4: Failure Analysis (Q8-Q9)")
+    logger.info("=" * 70)
+    logger.info("Estimated time: 30-40 minutes")
+
+    run_q8_q9_experiments()
+
+    # PHASE 5: FEW-SHOT EXPERIMENTS (Q10)
+    logger.info("\n" + "=" * 70)
+    logger.info("PHASE 5: Few-Shot Experiments (Q10)")
+    logger.info("=" * 70)
+    logger.info("Estimated time: 40-50 minutes")
+
+    run_fewshot_experiments()
+
+    # PHASE 6: REFLECTION DATA AGGREGATION (Q12)
+    logger.info("\n" + "=" * 70)
+    logger.info("PHASE 6: Reflection Data Aggregation (Q12)")
+    logger.info("=" * 70)
+    logger.info("Estimated time: <1 minute")
+
+    aggregate_reflection_data()
+
+    # PHASE 7: OPEN CHALLENGE (Q13)
+    logger.info("\n" + "=" * 70)
+    logger.info("PHASE 7: Open Challenge (Q13)")
+    logger.info("=" * 70)
+    logger.info("Estimated time: 1-2 hours")
+
+    run_open_challenge()
+
+    # COMPLETION SUMMARY
+    total_time = time.time() - start_time
+    hours = int(total_time // 3600)
+    minutes = int((total_time % 3600) // 60)
+
+    logger.info("\n" + "=" * 70)
+    logger.info("ALL EXPERIMENTS COMPLETED!")
+    logger.info("=" * 70)
+    logger.info(f"Total runtime: {hours}h {minutes}m")
+    logger.info("\nGenerated files:")
+    logger.info("  outputs/q1_baseline_accuracy.json")
+    logger.info("  outputs/q2_failure_cases.json")
+    logger.info("  outputs/q4_parameter_counts.json")
+    logger.info("  outputs/q5_1k_sft_results.json")
+    logger.info("  outputs/q7_scaling_results.json")
+    logger.info("  outputs/q7_scaling_plot.png")
+    logger.info("  outputs/q8_sft_comparison.json")
+    logger.info("  outputs/q9_sft_failures.json")
+    logger.info("  outputs/q10_fewshot_results.json")
+    logger.info("  outputs/q12_limitation_data.json")
+    logger.info("  outputs/q13_open_challenge.json")
+    logger.info("  outputs/adapters/lora_1k/")
+    logger.info("  outputs/adapters/lora_3k/")
+    logger.info("=" * 70)
 
 
 if __name__ == "__main__":

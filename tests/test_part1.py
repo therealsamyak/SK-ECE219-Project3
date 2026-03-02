@@ -84,3 +84,78 @@ class TestOutputFiles:
 
         ensure_output_dir()
         assert os.path.exists("outputs")
+
+
+class TestModelAnswerExtraction:
+    def test_extract_boxed_simple(self):
+        """Test extracting from \boxed{}"""
+        from part1 import extract_boxed
+
+        assert extract_boxed("The answer is \\boxed{42}") == "42"
+        assert extract_boxed("\\boxed{100} is correct") == "100"
+
+    def test_extract_boxed_nested(self):
+        """Test nested braces"""
+        from part1 import extract_boxed
+
+        assert extract_boxed("\\boxed{\\frac{1}{2}}") == "\\frac{1}{2}"
+
+    def test_extract_model_answer_boxed(self):
+        """Test model answer extraction prefers boxed"""
+        from part1 import extract_model_answer
+
+        assert extract_model_answer("Result: \\boxed{5}") == "5"
+
+    def test_extract_model_answer_fallback(self):
+        """Test fallback to last number"""
+        from part1 import extract_model_answer
+
+        assert extract_model_answer("First 10, then 20, finally 30") == "30"
+
+    def test_extract_model_answer_with_commas(self):
+        """Test number with commas"""
+        from part1 import extract_model_answer
+
+        result = extract_model_answer("Total: \\boxed{1,000}")
+        assert result == "1000"
+
+
+class TestParameterCounting:
+    def test_count_parameters_structure(self):
+        """Test count_parameters returns correct structure"""
+        from part1 import count_parameters, load_base_model
+
+        model, _ = load_base_model()
+        counts = count_parameters(model)
+
+        assert "total_params" in counts
+        assert "trainable_params" in counts
+        assert "trainable_pct" in counts
+        assert counts["total_params"] > 0
+
+    def test_lora_config_values(self):
+        """Test get_lora_config returns correct defaults"""
+        from part1 import get_lora_config
+
+        config = get_lora_config()
+
+        assert config.r == 8
+        assert config.lora_alpha == 16
+        assert config.lora_dropout == 0.05
+        assert "q_proj" in config.target_modules
+        assert "v_proj" in config.target_modules
+
+
+class TestGroundTruthExtraction:
+    def test_extract_with_commas(self):
+        """Test numbers with commas"""
+        from part1 import extract_ground_truth
+
+        assert extract_ground_truth("Total: #### 1,234") == "1234"
+
+    def test_extract_decimal(self):
+        """Test decimal numbers"""
+        from part1 import extract_ground_truth
+
+        result = extract_ground_truth("Answer: #### 3.5")
+        assert result == "3.5"
