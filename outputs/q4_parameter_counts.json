@@ -1,0 +1,22 @@
+{
+  "total_params": 1545893376,
+  "trainable_params": 2179072,
+  "trainable_pct": 0.141,
+  "lora_config": {
+    "r": 8,
+    "lora_alpha": 16,
+    "lora_dropout": 0.05,
+    "target_modules": ["q_proj", "o_proj", "k_proj", "v_proj"],
+    "bias": "none"
+  },
+  "hyperparameters": {
+    "learning_rate": 0.0002,
+    "batch_size": 8,
+    "grad_accum": 4,
+    "epochs": 1,
+    "max_length": 1024,
+    "lora_r": 8,
+    "lora_alpha": 16,
+    "lora_dropout": 0.05
+  }
+}

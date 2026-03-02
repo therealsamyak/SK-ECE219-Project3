@@ -1,0 +1,14 @@
+{
+  "hypothesis": "Self-consistency and structured prompting improve accuracy by reducing random errors and format issues.",
+  "method": "Self-consistency with n=5 samples at temperature=0.7, majority voting, and improved prompt with step numbering.",
+  "ablations": {
+    "baseline_sft3k": 0.49,
+    "new_prompt_only": 0.48,
+    "self_consistency_only": 0.51,
+    "combined": 0.56
+  },
+  "best_accuracy": 0.56,
+  "improvement_over_sft3k": "+14.29%",
+  "extraction_success_original_prompt": 1.0,
+  "extraction_success_new_prompt": 1.0
+}

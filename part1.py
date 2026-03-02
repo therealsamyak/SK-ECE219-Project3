@@ -383,7 +383,7 @@ def classify_failure(
         if is_large_error:
             return "reasoning_error"
         else:
-            return "arithmetic_error"
+            return "reasoning_error" if not matches else "arithmetic_error"
 
 
 def extract_model_answer(text: str) -> str | None:
@@ -440,6 +440,21 @@ def extract_model_answer(text: str) -> str | None:
 
     logger.warning(f"Could not extract answer from text: {text[:100]}...")
     return None
+
+
+def compare_answers_numeric(extracted: str | None, ground_truth: str | None) -> bool:
+    """
+    Compare two answers using numeric comparison with tolerance.
+    Falls back to string comparison if numeric conversion fails.
+    """
+    if extracted is None or ground_truth is None:
+        return False
+    try:
+        ext_num = float(extracted.strip().replace(",", ""))
+        gt_num = float(ground_truth.strip().replace(",", ""))
+        return abs(ext_num - gt_num) < 0.0005
+    except (ValueError, AttributeError):
+        return extracted.strip() == ground_truth.strip()
 
 
 # ── LoRA Configuration ─────────────────────────────────────────────────────────
@@ -847,6 +862,16 @@ def run_baseline_evaluation() -> dict:
             ground_truth=ground_truth,
         )
 
+        failure_cases.append(
+            {
+                "question": question,
+                "model_response": model_response,
+                "extracted_answer": extracted_answer,
+                "ground_truth": ground_truth,
+                "failure_type": failure_type,
+            }
+        )
+
     # Save failure cases
     failures_path = "outputs/q2_failure_cases.json"
     with open(failures_path, "w") as f:
@@ -1159,16 +1184,8 @@ def compare_sft_failures() -> list[dict]:
         sft_extracted = extract_model_answer(sft_responses[i])
         ground_truth = ground_truths[i]
 
-        base_correct = (
-            base_extracted is not None
-            and ground_truth is not None
-            and base_extracted.strip() == ground_truth.strip()
-        )
-        sft_correct = (
-            sft_extracted is not None
-            and ground_truth is not None
-            and sft_extracted.strip() == ground_truth.strip()
-        )
+        base_correct = compare_answers_numeric(base_extracted, ground_truth)
+        sft_correct = compare_answers_numeric(sft_extracted, ground_truth)
 
         comparison_results.append(
             {
@@ -1392,11 +1409,7 @@ def run_fewshot_experiments() -> dict:
     for item, response in zip(test_data, base_3shot_responses):
         model_answer = extract_model_answer(response)
         ground_truth = extract_ground_truth(item["answer"])
-        if (
-            model_answer
-            and ground_truth
-            and model_answer.strip() == ground_truth.strip()
-        ):
+        if compare_answers_numeric(model_answer, ground_truth):
             base_3shot_correct += 1
     base_3shot = base_3shot_correct / len(test_data)
     results["base_3shot"] = base_3shot
@@ -1425,11 +1438,7 @@ def run_fewshot_experiments() -> dict:
     for item, response in zip(test_data, sft_3shot_responses):
         model_answer = extract_model_answer(response)
         ground_truth = extract_ground_truth(item["answer"])
-        if (
-            model_answer
-            and ground_truth
-            and model_answer.strip() == ground_truth.strip()
-        ):
+        if compare_answers_numeric(model_answer, ground_truth):
             sft_3shot_correct += 1
     sft_3k_3shot = sft_3shot_correct / len(test_data)
     results["sft_3k_3shot"] = sft_3k_3shot
@@ -1894,11 +1903,7 @@ def evaluate_responses(test_data: list[dict], responses: list[str]) -> tuple[int
         if model_answer is not None:
             extracted += 1
 
-        if (
-            model_answer
-            and ground_truth
-            and model_answer.strip() == ground_truth.strip()
-        ):
+        if compare_answers_numeric(model_answer, ground_truth):
             correct += 1
 
     return correct, extracted
