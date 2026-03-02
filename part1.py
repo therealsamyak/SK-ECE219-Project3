@@ -269,6 +269,123 @@ def extract_boxed(text: str) -> str | None:
     return None
 
 
+def classify_failure(
+    question: str, response: str, extracted_answer: str, ground_truth: str
+) -> str:
+    """
+    Classify failure type based on response analysis.
+
+    Returns: "arithmetic_error" | "reasoning_error" | "format_error"
+    """
+    # 1. Check for format error
+    if extracted_answer is None:
+        return "format_error"
+
+    # Try to extract numeric values
+    try:
+        extracted_num = float(extracted_answer.replace(",", ""))
+        gt_num = float(ground_truth.replace(",", ""))
+    except (ValueError, AttributeError):
+        return "format_error"
+
+    # 2. Check if numbers match
+    if abs(extracted_num - gt_num) < 0.01:
+        return "format_error"
+
+    # 3. Check for arithmetic errors in response
+    import re
+
+    arithmetic_pattern = (
+        r"(\d+(?:\.\d+)?)\s*([+\-−×÷*/])\s*(\d+(?:\.\d+)?)\s*=\s*(\d+(?:\.\d+)?)"
+    )
+    matches = re.findall(arithmetic_pattern, response)
+
+    for match in matches:
+        try:
+            n1, op, n2, result = match
+            n1, n2, result = float(n1), float(n2), float(result)
+
+            expected = None
+            if op in ["+", "×", "*", "x", "X"]:
+                expected = n1 + n2
+            elif op in ["-", "−"]:
+                expected = n1 - n2
+            elif op in ["÷", "/"]:
+                expected = n1 / n2 if n2 != 0 else None
+
+            if expected is not None and abs(result - expected) > 0.01:
+                return "arithmetic_error"
+        except (ValueError, ZeroDivisionError):
+            pass
+
+    # 4. Check for reasoning error indicators
+    response_lower = response.lower()
+    question_lower = question.lower()
+
+    reasoning_keywords = [
+        "ratio",
+        "proportion",
+        "percent",
+        "percentage",
+        "convert",
+        "conversion",
+        "unit",
+        "per",
+        "each",
+        "every",
+        "step",
+        "first",
+        "then",
+        "after",
+        "before",
+        "next",
+        "total",
+        "remaining",
+        "left",
+        "rest",
+        "twice",
+        "half",
+        "double",
+        "triple",
+        "more than",
+        "less than",
+        "fewer",
+        "average",
+        "mean",
+        "sum",
+    ]
+
+    has_reasoning_keywords = any(
+        kw in response_lower or kw in question_lower for kw in reasoning_keywords
+    )
+
+    step_count = (
+        response.lower().count("step")
+        + response.count("1.")
+        + response.count("2.")
+        + response.count("3.")
+    )
+    is_multi_step = step_count >= 2
+
+    # 5. Check magnitude of error
+    ratio = max(extracted_num, gt_num) / (min(extracted_num, gt_num) + 1e-6)
+    is_large_error = ratio > 3
+
+    # 6. Decision logic
+    if is_multi_step or has_reasoning_keywords:
+        if is_large_error:
+            return "reasoning_error"
+        else:
+            if not matches:
+                return "reasoning_error"
+            return "arithmetic_error"
+    else:
+        if is_large_error:
+            return "reasoning_error"
+        else:
+            return "arithmetic_error"
+
+
 def extract_model_answer(text: str) -> str | None:
     """
     Extract the final answer from model output.
@@ -541,7 +658,14 @@ def evaluate_model(model, tokenizer, test_data: list[dict]) -> dict:
         # Compare (as strings, stripped)
         is_correct = False
         if model_answer is not None and ground_truth is not None:
-            is_correct = model_answer.strip() == ground_truth.strip()
+            # Try numeric comparison first (handles "33.00" == "33")
+            try:
+                model_num = float(model_answer.strip().replace(",", ""))
+                gt_num = float(ground_truth.strip().replace(",", ""))
+                is_correct = abs(model_num - gt_num) < 0.001
+            except (ValueError, AttributeError):
+                # Fall back to string comparison
+                is_correct = model_answer.strip() == ground_truth.strip()
 
         if is_correct:
             correct += 1
@@ -653,40 +777,6 @@ def train_lora_sft(
     return elapsed_time
 
 
-def build_few_shot_prompt(question: str, examples: list[dict], n_shots: int = 3) -> str:
-    """
-    Build few-shot prompt with examples and target question.
-
-    Args:
-        question: Target question to answer
-        examples: List of dicts with "question" and "answer" keys
-        n_shots: Number of few-shot examples to include (default: 3)
-
-    Returns:
-        str: Formatted prompt string with few-shot examples
-    """
-    logger.debug(
-        f"Building few-shot prompt with {min(n_shots, len(examples))} examples"
-    )
-
-    # Use exactly n_shots examples (or fewer if not enough examples)
-    n_examples = min(n_shots, len(examples))
-
-    # Build few-shot examples
-    prompt_parts = []
-    for i in range(n_examples):
-        example = examples[i]
-        prompt_parts.append(f"Q: {example['question']}")
-        prompt_parts.append(f"A: {example['answer']}")
-        prompt_parts.append("")  # Empty line between examples
-
-    # Append target question
-    prompt_parts.append(f"Q: {question}")
-    prompt_parts.append("A: ")
-
-    return "\n".join(prompt_parts)
-
-
 def run_baseline_evaluation() -> dict:
     """Evaluate base model on 100 test samples and save baseline results.
 
@@ -750,42 +840,11 @@ def run_baseline_evaluation() -> dict:
         ground_truth = record["ground_truth"]
 
         # Determine failure type
-        failure_type = "misunderstanding"  # default
-
-        # Check for format error
-        extracted_num = extract_number(extracted_answer)
-        if extracted_num is None:
-            failure_type = "format_error"
-        else:
-            # Check if it's an arithmetic error
-            gt_num = extract_number(ground_truth)
-            if gt_num is not None:
-                # Both are numeric - check if they're close but not equal
-                if abs(extracted_num - gt_num) > 0.01:
-                    # Check if the numbers suggest an arithmetic operation error
-                    # (e.g., similar magnitude but wrong operation)
-                    if (
-                        abs(extracted_num / (gt_num + 1e-6)) < 10
-                        or abs(gt_num / (extracted_num + 1e-6)) < 10
-                    ):
-                        failure_type = "arithmetic_error"
-                    else:
-                        failure_type = "reasoning_error"
-                else:
-                    # Numbers match but marked as incorrect - format issue
-                    failure_type = "format_error"
-            else:
-                # Ground truth not numeric, but extracted is
-                failure_type = "reasoning_error"
-
-        failure_cases.append(
-            {
-                "question": question,
-                "model_response": model_response,
-                "extracted_answer": extracted_answer,
-                "ground_truth": ground_truth,
-                "failure_type": failure_type,
-            }
+        failure_type = classify_failure(
+            question=question,
+            response=model_response,
+            extracted_answer=extracted_answer,
+            ground_truth=ground_truth,
         )
 
     # Save failure cases
@@ -896,7 +955,7 @@ def run_sft_experiments(baseline_accuracy: float = 0.0) -> dict:
         {
             "size": 3000,
             "adapter_dir": "outputs/adapters/lora_3k",
-            "results_file": "outputs/q7_scaling_results.json",
+            "results_file": "outputs/q7_3k_sft_results.json",
         },
     ]
 
@@ -1016,6 +1075,8 @@ def generate_scaling_plot(
     ax2.plot(train_sizes, training_times, "r-s", linewidth=2, markersize=8)
     ax2.set_xlabel("Training Data Size", fontsize=12)
     ax2.set_xticks(train_sizes)
+    ax2.set_ylabel("Training Time (seconds)", fontsize=12)
+    ax2.set_title("Training Time vs Training Data Size", fontsize=14)
 
     # Add value labels on points
     for x, y in zip(train_sizes, training_times):
@@ -1168,19 +1229,6 @@ def find_sft_failures() -> list[dict]:
     sft_results = evaluate_model(sft_model, sft_tokenizer, test_data)
     cleanup(sft_model, sft_tokenizer)
 
-    # Helper function to extract numeric answer (same as baseline)
-    def extract_number(answer: str) -> float | None:
-        if answer is None:
-            return None
-        cleaned = str(answer).replace(",", "").replace(" ", "")
-        match = re.search(r"-?\d+\.?\d*", cleaned)
-        if match:
-            try:
-                return float(match.group())
-            except ValueError:
-                return None
-        return None
-
     # Find SFT failures where base succeeded
     sft_failures = []
     for sft_record in sft_results["records"]:
@@ -1200,26 +1248,12 @@ def find_sft_failures() -> list[dict]:
             extracted_answer = sft_record["extracted"]
             ground_truth = sft_record["ground_truth"]
 
-            failure_type = "misunderstanding"
-            extracted_num = extract_number(extracted_answer)
-
-            if extracted_num is None:
-                failure_type = "format_error"
-            else:
-                gt_num = extract_number(ground_truth)
-                if gt_num is not None:
-                    if abs(extracted_num - gt_num) > 0.01:
-                        if (
-                            abs(extracted_num / (gt_num + 1e-6)) < 10
-                            or abs(gt_num / (extracted_num + 1e-6)) < 10
-                        ):
-                            failure_type = "arithmetic_error"
-                        else:
-                            failure_type = "reasoning_error"
-                    else:
-                        failure_type = "format_error"
-                else:
-                    failure_type = "reasoning_error"
+            failure_type = classify_failure(
+                question=question,
+                response=sft_record["response"],
+                extracted_answer=extracted_answer,
+                ground_truth=ground_truth,
+            )
 
             sft_failures.append(
                 {
@@ -1430,15 +1464,7 @@ def generate_fewshot_batch(
     """
     Generate responses using few-shot prompting.
 
-    Args:
-        model: The language model
-        tokenizer: The tokenizer
-        questions: List of questions to answer
-        examples: Few-shot examples with "question" and "answer" keys
-        n_shots: Number of few-shot examples to include
-
-    Returns:
-        list[str]: Generated responses
+    IMPLEMENTATION MATCHES SPEC: Interleaved user/assistant turns
     """
     all_responses = []
     total_questions = len(questions)
@@ -1453,11 +1479,19 @@ def generate_fewshot_batch(
 
         prompts = []
         for q in batch_questions:
-            fewshot_prompt = build_few_shot_prompt(q, examples, n_shots)
-            messages = [
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": fewshot_prompt},
-            ]
+            # Build messages with interleaved user/assistant turns
+            messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+
+            # Add few-shot examples as user/assistant pairs
+            for j in range(min(n_shots, len(examples))):
+                example = examples[j]
+                messages.append({"role": "user", "content": example["question"]})
+                messages.append({"role": "assistant", "content": example["answer"]})
+
+            # Add actual test question
+            messages.append({"role": "user", "content": q})
+
+            # Apply chat template
             prompt = tokenizer.apply_chat_template(
                 messages, tokenize=False, add_generation_prompt=True
             )
