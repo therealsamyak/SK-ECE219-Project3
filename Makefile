@@ -17,3 +17,7 @@ notebook:
 		--port 8888 \
 		--IdentityProvider.token "MY_TOKEN" \
 		--ip 0.0.0.0
+
+part1:
+	uv run part1.py
+

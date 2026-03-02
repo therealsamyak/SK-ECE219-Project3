@@ -1902,6 +1902,9 @@ def main():
     logger.info("Estimated time: 2-3 minutes")
 
     model, tokenizer = load_base_model()
+    # Apply LoRA to get the proper trainable % count
+    lora_config = get_lora_config()
+    model = get_peft_model(model, lora_config)
     save_hyperparameter_info(model)
     cleanup(model, tokenizer)
 
