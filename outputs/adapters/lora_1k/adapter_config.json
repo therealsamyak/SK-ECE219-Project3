@@ -28,7 +28,7 @@
   "r": 8,
   "rank_pattern": {},
   "revision": null,
-  "target_modules": ["q_proj", "o_proj", "k_proj", "v_proj"],
+  "target_modules": ["q_proj", "k_proj", "o_proj", "v_proj"],
   "target_parameters": null,
   "task_type": "CAUSAL_LM",
   "trainable_token_indices": null,

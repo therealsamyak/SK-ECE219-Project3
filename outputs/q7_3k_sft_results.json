@@ -1,0 +1,7 @@
+{
+  "accuracy": 0.49,
+  "training_time": 7009.310907125473,
+  "num_examples": 3000,
+  "correct": 49,
+  "total": 100
+}
