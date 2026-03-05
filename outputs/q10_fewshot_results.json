@@ -1,8 +1,0 @@
-{
-  "base_zeroshot": 0.44,
-  "base_3shot": 0.34,
-  "sft_3k_zeroshot": 0.49,
-  "sft_3k_3shot": 0.49,
-  "base_improvement": "+-22.73%",
-  "sft_improvement": "+0.00%"
-}
