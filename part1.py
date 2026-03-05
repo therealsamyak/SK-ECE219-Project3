@@ -4,6 +4,7 @@ import random
 
 import torch
 import numpy as np
+from datasets import load_dataset, Dataset
 
 
 # Constants
@@ -187,8 +188,119 @@ def answers_match(predicted: str | None, ground_truth: str) -> bool:
         ground_truth: The ground truth answer.
 
     Returns:
-        True if the normalized answers match, False otherwise.
+        True if normalized answers match, False otherwise.
     """
     norm_predicted = normalize_answer(predicted) if predicted is not None else ""
     norm_ground_truth = normalize_answer(ground_truth)
     return norm_predicted == norm_ground_truth
+
+
+def load_gsm8k_train(num_samples: int | None = None) -> Dataset:
+    """Load GSM8K training dataset.
+
+    Args:
+        num_samples: Optional number of samples to take from the beginning.
+                     If None, returns full training set.
+
+    Returns:
+        Dataset with GSM8K training examples.
+    """
+    dataset = load_dataset("gsm8k", "main", split="train")
+
+    set_seed(SEED)
+    dataset = dataset.shuffle(seed=SEED)
+
+    if num_samples is not None:
+        dataset = dataset.select(range(min(num_samples, len(dataset))))
+
+    return dataset
+
+
+def load_gsm8k_test(num_samples: int = 100) -> list[dict]:
+    """Load GSM8K test dataset.
+
+    Args:
+        num_samples: Number of samples to take from the beginning (default: 100).
+
+    Returns:
+        List of dicts with 'question' and 'answer' fields.
+    """
+    dataset = load_dataset("gsm8k", "main", split="test")
+    dataset = dataset.select(range(min(num_samples, len(dataset))))
+
+    test_examples = []
+    for row in dataset:
+        test_examples.append({"question": row["question"], "answer": row["answer"]})
+
+    return test_examples
+
+
+def format_training_example(question: str, answer: str, tokenizer) -> str:
+    """Format a GSM8K example for SFT training.
+
+    Converts GSM8K format (question + answer with #### N) to chat format
+    with system prompt, user question, and assistant answer using \boxed{N}.
+
+    Args:
+        question: The problem question.
+        answer: The GSM8K answer (step-by-step reasoning with #### N ending).
+        tokenizer: The tokenizer to apply chat template.
+
+    Returns:
+        Formatted string ready for SFT training.
+    """
+    hashmarks_match = re.search(r"####\s*\d+\s*$", answer)
+
+    if hashmarks_match:
+        ground_truth = extract_ground_truth(answer, "hashmarks")
+        reasoning = re.sub(r"####\s*\d+\s*$", "", answer).strip()
+    else:
+        numbers = re.findall(r"(-?\d[\d,]*\.?\d*)", answer)
+        ground_truth = numbers[-1] if numbers else answer.strip()
+
+        reasoning = answer
+        final_answer_patterns = [
+            r",\s*so\s+the\s+answer\s+is\s+\d+\s*$",
+            r"\.\s*so\s+the\s+answer\s+is\s+\d+\s*$",
+            r"so\s+the\s+answer\s+is\s+\d+\s*$",
+            r",\s*the\s+answer\s+is\s+\d+\s*$",
+            r"\.\s*the\s+answer\s+is\s+\d+\s*$",
+        ]
+        for pattern in final_answer_patterns:
+            reasoning = re.sub(pattern, ".", reasoning, flags=re.IGNORECASE)
+        reasoning = reasoning.strip()
+
+    assistant_answer = f"{reasoning}\\boxed{{{ground_truth}}}"
+
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": question},
+        {"role": "assistant", "content": assistant_answer},
+    ]
+
+    formatted = tokenizer.apply_chat_template(
+        messages, tokenize=False, add_generation_prompt=False
+    )
+
+    return formatted
+
+
+def format_gsm8k_for_sft(dataset, tokenizer) -> Dataset:
+    """Format GSM8K dataset for SFT training.
+
+    Applies format_training_example to each row and returns
+    a Dataset with a 'text' column.
+
+    Args:
+        dataset: The GSM8K dataset (from load_gsm8k_train).
+        tokenizer: The tokenizer to apply chat template.
+
+    Returns:
+        Dataset with 'text' column containing formatted examples.
+    """
+    formatted_texts = [
+        format_training_example(row["question"], row["answer"], tokenizer)
+        for row in dataset
+    ]
+
+    return Dataset.from_dict({"text": formatted_texts})

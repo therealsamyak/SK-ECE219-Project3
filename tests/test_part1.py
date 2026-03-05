@@ -1,11 +1,16 @@
 """Unit tests for Part 1 answer extraction functions."""
 
+from unittest.mock import Mock
+
+from transformers import AutoTokenizer
+
 from part1 import (
     extract_boxed,
     extract_model_answer,
     extract_ground_truth,
     normalize_answer,
     answers_match,
+    format_training_example,
 )
 
 
@@ -267,3 +272,104 @@ class TestAnswersMatch:
     def test_answers_match_both_none_like(self):
         """Test when both are None-like."""
         assert answers_match(None, "") is True
+
+
+class TestFormatTrainingExample:
+    """Tests for format_training_example function."""
+
+    def test_format_training_example_contains_boxed(self):
+        """Test that formatted example contains \\boxed{}."""
+        tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-1.5B-Instruct")
+        tokenizer.padding_side = "left"
+        if tokenizer.pad_token is None:
+            tokenizer.pad_token = tokenizer.eos_token
+
+        question = "What is 2 + 2?"
+        answer = "First, 2 + 2 = 4. So the answer is 4"
+
+        result = format_training_example(question, answer, tokenizer)
+
+        assert r"\boxed{4}" in result
+
+    def test_format_training_example_contains_system_prompt(self):
+        """Test that formatted example contains system prompt text."""
+        from part1 import SYSTEM_PROMPT
+
+        tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-1.5B-Instruct")
+        tokenizer.padding_side = "left"
+        if tokenizer.pad_token is None:
+            tokenizer.pad_token = tokenizer.eos_token
+
+        question = "What is 2 + 2?"
+        answer = "First, 2 + 2 = 4. So the answer is 4"
+
+        result = format_training_example(question, answer, tokenizer)
+
+        assert SYSTEM_PROMPT in result
+
+    def test_format_training_example_with_complex_answer(self):
+        """Test formatting with multi-step reasoning."""
+        tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-1.5B-Instruct")
+        tokenizer.padding_side = "left"
+        if tokenizer.pad_token is None:
+            tokenizer.pad_token = tokenizer.eos_token
+
+        question = "What is 3 * 5?"
+        answer = "Step 1: 3 * 5 = 15. So the answer is 15"
+
+        result = format_training_example(question, answer, tokenizer)
+
+        assert r"\boxed{15}" in result
+        assert "Step 1: 3 * 5 = 15." in result
+        assert "So the answer is" not in result
+
+    def test_format_training_example_with_hashmarks(self):
+        """Test that #### format is removed and replaced with \\boxed{}."""
+        tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-1.5B-Instruct")
+        tokenizer.padding_side = "left"
+        if tokenizer.pad_token is None:
+            tokenizer.pad_token = tokenizer.eos_token
+
+        question = "What is 10 / 2?"
+        answer = "10 divided by 2 equals 5. #### 5"
+
+        result = format_training_example(question, answer, tokenizer)
+
+        assert r"\boxed{5}" in result
+        assert "#### 5" not in result
+
+
+class TestLoadGSM8KTest:
+    """Tests for load_gsm8k_test function (mocked)."""
+
+    def test_load_gsm8k_test_format(self, monkeypatch):
+        """Test that load_gsm8k_test returns correct dict structure."""
+        from part1 import load_gsm8k_test
+
+        mock_dataset = Mock()
+        mock_row1 = {"question": "Test question 1?", "answer": "Test answer 1"}
+        mock_row2 = {"question": "Test question 2?", "answer": "Test answer 2"}
+        mock_selected = Mock()
+        mock_selected.__iter__ = Mock(return_value=iter([mock_row1, mock_row2]))
+        mock_selected.__len__ = Mock(return_value=2)
+        mock_dataset.select.return_value = mock_selected
+        mock_dataset.__len__ = Mock(return_value=10)
+
+        def mock_load_dataset(*args, **kwargs):
+            return mock_dataset
+
+        import part1
+
+        original_load_dataset = part1.load_dataset
+        monkeypatch.setattr(part1, "load_dataset", mock_load_dataset)
+
+        try:
+            result = load_gsm8k_test(num_samples=2)
+
+            assert len(result) == 2
+            assert result[0]["question"] == "Test question 1?"
+            assert result[0]["answer"] == "Test answer 1"
+            assert result[1]["question"] == "Test question 2?"
+            assert result[1]["answer"] == "Test answer 2"
+        finally:
+            monkeypatch.setattr(part1, "load_dataset", original_load_dataset)
