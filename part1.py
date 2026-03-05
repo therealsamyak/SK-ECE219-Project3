@@ -636,8 +636,8 @@ def train_sft(
     output_dir: str,
     lora_config: LoraConfig | None = None,
     epochs: int = 1,
-    batch_size: int = 8,
-    grad_accum: int = 4,
+    batch_size: int = 4,
+    grad_accum: int = 8,
     lr: float = 2e-4,
     max_seq_len: int = 1024,
 ) -> str:
