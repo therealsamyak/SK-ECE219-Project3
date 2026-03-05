@@ -19,5 +19,5 @@ notebook:
 		--ip 0.0.0.0
 
 part1:
-	uv run part1.py
+	uv run part1.py --all
 
