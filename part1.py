@@ -259,6 +259,35 @@ def extract_ground_truth(raw_answer: str, gt_format: str = "hashmarks") -> str:
     return raw_answer.strip()
 
 
+def validate_gsm8k_example(example: dict) -> bool:
+    """
+    Validate a GSM8K training example.
+
+    Checks:
+    - 'question' field exists and is non-empty
+    - 'answer' field exists and is non-empty
+    - Answer contains '####' marker for ground truth
+
+    Args:
+        example: Dictionary with 'question' and 'answer' keys
+
+    Returns:
+        True if example is valid, False otherwise
+    """
+    if "question" not in example or "answer" not in example:
+        return False
+
+    if not isinstance(example["question"], str) or not example["question"].strip():
+        return False
+    if not isinstance(example["answer"], str) or not example["answer"].strip():
+        return False
+
+    if "####" not in example["answer"]:
+        return False
+
+    return True
+
+
 # ── Data Formatting and GSM8K Loading (Task 3) ──
 
 
@@ -331,6 +360,72 @@ def format_training_example(question: str, answer: str, tokenizer) -> str:
 
     formatted = tokenizer.apply_chat_template(messages, tokenize=False)
     return formatted
+
+
+def filter_training_data_by_quality(
+    dataset, tokenizer, model_name=MODEL_NAME
+) -> Dataset:
+    """
+    Filter training data by keeping only examples where base model answers correctly.
+
+    Quality-focused supervision: train only on examples the base model can solve.
+
+    Args:
+        dataset: GSM8K training dataset
+        tokenizer: Tokenizer for the model
+        model_name: Name of the base model to use for filtering
+
+    Returns:
+        Filtered dataset containing only high-quality examples
+    """
+    # Load base model (no adapter)
+    model, _ = load_model(model_name, lora_path=None)
+    model.eval()
+
+    kept_indices = []
+    stats = {"total": len(dataset), "kept": 0, "removed": 0}
+
+    with torch.no_grad():
+        for idx, example in enumerate(dataset):
+            # Get question and ground truth
+            question = example["question"]
+            gt_answer = extract_ground_truth(example["answer"])
+
+            # Build prompt and generate response
+            prompt = build_prompts(tokenizer, [question])[0]
+            inputs = tokenizer(prompt, return_tensors="pt", truncation=True).to(
+                model.device
+            )
+            prompt_len = inputs["input_ids"].shape[1]
+
+            out = model.generate(**inputs, max_new_tokens=2048, do_sample=False)
+            new_tokens = out[0][prompt_len:]
+            response = tokenizer.decode(new_tokens, skip_special_tokens=True)
+
+            # Extract model answer
+            pred_answer = extract_model_answer(response)
+
+            # Keep if correct
+            if answers_match(pred_answer, gt_answer):
+                kept_indices.append(idx)
+                stats["kept"] += 1
+            else:
+                stats["removed"] += 1
+
+            if (idx + 1) % 100 == 0:
+                print(f"Processed {idx + 1}/{len(dataset)}, kept {stats['kept']}")
+
+    # Create filtered dataset
+    filtered_dataset = dataset.select(kept_indices)
+
+    # Save stats
+    save_json(stats, "q_filtering_stats.json")
+    print(f"Quality filtering: kept {stats['kept']}/{stats['total']} examples")
+
+    # Clean up model
+    cleanup(model)
+
+    return filtered_dataset
 
 
 def format_gsm8k_for_sft(dataset: Dataset, tokenizer) -> Dataset:
@@ -666,10 +761,11 @@ def train_sft(
     output_dir: str,
     lora_config=None,
     epochs: int = 1,
-    batch_size: int = 2,
-    grad_accum: int = 16,
+    # Per assignment spec (lines 188-199): batch_size=8, grad_accum=4, max_seq_len=1024
+    batch_size: int = 8,
+    grad_accum: int = 4,
     lr: float = 2e-4,
-    max_seq_len: int = 512,
+    max_seq_len: int = 1024,
 ) -> str:
     """
     Train SFT model on GSM8K dataset.
@@ -1037,20 +1133,35 @@ def run_q10(args):
 
 
 def run_q13(args):
-    """Q13: Open challenge - self-consistency with majority voting."""
-    # Load best model (SFT-3k)
+    """Q13: Open challenge - quality filtering + self-consistency with majority voting."""
+    use_filtered_data = getattr(args, "use_filtered", True)
+    filtered_adapter_path = getattr(
+        args, "filtered_data_path", "outputs/sft_filtered/final_adapter"
+    )
     sft3k_path = "outputs/sft_3k/final_adapter"
-    if not os.path.exists(sft3k_path):
-        print("SFT-3k adapter not found, training first...")
-        train_sft(3000, "outputs/sft_3k")
 
-    model, tokenizer = load_model(lora_path=sft3k_path)
+    if use_filtered_data:
+        if not os.path.exists(filtered_adapter_path):
+            print("Training on quality-filtered data...")
+            tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+            train_data = load_gsm8k_train()
+            filtered_data = filter_training_data_by_quality(train_data, tokenizer)
+            train_sft(len(filtered_data), "outputs/sft_filtered")
+
+        model, tokenizer = load_model(lora_path=filtered_adapter_path)
+        method_desc = "quality-filtered training + self-consistency"
+    else:
+        if not os.path.exists(sft3k_path):
+            print("SFT-3k adapter not found, training first...")
+            train_sft(3000, "outputs/sft_3k")
+        model, tokenizer = load_model(lora_path=sft3k_path)
+        method_desc = "self-consistency with majority voting"
 
     # Load test data
     test_data = load_gsm8k_test(num_samples=args.num_eval)
     records = []
     correct = 0
-    n_samples = 5  # Number of samples per question
+    n_samples = 10  # Increased from 5 for better self-consistency
 
     for item in tqdm(test_data, desc="Self-consistency eval"):
         question = item["question"]
@@ -1069,7 +1180,7 @@ def run_q13(args):
                 out = model.generate(
                     **inputs,
                     max_new_tokens=2048,
-                    temperature=0.7,
+                    temperature=0.5,  # Lowered from 0.7 for more focused sampling
                     do_sample=True,
                 )
             response = tokenizer.decode(
@@ -1106,9 +1217,10 @@ def run_q13(args):
             baseline_acc = json.load(f)["sft3k_accuracy"]
 
     results = {
-        "method": "self-consistency with majority voting",
+        "method": method_desc,
+        "use_filtered_data": use_filtered_data,
         "n_samples_per_question": n_samples,
-        "temperature": 0.7,
+        "temperature": 0.5,
         "accuracy": accuracy,
         "baseline_sft3k_accuracy": baseline_acc,
         "improvement": accuracy - baseline_acc,
@@ -1146,9 +1258,6 @@ def main():
         "--num-eval", type=int, default=100, help="Number of eval samples"
     )
     parser.add_argument("--batch-size", type=int, default=16, help="Eval batch size")
-    parser.add_argument(
-        "--force", action="store_true", help="Rerun even if output exists"
-    )
     args = parser.parse_args()
 
     # Map question numbers to runner functions and output files
@@ -1173,11 +1282,7 @@ def main():
         return
 
     for q in questions:
-        outfile, runner = runners[q]
-        outpath = os.path.join(OUTPUT_DIR, outfile)
-        if os.path.exists(outpath) and not args.force:
-            print(f"[Q{q}] Skipping — {outfile} already exists (use --force to rerun)")
-            continue
+        _, runner = runners[q]
         print(f"\n{'=' * 60}\n[Q{q}] Running...\n{'=' * 60}")
         runner(args)
         print(f"[Q{q}] Done.")
