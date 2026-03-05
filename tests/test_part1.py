@@ -1,5 +1,6 @@
 """Unit tests for Part 1 answer extraction functions."""
 
+import pytest
 from unittest.mock import Mock
 
 from transformers import AutoTokenizer
@@ -11,6 +12,11 @@ from part1 import (
     normalize_answer,
     answers_match,
     format_training_example,
+    evaluate_gsm8k,
+    build_few_shot_prompts,
+    FEW_SHOT_EXAMPLES,
+    count_parameters,
+    get_lora_config,
 )
 
 
@@ -373,3 +379,230 @@ class TestLoadGSM8KTest:
             assert result[1]["answer"] == "Test answer 2"
         finally:
             monkeypatch.setattr(part1, "load_dataset", original_load_dataset)
+
+
+class TestEvaluateGSM8K:
+    """Tests for evaluate_gsm8k function (mocked)."""
+
+    @pytest.mark.slow
+    def test_evaluate_gsm8k_with_mock(self, monkeypatch):
+        """Test evaluate_gsm8k with mocked model and tokenizer."""
+
+        mock_model = Mock()
+        mock_tokenizer = Mock()
+
+        mock_tokenizer.apply_chat_template = Mock(
+            side_effect=lambda messages, **kwargs: "template"
+        )
+        mock_tokenizer.return_value = {
+            "input_ids": Mock(shape=[2, 10]),
+            "attention_mask": Mock(),
+        }
+
+        def mock_generate(**kwargs):
+            return Mock(
+                __getitem__=lambda self, idx: Mock() if idx == slice(None) else Mock()
+            )
+
+        mock_model.generate = Mock(side_effect=mock_generate)
+        mock_model.device = "cpu"
+
+        def mock_decode(tokens, skip_special_tokens=True):
+            return "Step 1: 2 + 2 = 4. \\boxed{4}."
+
+        mock_tokenizer.decode = Mock(side_effect=mock_decode)
+
+        def mock_load_gsm8k_test(num_samples):
+            return [
+                {"question": "What is 2 + 2?", "answer": "First, 2 + 2 = 4. #### 4"},
+                {"question": "What is 5 - 3?", "answer": "5 - 3 = 2. #### 2"},
+            ]
+
+        import part1
+
+        original_load_gsm8k_test = part1.load_gsm8k_test
+        monkeypatch.setattr(part1, "load_gsm8k_test", mock_load_gsm8k_test)
+        monkeypatch.setattr(
+            part1,
+            "generate_batch",
+            Mock(
+                side_effect=lambda m, t, q, sp: [
+                    "Step 1: 2 + 2 = 4. \\boxed{4}.",
+                    "5 - 3 = 2. \\boxed{2}.",
+                ]
+            ),
+        )
+
+        try:
+            accuracy, records = evaluate_gsm8k(
+                mock_model, mock_tokenizer, num_samples=2, batch_size=2
+            )
+
+            assert accuracy == 1.0
+            assert len(records) == 2
+            assert records[0]["question"] == "What is 2 + 2?"
+            assert records[0]["ground_truth"] == "4"
+            assert records[0]["extracted_answer"] == "4"
+            assert records[0]["correct"] is True
+        finally:
+            monkeypatch.setattr(part1, "load_gsm8k_test", original_load_gsm8k_test)
+
+
+class TestBuildFewShotPrompts:
+    """Tests for build_few_shot_prompts function."""
+
+    def test_build_few_shot_prompts_contains_all_examples(self):
+        """Test that few-shot prompts contain all example Q&A pairs."""
+        tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-1.5B-Instruct")
+        tokenizer.padding_side = "left"
+        if tokenizer.pad_token is None:
+            tokenizer.pad_token = tokenizer.eos_token
+
+        questions = ["What is 1 + 1?"]
+        few_shot_examples = [
+            (
+                "Example question 1?",
+                "Example answer 1 with \\boxed{5}.",
+            ),
+            (
+                "Example question 2?",
+                "Example answer 2 with \\boxed{10}.",
+            ),
+        ]
+
+        result = build_few_shot_prompts(tokenizer, questions, few_shot_examples)
+
+        assert len(result) == 1
+        assert "Example question 1?" in result[0]
+        assert "Example answer 1 with \\boxed{5}." in result[0]
+        assert "Example question 2?" in result[0]
+        assert "Example answer 2 with \\boxed{10}." in result[0]
+
+    def test_build_few_shot_prompts_contains_actual_question(self):
+        """Test that few-shot prompts contain the actual question."""
+        tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-1.5B-Instruct")
+        tokenizer.padding_side = "left"
+        if tokenizer.pad_token is None:
+            tokenizer.pad_token = tokenizer.eos_token
+
+        questions = ["What is 1 + 1?"]
+        few_shot_examples = [
+            (
+                "Example question?",
+                "Example answer with \\boxed{5}.",
+            ),
+        ]
+
+        result = build_few_shot_prompts(tokenizer, questions, few_shot_examples)
+
+        assert "What is 1 + 1?" in result[0]
+
+    def test_build_few_shot_prompts_multiple_questions(self):
+        """Test that multiple questions generate multiple prompts."""
+        tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-1.5B-Instruct")
+        tokenizer.padding_side = "left"
+        if tokenizer.pad_token is None:
+            tokenizer.pad_token = tokenizer.eos_token
+
+        questions = ["Question 1?", "Question 2?", "Question 3?"]
+        few_shot_examples = [
+            (
+                "Example question?",
+                "Example answer with \\boxed{5}.",
+            ),
+        ]
+
+        result = build_few_shot_prompts(tokenizer, questions, few_shot_examples)
+
+        assert len(result) == 3
+        assert "Question 1?" in result[0]
+        assert "Question 2?" in result[1]
+        assert "Question 3?" in result[2]
+
+    def test_build_few_shot_prompts_with_FEW_SHOT_EXAMPLES(self):
+        """Test that FEW_SHOT_EXAMPLES constant produces valid prompts."""
+        tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-1.5B-Instruct")
+        tokenizer.padding_side = "left"
+        if tokenizer.pad_token is None:
+            tokenizer.pad_token = tokenizer.eos_token
+
+        questions = ["What is 1 + 1?"]
+
+        result = build_few_shot_prompts(tokenizer, questions, FEW_SHOT_EXAMPLES)
+
+        assert len(result) == 1
+        assert len(FEW_SHOT_EXAMPLES) == 3
+        for example_q, example_a in FEW_SHOT_EXAMPLES:
+            assert example_q in result[0]
+            assert example_a in result[0]
+        assert "What is 1 + 1?" in result[0]
+
+
+class TestLoraParameterCounting:
+    """Tests for LoRA parameter counting functions."""
+
+    def test_count_parameters_simple_model(self):
+        """Test counting parameters on a simple model."""
+        import torch.nn as nn
+
+        model = nn.Sequential(nn.Linear(10, 5), nn.Linear(5, 2))
+
+        result = count_parameters(model)
+
+        assert "total" in result
+        assert "trainable" in result
+        assert "percentage" in result
+        assert result["total"] > 0
+        assert result["trainable"] > 0
+        assert result["percentage"] == 100.0
+
+    def test_count_parameters_with_frozen_params(self):
+        """Test counting parameters with frozen parameters."""
+        import torch.nn as nn
+
+        model = nn.Sequential(nn.Linear(10, 5), nn.Linear(5, 2))
+        for param in model[1].parameters():
+            param.requires_grad = False
+
+        result = count_parameters(model)
+
+        assert result["trainable"] < result["total"]
+        assert result["percentage"] < 100.0
+
+    def test_get_lora_config_defaults(self):
+        """Test creating LoRA config with default parameters."""
+        config = get_lora_config()
+
+        assert config.r == 8
+        assert config.lora_alpha == 16
+        assert config.lora_dropout == 0.05
+        assert config.target_modules == {"q_proj", "k_proj", "v_proj", "o_proj"}
+        assert config.bias == "none"
+
+    def test_get_lora_config_custom_params(self):
+        """Test creating LoRA config with custom parameters."""
+        config = get_lora_config(r=16, alpha=32, dropout=0.1)
+
+        assert config.r == 16
+        assert config.lora_alpha == 32
+        assert config.lora_dropout == 0.1
+        assert config.target_modules == {"q_proj", "k_proj", "v_proj", "o_proj"}
+
+    def test_get_lora_config_custom_target_modules(self):
+        """Test creating LoRA config with custom target modules."""
+        custom_modules = ["q_proj", "v_proj"]
+        config = get_lora_config(target_modules=custom_modules)
+
+        assert config.target_modules == set(custom_modules)
+
+    def test_count_parameters_returns_dict_structure(self):
+        """Test that count_parameters returns correct dict structure."""
+        import torch.nn as nn
+
+        model = nn.Linear(5, 3)
+        result = count_parameters(model)
+
+        assert isinstance(result, dict)
+        assert isinstance(result["total"], int)
+        assert isinstance(result["trainable"], int)
+        assert isinstance(result["percentage"], float)
