@@ -1,8 +1,10 @@
 # Large-Scale Data Mining: Models and Algorithms ECE 219 Winter 2026
+
 **Prof. Vwani Roychowdhury**
 UCLA, Department of ECE
 
 ## Project 3: Automating Reasoning and Data Mining with Small Language Models
+
 **Due March 13, 2026 by 11:59 pm**
 
 ---

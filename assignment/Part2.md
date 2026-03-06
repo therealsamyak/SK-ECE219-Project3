@@ -1,145 +1,198 @@
-## Part B: Building a ReAct-Style Data Analysis Agent
+# Part B: Agentic Data Mining with ReAct
 
-### Introduction
+## Introduction
 
-In Part A, you fine-tuned a small language model to improve its mathematical reasoning on structured benchmarks. But real-world data analysis rarely looks like a clean benchmark: data lives in CSV files, questions are open-ended, and getting to an answer requires writing code, running it, inspecting results, and iterating.
+Modern data mining pipelines increasingly operate at a scale where manual curation is no longer feasible. In many real-world settings—customer logs, scientific datasets, public records, transaction streams, and web data—the raw material is noisy, heterogeneous, and only partially structured. Traditionally, teams would write domain-specific feature extraction and analytics code by hand, but today we increasingly rely on AI agents to help discover, clean, transform, and analyze data automatically.
 
-This part of the project asks you to build a **ReAct-style agent** — a system in which a language model interleaves *reasoning* and *acting* in a loop. At each step, the model can either call a tool (e.g., run a Python snippet on a CSV file) or emit a final answer. The agent keeps running until it produces an answer or hits a step budget.
+This sub-project explores a practical question in modern large-scale data mining:
 
-The central challenge here is not raw model capability — you will use GPT-4.1-mini as the backbone — but **reliable agent design under real constraints**: bounded context windows, tool call failures, and open-ended questions that require multi-step data exploration.
+_Can we build an LLM-based agent that answers data analysis questions by interacting with real CSV tables, while producing outputs that are reliable enough to be evaluated automatically?_
 
----
+The project is motivated by a practical tension:
 
-### What is a ReAct Agent?
+- LLMs are flexible, but their outputs can be unpredictable and hard to parse.
+- Data analysis requires precision: a single wrong filter, join, or aggregation can flip an answer.
+- Large-scale settings demand automation: if we cannot automate the whole workflow, the system does not scale.
 
-ReAct [4] is a prompting and agent design pattern in which the model generates alternating *Thought* and *Action* steps:
+## What You Will Build
 
+You will build a small data analysis agentic system that solves questions about CSV files. The system follows the ReAct paradigm (Reasoning + Acting): it iteratively (i) decides what to do next, (ii) writes Python code to perform that step, (iii) executes the code, (iv) summarizes the tool output into a structured observation, and (v) uses that observation to continue or stop with a final answer.
+
+You will also incorporate structured output (via Outlines), enabling robust orchestration and automatic evaluation.
+
+## Learning Objectives
+
+By the end of this project, you should be able to:
+
+- Work with a real benchmark for evaluating LLM agents on data analysis tasks.
+- Implement a basic agentic system with planning, tool-use (code), and observations.
+- Use structured generation to guarantee parseable intermediate outputs.
+- Evaluate an agent quantitatively and analyze typical failure modes (format errors, reasoning errors, code bugs, data issues).
+
+## Dataset: InfiAgent-DABench (DAEval)
+
+We use the InfiAgent-DABench benchmark. Each example consists of:
+
+- A natural-language question about a CSV table;
+- Additional constraints (e.g., rounding rules, filtering rules);
+- A required output format (so answers can be checked automatically);
+- A reference CSV file (one of many, with different schemas);
+- Ground-truth answers in a closed-form representation.
+
+The dataset is provided in this link to you in the following directory layout:
+
+- `da-dev-questions.jsonl` (questions + metadata)
+- `da-dev-labels.jsonl` (ground-truth answers)
+- `da-dev-tables/` (CSV files referenced by questions)
+
+**Important:** The CSV files do not share a common schema. One question may reference a finance table with columns like `revenue` and `quarter`, while another may reference a sports play-by-play table with completely different fields. This is a realistic large-scale data mining challenge: heterogeneous schemas are the norm, not the exception.
+
+## Why Structured Output? (Outlines)
+
+A typical pipeline has multiple components: a planner that decides the next step, a coder that writes code, and an executor that runs code. If the planner emits free-form text like:
+
+> I think we should compute the mean fare and round to two decimals.
+
+then your program must guess what to do next. This is not ideal: the agent might change phrasing across runs, break your parser, or produce ambiguous instructions.
+
+Instead, we will use structured output so the planner emits a machine-readable object, for example:
+
+```json
+{ "thought": "...", "is_done": false, "response": "Compute the mean of Fare." }
 ```
-Thought: I need to find the average sale price grouped by neighborhood.
-Action: run_python("df.groupby('Neighborhood')['SalePrice'].mean().sort_values()")
-Observation: Neighborhood
-            CollgCr    197965.77
-            Veenker    238772.73
-            ...
-Thought: I have the grouped means. The highest is Veenker.
-Answer: The neighborhood with the highest average sale price is Veenker.
-```
 
-Each tool call produces an *observation* that is appended to the context, and the model uses that observation to decide what to do next. This loop continues until the model emits an `Answer:` tag or the step budget is exhausted.
+In this project, you will use Outlines to constrain an open-source LLM to generate outputs that follow a Pydantic schema. This eliminates a major source of agent instability: parsing errors.
 
----
+## Agents and Agentic Data Mining
 
-### Dataset: Ames Housing
+In this project, an agent is a system that:
 
-You will use the **Ames Housing dataset** [5], a widely used tabular dataset describing residential home sales in Ames, Iowa. It contains 1,460 rows and 81 columns, including numerical features (lot area, year built, above-ground living area) and categorical features (neighborhood, building type, sale condition). The prediction target is `SalePrice`.
+1. maintains state (what it has done so far),
+2. decides what to do next,
+3. interacts with external tools (here: Python execution over CSV files),
+4. uses observations from tools to update its next decision,
+5. terminates when it can produce a final answer.
 
-You will not be building a predictive model here. Instead, your agent will answer open-ended analytical questions about this dataset by dynamically generating and executing Python code.
+Compared to a single one-shot LLM response, an agent can:
 
----
+- **maintain and manage context:** keep a persistent working memory (tool outputs, intermediate results, constraints), selectively summarize it, and feed back only the most relevant state when the context window is limited (this is especially important when we are using smaller models);
+- **use specialized prompting per role:** separate prompts for planning, coding, and verification, so each step is more focused than a single all-in-one prompt;
+- **decompose complex tasks** into smaller steps,
+- **ground answers in actual computations** (reducing hallucinations),
+- **debug when code fails** (recover from errors and retry),
+- **provide transparent traces** (what it attempted and what it observed).
 
-### System Design
+## The ReAct Idea (Reasoning + Acting)
 
-Your agent should implement the following loop:
+ReAct interleaves two things:
 
-```
-while steps < MAX_STEPS:
-    response = llm(messages)
-    if "Answer:" in response:
-        return extract_answer(response)
-    elif "Action:" in response:
-        tool_output = execute_tool(response)
-        messages.append(tool_output as Observation)
-    else:
-        break
-```
+- **Reasoning:** decide what to do next given the current state and past observations.
+- **Acting:** invoke an external tool (here: execute Python code over CSV files).
 
-#### Core Components
+In our setting, the action is Python code that reads a CSV and computes statistics. After execution, instead of directly feeding the raw stdout/stderr back to the planner, we introduce an additional Observation agent that converts tool output into a concise, task-relevant summary of observation (e.g., key numbers, detected schema issues, error type, and suggested fix) (We bring in observation agent to avoid context window become too big for certain complex tasks). The planner then uses this structured observation to decide the next step or terminate with the final formatted answer (e.g., `@mean fare[34.65]`).
 
-**LLM backbone:** Use GPT-4.1-mini via the OpenAI API (`gpt-4.1-mini`). You will call this model at each step of the agent loop.
+## Setup and Starter Code
 
-**Tool: `run_python`:** The only tool your agent needs is a Python code execution tool. It takes a string of Python code, runs it in a restricted local namespace (with `pandas`, `numpy`, and `scipy` pre-imported and a pre-loaded `df` variable pointing to the Ames Housing dataframe), and returns the output (stdout + result of last expression) as a string. Execution errors should be caught and returned as the observation so the model can self-correct.
+You may work in Google Colab or locally. Your solution must be runnable from a clean environment. We recommend:
 
-**Context management:** At each step, the full message history (system prompt, question, all prior Thought/Action/Observation turns) is sent to the model. For short agent runs this is fine, but for longer chains you should be aware that observation outputs can grow large. You may truncate long tool outputs (e.g., to 2,000 characters) to avoid hitting the context window limit.
+- Python ≥ 3.10
+- `transformers`, `accelerate`, `torch`
+- `pandas`, `numpy`
+- `pydantic`
+- `outlines`
 
-**Step budget:** Set `MAX_STEPS = 10` as the default. If the agent does not emit an `Answer:` within 10 steps, it should return a fallback response.
+**Compute note:** A 4B-parameter open model is typically feasible on a single GPU (e.g., Colab T4/L4/A100), but generation can still be slow.
 
----
+**Safety note:** Executing LLM-generated code can be dangerous. In this project:
 
-### Prompt Design
+- Do not allow internet access from the execution environment.
+- Restrict code to reading the provided CSV files only.
+- Avoid writing files, deleting files, or calling system commands.
 
-The system prompt is the most important design decision in your agent. It should:
+## Model Requirement
 
-1. Describe the ReAct format precisely (Thought → Action → Observation → ... → Answer).
-2. Specify the exact syntax for tool calls so they can be parsed reliably.
-3. Tell the model what tools are available and what the `df` variable contains.
-4. Instruct the model to include clear reasoning in every Thought step.
+Use `Qwen/Qwen3-4B-Instruct-2507` (or any model under 5B parameters). You should load the model once and reuse it for all roles in your pipeline. Different agents (Planner/Coder/Observer) are implemented by different prompts and may use different generation paradigms (e.g., structured outputs via Outlines + Pydantic for Planner and Observer, code-focused prompting for Coder).
 
-A suggested tool call syntax:
+## Task 1 — Dataset Inspection and Sanity Checks
 
-```
-Action: run_python
+Before building an agent, let's understand the dataset format.
+
+### Task 1.1 Load and Inspect JSONL Files
+
+**QUESTION 14:** Load `da-dev-questions.jsonl` and `da-dev-labels.jsonl`. Report:
+
+- The number of questions and labels.
+- The set of keys present in a question record (print one example).
+- The set of keys present in a label record (print one example).
+
+### Task 1.2 Inspect the Table References
+
+**QUESTION 15:** Pick 3 random question IDs. For each:
+
+- Print the file name of the referenced CSV.
+- Load the CSV with pandas and print `df.shape`, `df.dtypes`, and `df.head(3)`.
+- Print the corresponding question.
+
+### Task 1.3 Understand the Required Answer Format
+
+**QUESTION 16:** Find 2 examples where the required format contains multiple answer slots (e.g., two or more `@name[value]` fields). Explain:
+
+- How the dataset represents multi-part answers in the labels.
+- How you plan to evaluate such answers automatically.
+
+### Task 1.4 Checking the subset
+
+**QUESTION 17:** Unfortunately, the model we are going to use is still not powerful enough to solve all the tasks. Here we are selecting 10 sub-tasks that are proved to be solvable:
+
+The selected IDs are: `SELECTED_IDS = [0, 5, 9, 10, 14, 18, 24, 25, 26, 55]`.
+
+- Print out and check those tasks.
+
+## Task 2 — Model Loading and Structured Output: Make the Planner Parseable
+
+Please refer to the helper code for reference.
+
+First, let's load the model we are going to use: `MODEL_NAME = "Qwen/Qwen3-4B-Instruct-2507"`.
+
+Next, build a structured Planner component that returns a JSON object following a Pydantic schema such as:
+
 ```python
-<your code here>
+class PlannerOutput(BaseModel):
+    thought: str
+    is_done: bool
+    response: str
 ```
-```
 
-Your parser should extract the code block following `Action: run_python` and execute it.
+You must use Outlines (or an equivalent constrained decoding approach) so that the JSON is always valid. You can refer to the helper code for how to use Outlines.
 
----
+**QUESTION 18:** Demonstrate (with 5 different prompts) that your planner always returns valid JSON that parses into your Pydantic model without try/except fallbacks. Include at least one case where the planner decides it is done (`is_done=true`).
 
-### Tasks
+**QUESTION 19:** Explain in a few sentences why structured output is useful for large-scale data mining pipelines.
 
-#### Task 6 — Build and Validate the Agent
+## Task 3 — Build a ReAct Data Analysis Agent
 
-**QUESTION 14: (20 points)** Implement the ReAct agent as described above. Your implementation should include:
+Implement a 4-part system:
 
-- The agent loop with step budget,
-- The `run_python` tool with error handling,
-- A system prompt that clearly specifies the ReAct format,
-- Context truncation for long observations.
+- **Planner (Reasoning):** decides the next analysis step, or stops with the final formatted answer.
+- **Coder (Action):** writes Python code for the planner's instruction.
+- **Executor (Tool):** runs the code and returns raw stdout/stderr (or an error trace).
+- **Observer (Structured Observation):** converts raw tool output into a concise, task-relevant observation that the planner can reliably use.
 
-Run your agent on the following warm-up questions and report the full agent trace (all Thought/Action/Observation steps) for each:
+Your agent must run a loop for up to `max_steps=5` iterations:
 
-1. How many rows and columns does the dataset have?
-2. What is the mean and standard deviation of `SalePrice`?
-3. Which neighborhood has the highest median sale price?
+1. Planner produces structured output (`thought`, `is_done`, `response`).
+2. If `is_done=true`, return `response` as the final answer.
+3. Otherwise, Coder writes Python code based on Planner's response and Executor runs it to obtain raw stdout/stderr.
+4. Observer reads the raw output and the planner's original response and produces an observation summary (e.g., extracted values, warnings, error category, next-step hint).
+5. Append the quadruple (instruction, code, raw output, observation summary) to the history and continue.
 
-**QUESTION 15: (10 points)** Inspect the agent traces from Question 14. For each question:
+### Required Features
 
-- How many steps did the agent take?
-- Did it arrive at the correct answer?
-- Were there any tool errors or unexpected behaviors?
+- **Error recovery:** if the executor returns an error (e.g., parsing error, missing column, type conversion, runtime exception), the system must use the error message as feedback and attempt to fix the code and retry, instead of immediately failing.
+- **Bounded context (runnable on Google Colab):** the system must avoid unbounded growth of the prompt/history. In particular, it should remain runnable on a single Tesla T4 GPU with 15 GB GPU memory. Please optimize your design of the agents, especially the observation summarization agent.
+- **Structured outputs for planner:** planner must return a machine-parseable object with a fixed schema (recommended: Pydantic + Outlines).
 
----
+**QUESTION 20:** Run your ReAct agent on the 10 tasks. Report:
 
-#### Task 7 — Multi-Step Data Analysis
-
-Now stress-test your agent with questions that require multiple tool calls and intermediate reasoning.
-
-**QUESTION 16: (30 points)** Run your agent on the following questions and report the full agent trace and final answer for each:
-
-1. What are the top 5 features most correlated with `SalePrice` (by absolute Pearson correlation)?
-2. Is there a statistically significant difference in mean `SalePrice` between houses with and without a central air conditioning system (`CentralAir` column)? Report the test statistic and p-value.
-3. Among houses built after 1990, what fraction have a garage capacity (`GarageCars`) of 2 or more?
-
-**QUESTION 17: (10 points)** For the correlation analysis in Question 16.1:
-
-- Identify which features are numerical vs. categorical.
-- Explain how your agent handled (or should have handled) the presence of categorical features in a Pearson correlation analysis.
-- If your agent made an error here, describe what went wrong and how you would fix it.
-
----
-
-#### Task 8 — Robustness and Failure Analysis
-
-**QUESTION 18: (20 points)** Design two adversarial questions that are likely to challenge your agent — for example, questions involving missing data, ambiguous column names, or multi-step aggregations with filtering conditions. Run your agent on these questions and report:
-
-- The full agent trace,
-- Whether the agent recovered from any tool errors,
-- The final answer and whether it is correct.
-
-**QUESTION 19: (10 points)** Reflection: Based on your experiments in Tasks 6–8, what are the two most common failure modes of your ReAct agent? For each, describe:
-
-- What the failure looks like in the trace,
-- Why it happens (root cause),
-- One concrete fix you could implement.
+- Accuracy
+- At least 3 qualitative traces (planner thought, code, observation, final answer) that illustrate interesting behaviors: success, failure, recovery from an error.

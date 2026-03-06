@@ -1,138 +1,92 @@
-## Part C: Regression Analysis and Agent-Assisted Feature Engineering
+# Part C: Regression Analysis
 
-### Introduction
+## 1 Introduction
 
-In Parts A and B, you developed a fine-tuned reasoning model and a ReAct-style data analysis agent. Part C brings these threads together in the context of a classical machine learning task: predicting housing prices using regression models on the Ames Housing dataset.
+Regression analysis is a statistical procedure for estimating the relationship between a target variable and a set of features that jointly inform about the target. In this sub-project, we explore specific-to-regression feature engineering methods and then reuse your ReAct agent to train regression models.
 
-The goal here is not to build the most accurate model possible, but to practice a principled regression workflow — understanding your data, engineering meaningful features, fitting and diagnosing models, and interpreting results. You will also integrate your agent from Part B as an optional but encouraged tool for exploratory data analysis and feature engineering ideation.
+## 2 Datasets
 
----
+Valentine's day might be over, but we are still interested in building a bot to predict the price and characteristics of diamonds. A synthetic diamonds dataset can be downloaded from this link. This dataset contains information about 150000 round-cut diamonds. There are 14 variables (features) and for each sample, these features specify the various properties of the sample. Below we describe some of these features:
 
-### Background: Regression Modeling
+- **carat:** weight of the diamond
+- **cut:** quality of the cut
+- **clarity:** measured diamond clarity
+- **length:** measured length in mm
+- **width:** measured width in mm
+- **depth:** measured depth in mm
+- **depth_percent:** diamond's total height divided by its total width
+- **table_percent:** width of top of diamond relative to widest point
+- **girdle_min:** refers to the thinnest part of the girdle
+- **girdle_max:** refers to the thickest part of the girdle
 
-Linear regression models the relationship between a response variable y and a set of predictors X as:
+In addition to these features, there is the target variable: i.e what we would like to predict:
 
-$$y = X\beta + \epsilon, \quad \epsilon \sim \mathcal{N}(0, \sigma^2 I)$$
+- **price:** price in US dollars
 
-The ordinary least squares (OLS) estimator minimizes the residual sum of squares:
+## 3 Training Pipelines
 
-$$\hat{\beta} = \arg\min_\beta \|y - X\beta\|^2 = (X^TX)^{-1}X^Ty$$
+In this section, we describe the setup you need to follow. Follow these steps to process the datasets.
 
-In practice, raw predictors often violate assumptions (linearity, homoscedasticity, normality of residuals) or are collinear, which degrades model performance and interpretability. Feature engineering and regularization are standard remedies.
+### 3.1 Data Inspection
 
----
+Before training an algorithm, it's always essential to inspect the data. This provides intuition about the quality and quantity of the data and suggests ideas to extract features for downstream ML applications.
 
-### Task 9 — Exploratory Data Analysis
+**QUESTION 21:** Perform an exploratory data analysis on the provided Diamonds dataset. Report the following:
 
-Before building any model, understand the data.
+- **Correlation Analysis:** Plot a heatmap of the Pearson correlation matrix. Report which features have the highest absolute correlation with the target variable (price). Briefly describe what the correlation patterns suggest.
+- **Distribution Analysis:** Plot the histogram of numerical features. Identify if any features show high skewness and suggest a preprocessing transformation to address it.
+- **Categorical Analysis:** Construct box plots of categorical features versus the target variable. Describe any significant trends (e.g., how cut or color affects the price range).
 
-**QUESTION 20: (10 points)** Perform an exploratory data analysis of the Ames Housing dataset. Your analysis should include:
+### 3.2 Handling Categorical Features
 
-- Distribution of the target variable `SalePrice` (histogram, skewness).
-- Correlation heatmap of the top numerical features with `SalePrice`.
-- Identification of missing values: which columns have the most missing data, and what do you plan to do about them?
+A categorical feature is a feature that can take on one of a limited number of possible values. If one dataset contains categorical features, a preprocessing step needs to be carried to convert categorical variables into numbers and thus prepared for training.
 
-You are encouraged to use your ReAct agent from Part B to assist with parts of this analysis.
+One method for numerical encoding of categorical features is to assign a scalar. For instance, if we have a "Quality" feature with values {Poor, Fair, Typical, Good, Excellent} we might replace them with numbers 1 through 5. If there is no numerical meaning behind categorical features (e.g. {Cat, Dog}) one has to perform "one-hot encoding" instead.
 
-**QUESTION 21: (10 points)** Based on your EDA, select 8–12 numerical features that you believe are most predictive of `SalePrice`. Justify your selection using correlation values and domain reasoning (e.g., why would `GrLivArea` be a strong predictor?).
+**QUESTION 22:** Explain the following trade-off questions.
 
----
+- Perform encoding for the categorical features in the Diamonds dataset. Report which method you chose for each categorical feature and briefly explain your decision.
+- Explain the following trade-offs:
+  - What information does one-hot encoding discard?
+  - What assumption should hold strongly if we perform the scalar encoding instead?
 
-### Task 10 — Baseline Regression Model
+#### 3.2.1 Standardization
 
-**QUESTION 22: (20 points)** Fit an OLS linear regression model on your selected features (use an 80/20 train/test split). Report:
+Standardization of datasets is a common requirement for many machine learning estimators; they might behave badly if the individual features do not more-or-less look like standard normally distributed data: Gaussian with zero mean and unit variance. If a feature has a variance that is orders of magnitude larger than others, it might dominate the objective function and make the estimator unable to learn from other features correctly as expected.
 
-- Train and test R²,
-- Train and test RMSE,
-- A coefficient table showing the sign and magnitude of each feature's coefficient.
+**QUESTION 23:** Standardize feature columns and prepare them for training. Save your standardized version of the dataset as `diamonds_standardized.csv`.
 
-Interpret at least 3 coefficients in plain language (e.g., "holding all else equal, one additional square foot of above-ground living area is associated with a $X increase in sale price").
+#### 3.2.2 Feature Selection
 
-**QUESTION 23: (15 points)** Diagnose your baseline model using residual analysis:
+- `sklearn.feature_selection.mutual_info_regression` function returns estimated mutual information between each feature and the label. Mutual information (MI) between two random variables is a non-negative value which measures the dependency between the variables. It is equal to zero if and only if two random variables are independent, and higher values mean higher dependency.
+- `sklearn.feature_selection.f_regression` function provides F scores, which is a way of comparing the significance of the improvement of a model, with respect to the addition of new variables.
 
-- Plot residuals vs. fitted values. Do you see any patterns (heteroscedasticity, nonlinearity)?
-- Plot a Q-Q plot of the residuals. Are they approximately normally distributed?
-- Identify any high-leverage or high-influence points (e.g., using Cook's distance).
+You may use these functions to select features that yield better regression results (especially in the classical models).
 
-Based on your diagnostics, what are the two biggest modeling problems you observe?
+**QUESTION 24:** Print the top 5 features using each method (`mutual_info_regression` and `f_regression`).
 
----
+- **Agentic Integration:** For this step, load `diamonds-questions.jsonl` and `diamonds-labels.jsonl` (question id 0 and 1) and use your ReAct agent from Part 2 to automatically identify and print the top features. If the agent gets stuck, you may manually write the code to compute and print them.
 
-### Task 11 — Feature Engineering
+From this point on, you are free to use any combination of features, as long as the performance on the regression model is on par (or slightly worse) than the Neural Network model.
 
-**QUESTION 24: (20 points)** Apply at least three of the following feature engineering techniques and re-fit your regression model after each:
+Save your selected feature new csv as `diamonds_selected.csv`.
 
-- **Log-transform the target:** replace `SalePrice` with `log(SalePrice)` to reduce skewness and stabilize variance.
-- **Log-transform skewed predictors:** apply log transforms to right-skewed numerical features (e.g., `LotArea`, `GrLivArea`).
-- **Polynomial features:** add squared terms for features with nonlinear relationships with `SalePrice`.
-- **Interaction terms:** create interaction features between pairs of variables that have meaningful joint effects (e.g., `OverallQual × GrLivArea`).
-- **Encoding categorical variables:** one-hot encode key categorical features (e.g., `Neighborhood`, `BldgType`) and add them to the model.
+### 3.3 Training
 
-For each technique, report the new train/test R² and RMSE, and describe whether and why it helped.
+Once the data is prepared, we would like to train multiple algorithms and compare their performance using average RMSE from 10-fold cross-validation (please refer to part 3.4).
 
-**QUESTION 25: (10 points)** After applying your feature engineering pipeline, re-run your residual diagnostics from Question 23. Has heteroscedasticity improved? Are residuals more normally distributed? Summarize what changed and what remains problematic.
+### 3.4 Evaluation
 
----
+Perform 10-fold cross-validation and measure average RMSE errors for training and validation sets.
 
-### Task 12 — Regularization
+#### Task 5.1 Linear Regression
 
-When the feature space grows (especially after adding polynomial and interaction terms), OLS can overfit. Regularization constrains the coefficient magnitudes to reduce variance at the cost of some bias.
+**QUESTION 25:** Agentic Integration: For this step, load `diamonds-questions.jsonl` and `diamonds-labels.jsonl` (question ids 2, 3, and 4) and use your ReAct agent from Part 2 to automatically train the models and extract the necessary metrics. If the agent gets stuck, you may manually write the code to complete the training.
 
-**Ridge regression** adds an L2 penalty:
+**Important:** List out the Python code generated by your agent for these tasks. Review the code to ensure it makes sense and correctly implements the requested regression models. Do not blindly trust the agent's output; verify its logic before proceeding.
 
-$$\hat{\beta}_{\text{ridge}} = \arg\min_\beta \|y - X\beta\|^2 + \lambda\|\beta\|^2$$
+What is the objective function? Train three models: (a) ordinary least squares (linear regression without regularization), (b) Lasso and (c) Ridge regression, and answer the following questions.
 
-**Lasso regression** adds an L1 penalty:
-
-$$\hat{\beta}_{\text{lasso}} = \arg\min_\beta \|y - X\beta\|^2 + \lambda\|\beta\|_1$$
-
-The key difference: Lasso produces sparse solutions (some coefficients are exactly zero), making it useful for feature selection.
-
-**QUESTION 26: (20 points)** Fit both Ridge and Lasso regression models on your engineered feature set. For each:
-
-- Use cross-validation to select the regularization strength λ.
-- Report train and test R² and RMSE.
-- For Lasso: report how many features were zeroed out and list the top 10 features by absolute coefficient magnitude.
-
-Compare Ridge, Lasso, and your best OLS model in a summary table.
-
-**QUESTION 27: (10 points)** Interpret the regularization results:
-
-- Did regularization improve test performance? By how much?
-- Which model (Ridge or Lasso) performed better, and why might that be the case for this dataset?
-- What does the sparsity pattern from Lasso tell you about feature importance?
-
----
-
-### Task 13 — Agent-Assisted Feature Engineering (Integration Task)
-
-**QUESTION 28: (20 points)** Use your ReAct agent from Part B to assist with at least one of the following:
-
-1. **Automated feature suggestion:** Ask the agent to identify which features have the strongest nonlinear relationships with `SalePrice` (e.g., by computing rank correlations or binned mean plots), and use its output to motivate one new feature you add to your model.
-2. **Outlier investigation:** Ask the agent to identify statistical outliers in your residuals (e.g., homes where your model is off by more than 2 standard deviations), then manually inspect those homes and describe what makes them unusual.
-3. **Interaction discovery:** Ask the agent to test whether specific interaction terms are statistically significant (e.g., using a partial F-test or comparing model R² with and without the interaction), and report what it finds.
-
-For this question, include:
-
-- The question(s) you posed to the agent,
-- The full agent trace (Thought/Action/Observation steps),
-- How you used the agent's output to improve or inform your regression model,
-- The resulting change in model performance (if any).
-
----
-
-### Task 14 — Final Model and Reflection
-
-**QUESTION 29: (15 points)** Present your final regression model. This should be your best model after all feature engineering and regularization. Report:
-
-- Final train and test R² and RMSE,
-- The complete list of features used,
-- A coefficient plot or table showing the most important predictors,
-- A brief narrative explaining why this model is better than your baseline.
-
-**QUESTION 30: (10 points)** Final reflection: Write a short paragraph (6–10 sentences) addressing the following:
-
-- What was the single most impactful modeling decision you made (feature engineering step, regularization choice, target transformation)?
-- What was the most surprising finding from your analysis?
-- If you had more time, what would you try next to further improve the model?
-- How did integrating the ReAct agent into your workflow change (or not change) how you approached the analysis?
+- Explain how each regularization scheme affects the learned parameter set.
+- Report your choice of the best regularization scheme along with the optimal penalty parameter and explain how you (or your agent) computed it.
+- Some linear regression packages return p-values for different features. What is the meaning of these p-values and how can you infer the most significant features? A qualitative reasoning is sufficient.

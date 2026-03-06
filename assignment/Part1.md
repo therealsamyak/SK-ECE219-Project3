@@ -24,7 +24,7 @@ In this project, we use one of the most widely adopted PEFT techniques: **Low-Ra
 
 ### Low-Rank Adaptation (LoRA)
 
-LoRA is based on an empirical observation: the weight updates that matter for fine-tuning are often approximately *low-rank*. Rather than learning a full update ΔW ∈ ℝ^(d×d) to a weight matrix W, LoRA represents the update as a product of two thin matrices:
+LoRA is based on an empirical observation: the weight updates that matter for fine-tuning are often approximately _low-rank_. Rather than learning a full update ΔW ∈ ℝ^(d×d) to a weight matrix W, LoRA represents the update as a product of two thin matrices:
 
 $$h = (W + \Delta W)x = Wx + BAx, \quad B \in \mathbb{R}^{d \times r},\ A \in \mathbb{R}^{r \times d},\ r \ll d$$
 
@@ -87,6 +87,7 @@ Now consider GPT-4.1-mini solving a similar problem:
 > **Question:** Betty is saving money for a new wallet which costs $100. Betty has only half of the money she needs. Her parents decided to give her $15 for that purpose, and her grandparents twice as much as her parents. How much more money does Betty need to buy the wallet?
 >
 > **GPT's reasoning:**
+>
 > 1. The wallet costs 100.
 > 2. Betty has half: 100/2 = 50
 > 3. Parents give her 15.
@@ -185,17 +186,17 @@ Conceptually, the training pipeline has three key ingredients:
 
 Default hyperparameters are summarized below. Use these unless a question explicitly asks you to experiment.
 
-| Hyperparameter | Default | Notes |
-|---|---|---|
-| LoRA rank (r) | 8 | Controls adapter capacity |
-| LoRA alpha | 16 | Scaling factor (rule of thumb: 2r) |
-| LoRA dropout | 0.05 | |
-| Learning rate | 2 × 10⁻⁴ | Cosine schedule with 5% warmup |
-| Epochs | 1 | |
-| Per-device batch size | 8 | |
-| Gradient accumulation | 4 | Effective batch size = 32 |
-| Max sequence length | 1024 | |
-| Target modules | Attention only | q,k,v,o proj |
+| Hyperparameter        | Default        | Notes                              |
+| --------------------- | -------------- | ---------------------------------- |
+| LoRA rank (r)         | 8              | Controls adapter capacity          |
+| LoRA alpha            | 16             | Scaling factor (rule of thumb: 2r) |
+| LoRA dropout          | 0.05           |                                    |
+| Learning rate         | 2 × 10⁻⁴       | Cosine schedule with 5% warmup     |
+| Epochs                | 1              |                                    |
+| Per-device batch size | 8              |                                    |
+| Gradient accumulation | 4              | Effective batch size = 32          |
+| Max sequence length   | 1024           |                                    |
+| Target modules        | Attention only | q,k,v,o proj                       |
 
 **QUESTION 3: (15 points)** Pick the three hyperparameters (LoRA rank, LoRA alpha, Gradient accumulation) from the table above and explain:
 
