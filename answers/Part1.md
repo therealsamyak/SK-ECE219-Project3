@@ -174,13 +174,13 @@ Additionally, LoRA only adapts the attention projection layers (q_proj, k_proj, 
 
 **Results:**
 
-- **SFT-1k Accuracy:** 43%
+- **SFT-1k Accuracy:** 40%
 - **Baseline Accuracy:** 38%
-- **Improvement:** +5 percentage points
+- **Improvement:** +2 percentage points
 
 **Analysis:**
 
-The improvement from 38% to 43% (+5 pp) represents a meaningful but modest gain. This matches expectations for several reasons:
+The improvement from 38% to 40% (+2 pp) represents a modest but meaningful gain. This matches expectations for several reasons:
 
 **Positive aspects:**
 1. **Validates the approach:** Even with only 1,000 examples, fine-tuning improves performance
@@ -189,7 +189,7 @@ The improvement from 38% to 43% (+5 pp) represents a meaningful but modest gain.
 
 **Limitations observed:**
 1. **Small dataset:** 1,000 examples may not be sufficient for learning robust mathematical reasoning patterns
-2. **Limited improvement:** +5pp is modest, suggesting more data is needed
+2. **Limited improvement:** +2pp is modest, suggesting more data is needed
 3. **Continued errors:** Model still makes arithmetic and reasoning errors similar to base model
 
 **Examples of improvements and continued failures:**
@@ -216,8 +216,8 @@ The model shows it's learning some patterns but hasn't developed robust mathemat
 
 **Expected Accuracy Gains:**
 
-1. **1,000 → 3,000 examples:** I expect ~3-5 percentage point improvement (43% → 46-48%)
-2. **3,000 → 7,473 examples:** I expect ~2-4 percentage point improvement (46-48% → 48-52%)
+1. **1,000 → 3,000 examples:** I expect ~2-4 percentage point improvement (40% → 42-44%)
+2. **3,000 → 7,473 examples:** I expect ~1-3 percentage point improvement (42-44% → 43-47%)
 
 **Rationale:**
 
@@ -238,7 +238,7 @@ I would scale in **two steps** (1k → 3k → full) rather than jumping directly
 2. **Analysis opportunity:** Can study scaling behavior at each step
 3. **Compute management:** If 3k shows minimal improvement, can avoid spending 3-4 hours on full training
 
-**Expected total improvement:** 38% → 48-52% (10-14 pp total improvement from baseline)
+**Expected total improvement:** 38% → 43-47% (5-9 pp total improvement from baseline)
 
 ---
 
@@ -251,22 +251,25 @@ I would scale in **two steps** (1k → 3k → full) rather than jumping directly
 | Training Examples | Accuracy | Improvement from Baseline |
 |-------------------|----------|--------------------------|
 | 0 (baseline)      | 38%      | -                        |
-| 1,000             | 43%      | +5 pp                    |
-| 3,000             | 41%      | +3 pp                    |
+| 1,000             | 40%      | +2 pp                    |
+| 3,000             | 39%      | +1 pp                    |
 
 **Plot:** See `outputs/q7_accuracy_plot.png` for the accuracy scaling visualization.
 
 **Analysis of Results:**
 
-**Unexpected finding:** The 3,000-example model (41%) performed **worse** than the 1,000-example model (43%), contrary to expectations.
+**Unexpected finding:** The 3,000-example model (39%) performed **worse** than the 1,000-example model (40%), contrary to expectations.
+
+**This is a critical issue that suggests: scaling from 1k to 3k examples resulted in performance degradation.**
 
 **Possible explanations:**
 
-1. **Training instability:** Larger dataset might have caused training issues
-2. **Overfitting to noise:** More examples might include more confusing or contradictory patterns
-3. **Hyperparameter mismatch:** Default hyperparameters might not scale well to 3x data
-4. **Random variation:** Small test set (100 questions) means ±2-3% variance is expected
-5. **Data quality issues:** Additional 2,000 examples might be lower quality or harder problems
+1. **Training instability:** Larger dataset might have caused training issues or convergence problems
+2. **Overfitting to noise:** More examples might include more confusing or contradictory patterns that hurt generalization
+3. **Hyperparameter mismatch:** Default hyperparameters (learning rate, batch size) might not scale well to 3x data
+4. **Random variation:** Small test set (100 questions) means ±2-3% variance is expected - however, the drop is significant
+5. **Data quality issues:** Additional 2,000 examples might be lower quality or harder problems that the model struggles with
+6. **Optimal dataset size:** There may be an optimal dataset size around 1,000 examples for this specific model architecture and task
 
 **Diminishing Returns Analysis:**
 

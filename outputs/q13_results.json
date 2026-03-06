@@ -1,0 +1,6 @@
+{
+  "accuracy": 0.39,
+  "num_samples": 5,
+  "num_eval": 100,
+  "method": "self_consistency"
+}

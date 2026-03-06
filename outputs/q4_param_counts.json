@@ -1,0 +1,12 @@
+{
+  "before": {
+    "total": 1543714304,
+    "trainable": 1543714304,
+    "percentage": 100.0
+  },
+  "after": {
+    "total": 1545893376,
+    "trainable": 2179072,
+    "percentage": 0.1409587513492263
+  }
+}

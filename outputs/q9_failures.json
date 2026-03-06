@@ -1,0 +1,16 @@
+[
+  {
+    "question": "Janet\u2019s ducks lay 16 eggs per day. She eats three for breakfast every morning and bakes muffins for her friends every day with four. She sells the remainder at the farmers' market daily for $2 per fresh duck egg. How much in dollars does she make every day at the farmers' market?",
+    "ground_truth": "18",
+    "model_response": "The total number of eggs laid is 16*7=<<16*7=112>>112.\nShe eats 3*7=<<3*7=21>>21 eggs for breakfast.\nSo she has 112-21=<<112-21=91>>91 eggs left to sell.\nTherefore, Janet makes 91*2=$\\boxed{182}$ every day at the farmers' market.\\boxed{182}",
+    "extracted_answer": "182",
+    "correct": false
+  },
+  {
+    "question": "Josh decides to try flipping a house.  He buys a house for $80,000 and then puts in $50,000 in repairs.  This increased the value of the house by 150%.  How much profit did he make?",
+    "ground_truth": "70000",
+    "model_response": "The new value of the house is 80,000 + 50,000 = $<<80000+50000=130000>>130,000\nThis was an increase of 150% on the original price so that means it's worth 130,000 / (1 + .15) = $<<130000/1+.15=114285.71>>114,285.71\nSo his profit is 114,285.71 - 80,000 = $<<114285.71-80000=34285.71>>34,285.71\\boxed{34286}",
+    "extracted_answer": "34286",
+    "correct": false
+  }
+]
