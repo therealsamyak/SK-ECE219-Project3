@@ -1,5 +1,7 @@
 # Part 1: Teaching a Small Model to Reason - LoRA Fine-Tuning
 
+> **Note on Hyperparameters:** Due to GPU memory constraints, the batch size and gradient accumulation values were swapped from the assignment defaults. The assignment specifies per-device batch size of 8 with gradient accumulation of 4, but the implementation uses per-device batch size of 4 with gradient accumulation of 8. This maintains the same effective batch size of 32 (4×8 = 8×4 = 32) while reducing peak memory usage.
+
 ## Question 1: Baseline Accuracy (10 points)
 
 **Question:** Run the base Qwen2.5-1.5B-Instruct model on 100 GSM8K test questions and report the accuracy. You should expect approximately 35–40%.
