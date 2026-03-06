@@ -4,8 +4,8 @@ library_name: transformers
 model_name: q7_3k_adapter
 tags:
 - generated_from_trainer
-- sft
 - trl
+- sft
 licence: license
 ---
 

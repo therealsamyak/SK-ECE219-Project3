@@ -475,7 +475,16 @@ def build_few_shot_prompts(
     return prompts
 
 
-def generate_batch(model, tokenizer, questions, system_prompt: str = SYSTEM_PROMPT):
+def generate_batch(
+    model,
+    tokenizer,
+    questions,
+    system_prompt: str = SYSTEM_PROMPT,
+    few_shot_examples: list | None = None,
+    temperature: float = 1.0,
+    top_p: float = 1.0,
+    do_sample: bool = False,
+):
     """Generate responses for a batch of questions in one forward pass.
 
     Args:
@@ -483,18 +492,33 @@ def generate_batch(model, tokenizer, questions, system_prompt: str = SYSTEM_PROM
         tokenizer: The tokenizer.
         questions: List of question strings.
         system_prompt: The system prompt to use.
+        few_shot_examples: Optional list of few-shot examples.
+        temperature: Sampling temperature (only used if do_sample=True).
+        top_p: Nucleus sampling parameter (only used if do_sample=True).
+        do_sample: Whether to use sampling (True) or greedy decoding (False).
 
     Returns:
         List of generated response strings.
     """
-    prompts = build_prompts(tokenizer, questions, system_prompt)
+    if few_shot_examples is not None:
+        prompts = build_few_shot_prompts(
+            tokenizer, questions, few_shot_examples, system_prompt
+        )
+    else:
+        prompts = build_prompts(tokenizer, questions, system_prompt)
     inputs = tokenizer(prompts, return_tensors="pt", padding=True, truncation=True).to(
         model.device
     )
     prompt_len = inputs["input_ids"].shape[1]
 
     with torch.no_grad():
-        out = model.generate(**inputs, max_new_tokens=2048, do_sample=False)
+        out = model.generate(
+            **inputs,
+            max_new_tokens=2048,
+            do_sample=do_sample,
+            temperature=temperature if do_sample else None,
+            top_p=top_p if do_sample else None,
+        )
 
     responses = []
     for i in range(len(questions)):
@@ -605,7 +629,13 @@ def evaluate_gsm8k(
         batch = test_examples[i : i + batch_size]
         questions = [item["question"] for item in batch]
 
-        responses = generate_batch(model, tokenizer, questions, system_prompt)
+        responses = generate_batch(
+            model,
+            tokenizer,
+            questions,
+            system_prompt,
+            few_shot_examples=few_shot_examples,
+        )
 
         for q, response, item in zip(questions, responses, batch):
             extracted_answer = extract_model_answer(response)
@@ -744,10 +774,6 @@ def run_q1_baseline_eval(
     output_acc = "q1_accuracy.json"
     output_records = "q1_records.json"
 
-    if not force and file_exists(output_acc) and file_exists(output_records):
-        print("Q1 outputs exist, skipping (use --force to rerun)")
-        return
-
     print("\n=== Q1: Baseline Evaluation ===")
     model, tokenizer = load_model(MODEL_NAME)
     accuracy, records = evaluate_gsm8k(
@@ -768,10 +794,6 @@ def run_q2_extract_failures(force: bool = False):
         - q2_failures.json: list of 3 failure records with excerpts
     """
     output_file = "q2_failures.json"
-
-    if not force and file_exists(output_file):
-        print("Q2 outputs exist, skipping (use --force to rerun)")
-        return
 
     print("\n=== Q2: Extract Failures ===")
 
@@ -808,10 +830,6 @@ def run_q4_param_count(force: bool = False):
     """
     output_file = "q4_param_counts.json"
 
-    if not force and file_exists(output_file):
-        print("Q4 outputs exist, skipping (use --force to rerun)")
-        return
-
     print("\n=== Q4: Parameter Counts ===")
 
     model = AutoModelForCausalLM.from_pretrained(
@@ -843,10 +861,6 @@ def run_q5_train_1k(num_eval: int = 100, batch_size: int = 16, force: bool = Fal
     output_acc = "q5_accuracy.json"
     output_records = "q5_records.json"
 
-    if not force and file_exists(output_acc) and file_exists(output_records):
-        print("Q5 outputs exist, skipping (use --force to rerun)")
-        return
-
     print("\n=== Q5: Train SFT-1k ===")
 
     output_dir = os.path.join(OUTPUT_DIR, "q5_adapter")
@@ -874,10 +888,6 @@ def run_q7_train_3k(num_eval: int = 100, batch_size: int = 16, force: bool = Fal
     output_acc = "q7_3k_accuracy.json"
     output_records = "q7_3k_records.json"
 
-    if not force and file_exists(output_acc) and file_exists(output_records):
-        print("Q7 (3k) outputs exist, skipping (use --force to rerun)")
-        return
-
     print("\n=== Q7: Train SFT-3k ===")
 
     output_dir = os.path.join(OUTPUT_DIR, "q7_3k_adapter")
@@ -904,10 +914,6 @@ def run_q7_plot_scaling(force: bool = False):
     """
     output_data = "q7_scaling.json"
     output_plot = "q7_scaling_plot.png"
-
-    if not force and file_exists(output_data) and file_exists(output_plot):
-        print("Q7 scaling outputs exist, skipping (use --force to rerun)")
-        return
 
     print("\n=== Q7: Plot Scaling ===")
 
@@ -951,10 +957,6 @@ def run_q8_compare_models(force: bool = False):
         - q8_comparison.json: {"failures": [...]}
     """
     output_file = "q8_comparison.json"
-
-    if not force and file_exists(output_file):
-        print("Q8 outputs exist, skipping (use --force to rerun)")
-        return
 
     print("\n=== Q8: Compare Models on Failures ===")
 
@@ -1002,10 +1004,6 @@ def run_q9_sft_failures(force: bool = False):
     """
     output_file = "q9_failures.json"
 
-    if not force and file_exists(output_file):
-        print("Q9 outputs exist, skipping (use --force to rerun)")
-        return
-
     print("\n=== Q9: SFT-3k Failures ===")
 
     import json
@@ -1034,10 +1032,6 @@ def run_q10_fewshot(num_eval: int = 100, batch_size: int = 16, force: bool = Fal
         - q10_fewshot_results.json: {"base_no_shot": ..., "base_few_shot": ..., "sft_no_shot": ..., "sft_few_shot": ...}
     """
     output_file = "q10_fewshot_results.json"
-
-    if not force and file_exists(output_file):
-        print("Q10 outputs exist, skipping (use --force to rerun)")
-        return
 
     print("\n=== Q10: Few-Shot Evaluation ===")
 
@@ -1100,10 +1094,6 @@ def run_q13_open_challenge(
     """
     output_file = "q13_results.json"
 
-    if not force and file_exists(output_file):
-        print("Q13 outputs exist, skipping (use --force to rerun)")
-        return
-
     print("\n=== Q13: Self-Consistency Voting ===")
 
     model, tokenizer = load_model(
@@ -1121,7 +1111,9 @@ def run_q13_open_challenge(
 
         all_votes = []
         for _ in range(num_samples):
-            responses = generate_batch(model, tokenizer, questions)
+            responses = generate_batch(
+                model, tokenizer, questions, temperature=0.7, top_p=0.9, do_sample=True
+            )
             for q, response in zip(questions, responses):
                 answer = extract_model_answer(response)
                 if answer:

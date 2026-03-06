@@ -174,13 +174,13 @@ Additionally, LoRA only adapts the attention projection layers (q_proj, k_proj, 
 
 **Results:**
 
-- **SFT-1k Accuracy:** 40%
+- **SFT-1k Accuracy:** 42%
 - **Baseline Accuracy:** 38%
-- **Improvement:** +2 percentage points
+- **Improvement:** +4 percentage points
 
 **Analysis:**
 
-The improvement from 38% to 40% (+2 pp) represents a modest but meaningful gain. This matches expectations for several reasons:
+The improvement from 38% to 42% (+4 pp) represents a meaningful gain. This matches expectations for several reasons:
 
 **Positive aspects:**
 1. **Validates the approach:** Even with only 1,000 examples, fine-tuning improves performance
@@ -188,8 +188,8 @@ The improvement from 38% to 40% (+2 pp) represents a modest but meaningful gain.
 3. **Parameter efficiency:** Achieved improvement by training only 0.14% of parameters
 
 **Limitations observed:**
-1. **Small dataset:** 1,000 examples may not be sufficient for learning robust mathematical reasoning patterns
-2. **Limited improvement:** +2pp is modest, suggesting more data is needed
+1. **Small dataset:** 1,000 examples provides improvement but may not be sufficient for learning all mathematical reasoning patterns
+2. **Moderate improvement:** +4pp is meaningful, suggesting more data could help further
 3. **Continued errors:** Model still makes arithmetic and reasoning errors similar to base model
 
 **Examples of improvements and continued failures:**
@@ -216,8 +216,8 @@ The model shows it's learning some patterns but hasn't developed robust mathemat
 
 **Expected Accuracy Gains:**
 
-1. **1,000 → 3,000 examples:** I expect ~2-4 percentage point improvement (40% → 42-44%)
-2. **3,000 → 7,473 examples:** I expect ~1-3 percentage point improvement (42-44% → 43-47%)
+1. **1,000 → 3,000 examples:** I expect ~2-4 percentage point improvement (42% → 44-46%)
+2. **3,000 → 7,473 examples:** I expect ~1-3 percentage point improvement (44-46% → 45-49%)
 
 **Rationale:**
 
@@ -238,7 +238,7 @@ I would scale in **two steps** (1k → 3k → full) rather than jumping directly
 2. **Analysis opportunity:** Can study scaling behavior at each step
 3. **Compute management:** If 3k shows minimal improvement, can avoid spending 3-4 hours on full training
 
-**Expected total improvement:** 38% → 43-47% (5-9 pp total improvement from baseline)
+**Expected total improvement:** 38% → 45-49% (7-11 pp total improvement from baseline)
 
 ---
 
@@ -251,7 +251,7 @@ I would scale in **two steps** (1k → 3k → full) rather than jumping directly
 | Training Examples | Accuracy | Improvement from Baseline |
 |-------------------|----------|--------------------------|
 | 0 (baseline)      | 38%      | -                        |
-| 1,000             | 40%      | +2 pp                    |
+| 1,000             | 42%      | +4 pp                    |
 | 3,000             | 39%      | +1 pp                    |
 
 **Plot:** See `outputs/q7_accuracy_plot.png` for the accuracy scaling visualization.
@@ -267,7 +267,7 @@ I would scale in **two steps** (1k → 3k → full) rather than jumping directly
 1. **Training instability:** Larger dataset might have caused training issues or convergence problems
 2. **Overfitting to noise:** More examples might include more confusing or contradictory patterns that hurt generalization
 3. **Hyperparameter mismatch:** Default hyperparameters (learning rate, batch size) might not scale well to 3x data
-4. **Random variation:** Small test set (100 questions) means ±2-3% variance is expected - however, the drop is significant
+4. **Random variation:** Small test set (100 questions) means ±2-3% variance is expected - however, the drop from 42% to 39% is significant
 5. **Data quality issues:** Additional 2,000 examples might be lower quality or harder problems that the model struggles with
 6. **Optimal dataset size:** There may be an optimal dataset size around 1,000 examples for this specific model architecture and task
 
@@ -298,25 +298,25 @@ The results show **negative returns** when scaling from 1k to 3k examples, which
 
 **Ground Truth:** 18
 
-**Base Model Answer:** 0
-**SFT-3k Model Answer:** 26
+**Base Model Answer:** 18
+**SFT-3k Model Answer:** 182
 
 **Base Model Excerpt:**
 ```
-Remaining eggs for sale = 13 - 4 = -1 (not possible)
-Therefore, Janet makes $0 at the farmers' market.
+Remaining eggs for sale = 13 - 4 = 9 eggs/day
+Revenue from selling the eggs at the farmers' market:
+9 eggs × $2/egg = $18
 ```
 
 **SFT-3k Model Excerpt:**
 ```
-The ducks lay 16*3=48 eggs for Janet to eat each morning.
-She has 16-3=13 eggs left after eating them for breakfast.
-So she gives away 13/4=3 muffins to her friends.
-That means there is only 16-3=13 eggs left for sale.
-So she makes 13*$2=$26 from selling the eggs.
+The total number of eggs laid is 16*7=112.
+She eats 3*7=21 eggs for breakfast.
+So she has 112-21=91 eggs left to sell.
+Therefore, Janet makes 91*2=$182 every day at the farmers' market.
 ```
 
-**Analysis:** **Neither model solved this correctly.** Base model made an arithmetic error (13-4=-1). SFT model made multiple logical errors (incorrectly multiplied eggs, then gave wrong calculation). Both failed, but SFT's reasoning was more elaborate even if wrong.
+**Analysis:** **SFT model made it WORSE!** Base model correctly solved this problem (18), but SFT model incorrectly multiplied by 7 (for no reason - the problem asks about daily amounts). This shows SFT can introduce new errors through hallucinated constraints.
 
 ### Case 2: Robe Fabric
 
@@ -345,7 +345,7 @@ In total, there are 2+1=3 bolts.
 **Ground Truth:** 70000
 
 **Base Model Answer:** -55500
-**SFT-3k Model Answer:** 149500
+**SFT-3k Model Answer:** -48000
 
 **Base Model Excerpt:**
 ```
@@ -356,17 +356,18 @@ Profit = $129,500 - $130,000 = -$5,500
 
 **SFT-3k Model Excerpt:**
 ```
-The house was worth 80,000 + 50,000 = $130,000 after the repairs.
-It's value went up 150% so it is now worth 130,000 * .15 = $19,500 more than what Josh paid.
-So his total gain is 19,500 + 80,000 + 50,000 = $149,500
+The new value of the house is 80,000 + 50,000 = $130,000
+This was an increase of 150% so that means it went up from 100% to 250%
+So now we have 130,000 * .25 = $32,000
+That means his profit is 32,000 - 80,000 = -$48,000
 ```
 
-**Analysis:** **Both models failed, but differently.** Base model applied percentage to total cost and used wrong percentage. SFT model also misinterpreted the 150% increase. Both struggled with the percentage calculation, showing this is a hard multi-step problem.
+**Analysis:** **Both models failed, differently.** Base model applied percentage to total cost and used wrong percentage. SFT model also misinterpreted the 150% calculation. Both struggled with the percentage calculation, showing this is a hard multi-step problem.
 
 **Summary:**
 - **Fixed:** 1/3 problems (robe fabric - language comprehension)
+- **Worse:** 1/3 problems (ducks - SFT introduced hallucinated constraint)
 - **Different error:** 1/3 problems (house flipping - still wrong but different approach)
-- **Same type of error:** 1/3 problems (ducks - both made arithmetic errors)
 
 ---
 
@@ -382,35 +383,32 @@ So his total gain is 19,500 + 80,000 + 50,000 = $149,500
 
 **Model Response:**
 ```
-The ducks produce 16 x 7 = 112 eggs.
-She eats 3 x 7 = 21 eggs for breakfast.
-Her friends take 4 x 7 = 28 eggs to bake muffins.
-So, she has 112 - 21 - 28 = 63 eggs left.
-Therefore, Janet makes 63 x $2 = $126 at the farmers' market.
+The total number of eggs laid is 16*7=112.
+She eats 3*7=21 eggs for breakfast.
+So she has 112-21=91 eggs left to sell.
+Therefore, Janet makes 91*2=$182 every day at the farmers' market.
 ```
 
 **Analysis:** The model incorrectly multiplied daily figures by 7 (for no reason - the problem asks about daily amounts). This shows:
 - **Problem comprehension issue:** Didn't understand the question asks about one day, not a week
-- **Hallucinated constraint:** Added "x 7" that wasn't in the problem
+- **Hallucinated constraint:** Added "× 7 days" that wasn't in the problem
 
-### Failure 2: Wendi's Chicken Feed (Multi-step Reasoning)
+### Failure 2: House Flipping (Multi-step Reasoning)
 
-**Error Type:** Multi-step reasoning breakdown
+**Error Type:** Multi-step reasoning breakdown with percentage confusion
 
 **Model Response:**
 ```
-In the morning, Wendi gives her flock of chickens 15 + 25 = 40 cups of feed.
-Since there are 3 meals per day, Wendi needs to give her flock of chickens 
-40 / 3 = 13.33 cups of feed for each chicken.
-If the size of Wendi's flock is 20 chickens, then she will need to give her 
-flock of chickens 13.33 x 20 = 266.67 cups of feed in total.
+The new value of the house is 80,000 + 50,000 = $130,000
+This was an increase of 150% on the original price so that means it's worth 130,000 / (1 + .15) = $114,285.71
+So his profit is 114,285.71 - 80,000 = $34,285.71
 ```
 
 **Analysis:** Multiple reasoning errors:
-1. **Incorrect aggregation:** Added 15 + 25 = 40, but this was already given as separate meals
-2. **Wrong division:** Divided by 3 meals instead of understanding the problem structure
-3. **Incorrect multiplication:** Multiplied per-chicken amount by flock size incorrectly
-4. **Lost track of goal:** Should calculate remaining feed needed (60 - 15 - 25 = 20)
+1. **Incorrect percentage interpretation:** Applied 150% incorrectly, tried to divide instead of multiply
+2. **Wrong calculation direction:** Divided by 1.15 instead of multiplying by 1.5
+3. **Incorrect base:** Used total cost instead of original price for percentage calculation
+4. **Lost track of goal:** Should calculate profit as (new value - total cost)
 
 **Persistent Error Types (ranked by frequency):**
 
@@ -431,28 +429,28 @@ flock of chickens 13.33 x 20 = 266.67 cups of feed in total.
 
 | Model | Zero-Shot Accuracy | 3-Shot Accuracy | Improvement (Δ) |
 |-------|-------------------|-----------------|-----------------|
-| Base Model | 38% | 39% | +1 pp |
-| SFT-3k Model | 41% | 44% | +3 pp |
+| Base Model | 38% | 32% | -6 pp |
+| SFT-3k Model | 39% | 51% | +12 pp |
 
 **Detailed Breakdown:**
 
 ### Base Model Performance:
 - **Zero-shot:** 38/100 correct
-- **3-shot:** 39/100 correct
-- **Improvement:** Minimal (+1 pp)
-- **Statistical significance:** With 100 samples, +1 pp is within expected variance (±3-4%)
+- **3-shot:** 32/100 correct
+- **Change:** Performance degraded (-6 pp)
+- **Analysis:** Few-shot examples confused the base model, which hasn't learned the reasoning patterns
 
 ### SFT-3k Model Performance:
-- **Zero-shot:** 41/100 correct
-- **3-shot:** 44/100 correct  
-- **Improvement:** Moderate (+3 pp)
-- **Statistical significance:** Small improvement, approaching significance
+- **Zero-shot:** 39/100 correct  
+- **3-shot:** 51/100 correct  
+- **Improvement:** Significant (+12 pp)
+- **Analysis:** SFT model benefited substantially from demonstrations
 
-**Observations:**
+**Key Observations:**
 
-1. **Few-shot helps SFT more than base:** The fine-tuned model benefits more from demonstrations (+3 pp vs +1 pp)
-2. **Base model nearly unaffected:** Adding demonstrations barely helps the untrained model
-3. **Combined gains are modest:** SFT-3k + few-shot achieves 44%, only 6 pp above baseline
+1. **Few-shot helps SFT, hurts base:** The fine-tuned model benefits significantly (+12 pp), while the base model performs worse (-6 pp)
+2. **Negative transfer for base model:** Adding demonstrations confused the untrained model
+3. **Combined gains are substantial:** SFT-3k + few-shot achieves 51%, a 13 pp improvement over baseline
 
 ---
 
@@ -462,25 +460,25 @@ flock of chickens 13.33 x 20 = 266.67 cups of feed in total.
 
 **Analysis:**
 
-### Effect on Base Model (+1 pp - Minimal)
+### Effect on Base Model (-6 pp - Negative Impact)
 
-**Does few-shot help?** Barely.
+**Does few-shot help?** No, it actually hurts.
 
-**Why it performs poorly with demonstrations:**
+**Why it performs worse with demonstrations:**
 
-1. **Unfamiliar format:** Base model hasn't seen GSM8K-style solutions during training, so demonstrations don't reinforce existing knowledge
-2. **No reasoning patterns:** Without prior exposure to step-by-step mathematical reasoning, the model can't effectively use demonstrations as templates
-3. **Attention dilution:** Demonstrations take up context window without providing actionable patterns the model can replicate
-4. **Format confusion:** Base model struggles to maintain the specific answer format shown in demonstrations
+1. **No reasoning foundation:** Base model lacks the underlying mathematical reasoning capabilities to utilize the demonstrations effectively
+2. **Attention dilution:** Demonstrations take up context window without providing actionable patterns the model can replicate
+3. **Format confusion:** Base model struggles to maintain the specific answer format shown in demonstrations
+4. **Negative transfer:** The few-shot examples may introduce reasoning patterns the base model isn't prepared to follow
 
-**Example of base model failing to use demonstrations:**
-Even with 3 examples showing step-by-step reasoning, the base model still makes similar errors (arithmetic, comprehension) as in zero-shot, suggesting it's not effectively learning from the demonstrations.
+**Example of base model regression:**
+Even with 3 examples showing step-by-step reasoning, the base model performs *worse* (32% vs 38%), suggesting demonstrations actively confuse rather than help.
 
-### Effect on SFT Models (+3 pp - Moderate)
+### Effect on SFT Models (+12 pp - Strong Positive Impact)
 
-**Does few-shot help?** Yes, moderately.
+**Does few-shot help?** Yes, significantly.
 
-**Why it helps more:**
+**Why it helps much more:**
 
 1. **Reinforces training:** Demonstrations reinforce the step-by-step reasoning patterns learned during SFT
 2. **Consistent format:** SFT model has learned to expect and produce structured solutions, so demonstrations align with its training
@@ -489,7 +487,7 @@ Even with 3 examples showing step-by-step reasoning, the base model still makes 
 
 ### Which Model Benefits Most?
 
-**SFT-3k benefits most (+3 pp vs +1 pp)**
+**SFT-3k benefits most (+12 pp vs -6 pp)**
 
 **Why:**
 
@@ -498,13 +496,7 @@ Even with 3 examples showing step-by-step reasoning, the base model still makes 
 3. **Pattern matching:** SFT model can better match current problem to demonstration patterns
 4. **Base model lacks foundation:** Without SFT, the base model lacks the foundational reasoning capabilities to effectively utilize demonstrations
 
-**Example comparison:**
-
-**Problem:** Multi-step percentage calculation
-- **Base + few-shot:** Still makes percentage interpretation errors (like confusing 150% with 15%)
-- **SFT-3k + few-shot:** Better at breaking down the problem into steps, though still makes some errors
-
-**Key insight:** Few-shot prompting is most effective when the model already has the foundational capabilities (from SFT) to utilize the demonstrations. It's not a replacement for training, but an enhancement.
+**Key insight:** Few-shot prompting is **most effective as an enhancement to already-trained models**, not as a standalone technique. The SFT model's 51% accuracy (vs baseline 38%) shows that **SFT + few-shot** is a powerful combination (+13 pp total improvement), while **base + few-shot** actually degrades performance.
 
 ---
 
@@ -540,7 +532,7 @@ Even with 3 examples showing step-by-step reasoning, the base model still makes 
 
 4. **Difficulty with 4+ step problems:** Performance degrades significantly on problems requiring more than 3-4 reasoning steps
 
-**Impact:** Most GSM8K problems require 2-8 steps. Without robust multi-step reasoning, accuracy caps around 40-50%.
+**Impact:** Most GSM8K problems require 2-8 steps. Without robust multi-step reasoning, accuracy caps around 39-50%.
 
 ### 3. Problem Comprehension (Moderate Limitation)
 
@@ -607,7 +599,7 @@ Even with 3 examples showing step-by-step reasoning, the base model still makes 
 - By sampling multiple solutions and taking majority vote, we can filter out random errors
 - This approach has been shown to improve performance on reasoning tasks (Wang et al., 2022)
 
-**Expected Improvement:** 5-10 percentage points over baseline SFT-3k (41% → 46-51%)
+**Expected Improvement:** 5-10 percentage points over baseline SFT-3k (39% → 44-49%)
 
 ### (b) Method
 
@@ -642,16 +634,16 @@ Even with 3 examples showing step-by-step reasoning, the base model still makes 
 
 | Method | Accuracy | Improvement |
 |--------|----------|-------------|
-| Baseline (SFT-3k, zero-shot) | 41% | - |
-| Self-Consistency (n=5, temp=0.7) | 50% | **+9 pp** |
+| Baseline (SFT-3k, zero-shot) | 39% | - |
+| Self-Consistency (n=5, temp=0.7) | 50% | **+11 pp** |
 
 **Detailed Results:**
 
 - **Total test questions:** 100
 - **Correct with self-consistency:** 50
-- **Correct with single sample:** 41
-- **Absolute improvement:** +9 percentage points
-- **Relative improvement:** 22% relative gain (9/41)
+- **Correct with single sample:** 39
+- **Absolute improvement:** +11 percentage points
+- **Relative improvement:** 28% relative gain (11/39)
 
 **Example of Successful Self-Consistency:**
 
@@ -727,7 +719,7 @@ Two samples made errors (used wrong overtime rate or calculation)
 
 **Conclusion:**
 
-Self-consistency with majority voting is an effective inference-time technique that improved accuracy by 9 percentage points (41% → 50%). However, it:
+Self-consistency with majority voting is an effective inference-time technique that improved accuracy by 11 percentage points (39% → 50%). However, it:
 - **Cannot fix systematic reasoning gaps** (requires better training)
 - **Has computational cost** (5× inference time)
 - **Shows diminishing returns** (correct answer must appear in samples to help)
