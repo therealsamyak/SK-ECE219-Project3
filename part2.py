@@ -466,11 +466,7 @@ Instruction: {instruction}
 Generate Python code to perform the instruction. Use only pandas (pd) and numpy (np).
 The DataFrame is available as 'df'.
 
-CRITICAL RULES:
-1. Generate ONLY executable Python code - no answer format strings like @name[value]
-2. Use print() to output results
-3. pd, np, and df are already available in namespace. DO NOT import them
-4. DO NOT include any text outside the code
+IMPORTANT: pd, np, and df are already available in namespace. DO NOT import them.
 
 Code:"""
 
@@ -557,7 +553,7 @@ Provide:
 
         print("[Observer] Generating structured observation...")
         prompt = self._format_prompt(prompt)
-        result_json = self.outlines_model(prompt, ObservationOutput, max_new_tokens=500)
+        result_json = self.outlines_model(prompt, ObservationOutput, max_new_tokens=200)
         result = json.loads(result_json)
 
         print(f"[Observer]   Summary: {result['summary'][:100]}...")
@@ -622,18 +618,8 @@ Respond with a structured output containing:
 
         print("[Planner] Generating structured plan...")
         prompt = self._format_prompt(prompt)
-        result_json = self.outlines_model(prompt, PlannerOutput, max_new_tokens=800)
-        try:
-            result = json.loads(result_json)
-        except json.JSONDecodeError as e:
-            print(f"[Planner] JSON decode error: {e}")
-            print(f"[Planner] Raw JSON: {result_json[:500]}")
-            # Return a safe default
-            result = {
-                "thought": "Failed to parse planner output, proceeding with default action",
-                "is_done": False,
-                "response": "Analyze the DataFrame and compute the requested statistics",
-            }
+        result_json = self.outlines_model(prompt, PlannerOutput, max_new_tokens=300)
+        result = json.loads(result_json)
 
         print(f"[Planner]   Thought: {result['thought'][:100]}...")
         print(f"[Planner]   is_done: {result['is_done']}")
@@ -778,7 +764,7 @@ Respond with a structured output containing:
         tokenize=False,
         add_generation_prompt=True,
     )
-    result_json = outlines_model(full_prompt, PlannerOutput, max_new_tokens=400)
+    result_json = outlines_model(full_prompt, PlannerOutput, max_new_tokens=200)
     result = json.loads(result_json)
     return result
 
