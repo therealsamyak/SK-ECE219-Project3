@@ -6,7 +6,7 @@
     {
       "prompt": "The user asks: What is the average age of passengers?",
       "output": {
-        "thought": "To find the average age of passengers, I need access to a dataset containing passenger age information.",
+        "thought": "To calculate the average age of passengers, I need access to a dataset containing passenger age values.",
         "is_done": false,
         "response": "Retrieve the passenger age dataset and compute the mean age."
       }
@@ -30,15 +30,15 @@
     {
       "prompt": "The user asks: Show me the distribution of passenger classes.",
       "output": {
-        "thought": "To show the distribution of passenger classes, I need to analyze the 'Pclass' column from the dataset.",
+        "thought": "To show the distribution of passenger classes, I need to access the dataset and count how many passengers belong to each class (e.g., 1st, 2nd, 3rd).",
         "is_done": false,
-        "response": "Load the dataset and examine the 'Pclass' column to visualize and display the distribution of passenger classes."
+        "response": "Load the dataset and count the number of passengers in each class (e.g., Pclass). Then present the distribution in a clear, tabular or visual format."
       }
     },
     {
       "prompt": "Calculate the mean fare: @mean_fare[32.20] (final answer)",
       "output": {
-        "thought": "The mean fare is already provided as 32.20, so no further calculation is needed.",
+        "thought": "The mean fare is already provided as 32.20. No further calculation or data retrieval is needed.",
         "is_done": true,
         "response": "}"
       }

@@ -1,0 +1,74 @@
+{
+  "accuracy": 0.6,
+  "correct": 6,
+  "total": 10,
+  "results": [
+    {
+      "task_id": 0,
+      "is_correct": false,
+      "final_answer": "@mean_fare[8.47]",
+      "ground_truth": [["mean_fare", "34.65"]]
+    },
+    {
+      "task_id": 5,
+      "is_correct": true,
+      "final_answer": "@correlation_coefficient[0.21]",
+      "ground_truth": [["correlation_coefficient", "0.21"]]
+    },
+    {
+      "task_id": 9,
+      "is_correct": false,
+      "final_answer": "@mean_close_price[584.80]",
+      "ground_truth": [["mean_close_price", "570.68"]]
+    },
+    {
+      "task_id": 10,
+      "is_correct": true,
+      "final_answer": "@is_normal[no]",
+      "ground_truth": [["is_normal", "no"]]
+    },
+    {
+      "task_id": 14,
+      "is_correct": false,
+      "final_answer": "@price_range_mean[16.50] @price_range_median[15.75] @price_range_std_dev[8.23]",
+      "ground_truth": [
+        ["price_range_mean", "16.65"],
+        ["price_range_std_dev", "6.72"],
+        ["price_range_median", "15.67"]
+      ]
+    },
+    {
+      "task_id": 18,
+      "is_correct": true,
+      "final_answer": "@mean_mar_2019[171.44] @sd_mar_2019[188.25]",
+      "ground_truth": [
+        ["mean_mar_2019", "171.44"],
+        ["sd_mar_2019", "188.25"]
+      ]
+    },
+    {
+      "task_id": 24,
+      "is_correct": true,
+      "final_answer": "@mean_age[39.24]",
+      "ground_truth": [["mean_age", "39.21"]]
+    },
+    {
+      "task_id": 25,
+      "is_correct": true,
+      "final_answer": "@bmi_distribution[normal]",
+      "ground_truth": [["bmi_distribution", "normal"]]
+    },
+    {
+      "task_id": 26,
+      "is_correct": false,
+      "final_answer": "@correlation_coefficient[0.26]",
+      "ground_truth": [["correlation_coefficient", "0.07"]]
+    },
+    {
+      "task_id": 55,
+      "is_correct": true,
+      "final_answer": "@mean_cases[2081990]",
+      "ground_truth": [["mean_cases", "2081990"]]
+    }
+  ]
+}

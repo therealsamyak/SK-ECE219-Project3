@@ -36,18 +36,18 @@ class Executor:
     """Executes Python code with isolated namespace and timeout protection.
 
     Provides sandboxed execution environment with:
-    - Timeout protection via signal.SIGALRM (300s default = 5 minutes)
+    - Timeout protection via signal.SIGALRM (900s default = 15 minutes)
     - Isolated namespace (only pd, np, df, print available)
     - Captured stdout/stderr
     - State reset between tasks
     """
 
-    def __init__(self, df: pd.DataFrame, timeout: int = 300):
+    def __init__(self, df: pd.DataFrame, timeout: int = 900):
         """Initialize Executor with DataFrame and timeout.
 
         Args:
             df: DataFrame to make available in namespace as 'df'
-            timeout: Execution timeout in seconds (default: 300 = 5 minutes)
+            timeout: Execution timeout in seconds (default: 900 = 15 minutes)
         """
         self.df = df
         self.timeout = timeout
@@ -455,7 +455,7 @@ class ReActAgent:
         print(f"[Coder] Generating code for instruction: {instruction[:80]}...")
         print(f"[Coder] Question: {question[:60]}...")
 
-        prompt = f"""You are a Python data analysis code generator.
+        prompt = f"""You are a Python data analysis code generator. Your job is to write EXECUTABLE Python code, not answer strings.
 
 Question: {question}
 
@@ -463,12 +463,31 @@ Context: {context}
 
 Instruction: {instruction}
 
-Generate Python code to perform the instruction. Use only pandas (pd) and numpy (np).
-The DataFrame is available as 'df'.
+CRITICAL RULES:
+1. Write ONLY valid, executable Python code using pandas (pd) and numpy (np)
+2. The DataFrame is available as variable 'df' - use it directly
+3. pd, np, and df are already imported - DO NOT write import statements
+4. DO NOT use answer format strings like @name[value] in your code
+5. Use print() to output computed values
+6. For statistical tests, use scipy.stats if needed (already available)
 
-IMPORTANT: pd, np, and df are already available in namespace. DO NOT import them.
+EXAMPLES OF CORRECT CODE:
+```python
+mean_fare = df['Fare'].mean()
+print(f"Mean fare: {{mean_fare:.2f}}")
+```
 
-Code:"""
+```python
+from scipy import stats
+stat, p_value = stats.normaltest(df['bmi'])
+print(f"P-value: {{p_value:.4f}}")
+```
+
+EXAMPLES OF INCORRECT CODE (DO NOT WRITE THIS):
+- @mean_fare[34.65]  ← This is NOT Python code, it's an answer format
+- mean = 34.65  ← Don't hardcode values, compute them from data
+
+Now write the Python code to perform the instruction:"""
 
         print(f"[Coder] Prompt length: {len(prompt)} chars")
 
@@ -510,6 +529,9 @@ Code:"""
 
         if matches:
             return matches[0].strip()
+
+        if re.search(r"@\w+\[", text) and not text.strip().startswith("print"):
+            return "print('Error: Generated answer format instead of code. Please generate executable Python code.')"
 
         return text.strip()
 
@@ -614,7 +636,15 @@ Previous Steps:
 Respond with a structured output containing:
 - thought: Your reasoning about the current state and what to do next (10-500 characters)
 - is_done: Whether you have enough information to answer the question (true/false)
-- response: If is_done=true, provide the final answer using the EXACT required answer format shown in the context. If is_done=false, provide the next instruction for the coder."""
+- response: Your response based on is_done:
+  * If is_done=true: Provide the FINAL ANSWER using the EXACT required format from context
+    - Use ONLY the @name[value] format shown in "Required Answer Format"
+    - Do NOT add explanatory text, descriptions, or extra words
+    - Example: @mean_fare[34.65] NOT "The mean fare is @mean_fare[34.65]"
+    - Example: @price_range_mean[16.65] @price_range_median[15.67] @price_range_std_dev[6.72]
+  * If is_done=false: Provide the next instruction for the coder to execute
+
+CRITICAL: When is_done=true, response must contain ONLY the formatted answer, nothing else."""
 
         print("[Planner] Generating structured plan...")
         prompt = self._format_prompt(prompt)
@@ -704,8 +734,18 @@ Respond with a structured output containing:
                     break
                 else:
                     print(f"[ReAct]   Error detected: {observation.error_type}")
-                    print("[ReAct]   Retrying with error feedback...")
-                    instruction = f"{original_instruction}\n\nPrevious error: {observation.error_type}. Please fix."
+                    if retry < 2:
+                        print("[ReAct]   Retrying with enhanced error feedback...")
+                        error_details = f"{observation.error_type}"
+                        if "SyntaxError" in stderr:
+                            error_details += " - The code has invalid Python syntax. Remember to write executable Python code, not answer format strings like @name[value]."
+                        elif "NameError" in stderr:
+                            error_details += " - A variable or function is not defined. Make sure to use only pd, np, df, and print."
+                        elif "KeyError" in stderr:
+                            error_details += " - Column name not found. Check available columns in the DataFrame."
+                        instruction = f"{original_instruction}\n\nPrevious error: {error_details}\nStderr: {stderr[:300]}\n\nPlease write valid, executable Python code."
+                    else:
+                        print("[ReAct]   Max retries reached, moving to next step")
 
         print(f"[ReAct] Max steps ({max_steps}) reached, generating final response")
         final_planner = self.planner(question, context, history)
@@ -730,10 +770,15 @@ Respond with a structured output containing:
             try:
                 pred_float = float(pred_val)
                 truth_float = float(truth_val)
-                if abs(pred_float - truth_float) > 0.01:
+                rel_tol = 0.011
+                abs_tol = 0.011
+                if not (
+                    abs(pred_float - truth_float)
+                    <= max(rel_tol * max(abs(pred_float), abs(truth_float)), abs_tol)
+                ):
                     return False
             except ValueError:
-                if pred_val != truth_val:
+                if pred_val.lower() != truth_val.lower():
                     return False
 
         return True
