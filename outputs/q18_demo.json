@@ -1,0 +1,47 @@
+{
+  "model": "Qwen/Qwen3-4B-Instruct",
+  "quantization": "4-bit NF4",
+  "num_prompts": 5,
+  "prompts": [
+    {
+      "prompt": "The user asks: What is the average age of passengers?",
+      "output": {
+        "thought": "To find the average age of passengers, I need access to a dataset containing passenger age information.",
+        "is_done": false,
+        "response": "Retrieve the passenger age dataset and compute the mean age."
+      }
+    },
+    {
+      "prompt": "The user asks: How many passengers survived?",
+      "output": {
+        "thought": "To determine the number of passengers who survived, I need access to a dataset containing passenger survival information, such as the Titanic dataset.",
+        "is_done": false,
+        "response": "Fetch the passenger survival data (e.g., from a dataset like Titanic) and count the number of survivors."
+      }
+    },
+    {
+      "prompt": "The user asks: What is the correlation between age and fare?",
+      "output": {
+        "thought": "To determine the correlation between age and fare, I need access to a dataset containing both age and fare values.",
+        "is_done": false,
+        "response": "Retrieve the dataset containing age and fare columns, then compute the Pearson correlation coefficient between age and fare."
+      }
+    },
+    {
+      "prompt": "The user asks: Show me the distribution of passenger classes.",
+      "output": {
+        "thought": "To show the distribution of passenger classes, I need to analyze the 'Pclass' column from the dataset.",
+        "is_done": false,
+        "response": "Load the dataset and examine the 'Pclass' column to visualize and display the distribution of passenger classes."
+      }
+    },
+    {
+      "prompt": "Calculate the mean fare: @mean_fare[32.20] (final answer)",
+      "output": {
+        "thought": "The mean fare is already provided as 32.20, so no further calculation is needed.",
+        "is_done": true,
+        "response": "}"
+      }
+    }
+  ]
+}

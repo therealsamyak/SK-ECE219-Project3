@@ -1,0 +1,21 @@
+{
+  "representation": "Multi-part answers use @name[value] slots where 'name' identifies the answer part and 'value' is the expected value. For example, @mean_fare_child[34.56] and @mean_fare_adult[42.78] represent two separate values for different age groups.",
+  "examples": [
+    {
+      "id": 6,
+      "question": "Create a new column called \"AgeGroup\" that categorizes the passengers into four age groups: 'Child' (0-12 years old), 'Teenager' (13-19 years old), 'Adult' (20-59 years old), and 'Elderly' (60 years old and above). Then, calculate the mean fare for each age group.",
+      "format": "@mean_fare_child[mean_fare], @mean_fare_teenager[mean_fare], @mean_fare_adult[mean_fare], @mean_fare_elderly[mean_fare], where \"mean_fare\" is a float number rounded to 2 decimal places.",
+      "file_name": "test_ave.csv",
+      "level": "medium",
+      "num_slots": 4
+    },
+    {
+      "id": 8,
+      "question": "Perform a distribution analysis on the 'Fare' column for each passenger class ('Pclass') separately. Calculate the mean, median, and standard deviation of the fare for each class. Interpret the results in terms of the different passenger classes.",
+      "format": "@mean_fare_class1[mean_fare], @median_fare_class1[median_fare], @std_dev_fare_class1[std_dev], @mean_fare_class2[mean_fare], @median_fare_class2[median_fare], @std_dev_fare_class2[std_dev], @mean_fare_class3[mean_fare], @median_fare_class3[median_fare], @std_dev_fare_class3[std_dev], where \"mean_fare\", \"median_fare\", and \"std_dev\" are statistical measures in float format rounded to 2 decimal places.",
+      "file_name": "test_ave.csv",
+      "level": "medium",
+      "num_slots": 9
+    }
+  ]
+}

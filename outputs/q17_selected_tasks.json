@@ -1,0 +1,72 @@
+[
+  {
+    "id": 0,
+    "question": "Calculate the mean fare paid by the passengers.",
+    "concepts": ["Summary Statistics"],
+    "file_name": "test_ave.csv",
+    "level": "easy"
+  },
+  {
+    "id": 5,
+    "question": "Generate a new feature called \"FamilySize\" by summing the \"SibSp\" and \"Parch\" columns. Then, calculate the Pearson correlation coefficient (r) between the \"FamilySize\" and \"Fare\" columns.",
+    "concepts": ["Feature Engineering", "Correlation Analysis"],
+    "file_name": "test_ave.csv",
+    "level": "medium"
+  },
+  {
+    "id": 9,
+    "question": "Calculate the mean value of the \"Close Price\" column.",
+    "concepts": ["Summary Statistics"],
+    "file_name": "GODREJIND.csv",
+    "level": "easy"
+  },
+  {
+    "id": 10,
+    "question": "Check if the \"Total Traded Quantity\" column adheres to a normal distribution.",
+    "concepts": ["Distribution Analysis"],
+    "file_name": "GODREJIND.csv",
+    "level": "easy"
+  },
+  {
+    "id": 14,
+    "question": "Create a new feature called \"Price Range\" which represents the difference between the \"High Price\" and \"Low Price\" for each row. Calculate the mean, median, and standard deviation of this new feature.",
+    "concepts": ["Feature Engineering", "Summary Statistics"],
+    "file_name": "GODREJIND.csv",
+    "level": "medium"
+  },
+  {
+    "id": 18,
+    "question": "Calculate the mean and standard deviation of the \"Mar.2019\" column.",
+    "concepts": ["Summary Statistics"],
+    "file_name": "unemployement_industry.csv",
+    "level": "easy"
+  },
+  {
+    "id": 24,
+    "question": "Calculate the mean age of the individuals in the dataset.",
+    "concepts": ["Summary Statistics"],
+    "file_name": "insurance.csv",
+    "level": "easy"
+  },
+  {
+    "id": 25,
+    "question": "Check if the distribution of BMI values in the dataset follows a normal distribution.",
+    "concepts": ["Distribution Analysis"],
+    "file_name": "insurance.csv",
+    "level": "easy"
+  },
+  {
+    "id": 26,
+    "question": "Calculate the correlation coefficient between the charges incurred by individuals and the number of children they have.",
+    "concepts": ["Correlation Analysis"],
+    "file_name": "insurance.csv",
+    "level": "easy"
+  },
+  {
+    "id": 55,
+    "question": "What is the mean number of cases recorded across all countries and years?",
+    "concepts": ["Summary Statistics"],
+    "file_name": "estimated_numbers.csv",
+    "level": "easy"
+  }
+]

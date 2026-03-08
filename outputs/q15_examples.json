@@ -1,0 +1,188 @@
+[
+  {
+    "id": 142,
+    "file_name": "election2016.csv",
+    "shape": [3141, 10],
+    "columns": [
+      "votes_dem",
+      "votes_gop",
+      "total_votes",
+      "per_dem",
+      "per_gop",
+      "diff",
+      "per_point_diff",
+      "state_abbr",
+      "county_name",
+      "combined_fips"
+    ],
+    "dtypes": {
+      "votes_dem": "float64",
+      "votes_gop": "float64",
+      "total_votes": "float64",
+      "per_dem": "float64",
+      "per_gop": "float64",
+      "diff": "str",
+      "per_point_diff": "str",
+      "state_abbr": "str",
+      "county_name": "str",
+      "combined_fips": "int64"
+    },
+    "head": [
+      {
+        "votes_dem": 93003.0,
+        "votes_gop": 130413.0,
+        "total_votes": 246588.0,
+        "per_dem": 0.37715947248,
+        "per_gop": 0.528870018006,
+        "diff": "37,410",
+        "per_point_diff": "15.17%",
+        "state_abbr": "AK",
+        "county_name": "Alaska",
+        "combined_fips": 2013
+      },
+      {
+        "votes_dem": 93003.0,
+        "votes_gop": 130413.0,
+        "total_votes": 246588.0,
+        "per_dem": 0.37715947248,
+        "per_gop": 0.528870018006,
+        "diff": "37,410",
+        "per_point_diff": "15.17%",
+        "state_abbr": "AK",
+        "county_name": "Alaska",
+        "combined_fips": 2016
+      },
+      {
+        "votes_dem": 93003.0,
+        "votes_gop": 130413.0,
+        "total_votes": 246588.0,
+        "per_dem": 0.37715947248,
+        "per_gop": 0.528870018006,
+        "diff": "37,410",
+        "per_point_diff": "15.17%",
+        "state_abbr": "AK",
+        "county_name": "Alaska",
+        "combined_fips": 2020
+      }
+    ],
+    "question": "Question 2: Is there a relationship between the difference in votes received by the Democratic and Republican parties and their percentage point difference?"
+  },
+  {
+    "id": 24,
+    "file_name": "insurance.csv",
+    "shape": [1338, 7],
+    "columns": ["age", "sex", "bmi", "children", "smoker", "region", "charges"],
+    "dtypes": {
+      "age": "int64",
+      "sex": "str",
+      "bmi": "float64",
+      "children": "int64",
+      "smoker": "str",
+      "region": "str",
+      "charges": "float64"
+    },
+    "head": [
+      {
+        "age": 19,
+        "sex": "female",
+        "bmi": 27.9,
+        "children": 0,
+        "smoker": "yes",
+        "region": "southwest",
+        "charges": 16884.924
+      },
+      {
+        "age": 18,
+        "sex": "male",
+        "bmi": 33.77,
+        "children": 1,
+        "smoker": "no",
+        "region": "southeast",
+        "charges": 1725.5523
+      },
+      {
+        "age": 28,
+        "sex": "male",
+        "bmi": 33.0,
+        "children": 3,
+        "smoker": "no",
+        "region": "southeast",
+        "charges": 4449.462
+      }
+    ],
+    "question": "Calculate the mean age of the individuals in the dataset."
+  },
+  {
+    "id": 429,
+    "file_name": "cost_data_with_errors.csv",
+    "shape": [818, 11],
+    "columns": [
+      "Unnamed: 0",
+      "name",
+      "dates_active",
+      "max_storm_cat",
+      "max_sust_wind",
+      "min_p",
+      "areas_affected",
+      "damage_USD",
+      "deaths",
+      "year",
+      "damage_imputed"
+    ],
+    "dtypes": {
+      "Unnamed: 0": "int64",
+      "name": "str",
+      "dates_active": "str",
+      "max_storm_cat": "int64",
+      "max_sust_wind": "float64",
+      "min_p": "float64",
+      "areas_affected": "str",
+      "damage_USD": "float64",
+      "deaths": "float64",
+      "year": "int64",
+      "damage_imputed": "int64"
+    },
+    "head": [
+      {
+        "Unnamed: 0": 0,
+        "name": "ARLENE",
+        "dates_active": "April\u00a019\u00a0\u2013 21",
+        "max_storm_cat": 1,
+        "max_sust_wind": 43.4488,
+        "min_p": 990.0,
+        "areas_affected": NaN,
+        "damage_USD": 0.0,
+        "deaths": 0.0,
+        "year": 2017,
+        "damage_imputed": 0
+      },
+      {
+        "Unnamed: 0": 1,
+        "name": "BRET",
+        "dates_active": "June\u00a019\u00a0\u2013 20",
+        "max_storm_cat": 1,
+        "max_sust_wind": 43.4488,
+        "min_p": 1007.0,
+        "areas_affected": "Guyana, Venezuela, Trinidad and Tobago, Windward Islands",
+        "damage_USD": 3000000.0,
+        "deaths": 2.0,
+        "year": 2017,
+        "damage_imputed": 0
+      },
+      {
+        "Unnamed: 0": 2,
+        "name": "CINDY",
+        "dates_active": "June\u00a020\u00a0\u2013 23",
+        "max_storm_cat": 1,
+        "max_sust_wind": 52.13856,
+        "min_p": 991.0,
+        "areas_affected": "Honduras, Belize, Cayman Islands, Yucat\u00e1n Peninsula, Cuba, Southern United States, Eastern United States",
+        "damage_USD": 25000000.0,
+        "deaths": 2.0,
+        "year": 2017,
+        "damage_imputed": 0
+      }
+    ],
+    "question": "2. Is there a correlation between the maximum storm category achieved by a storm and the recorded damage in USD? If so, what is the strength and direction of the correlation?"
+  }
+]
