@@ -9,11 +9,14 @@
 **Results:**
 
 ### Dataset Statistics
+
 - **Number of Questions:** 257
 - **Number of Labels:** 257
 
 ### Question Record Structure
+
 Each question record contains the following keys:
+
 - `id`: Unique identifier for the question
 - `question`: Natural language question about the data
 - `concepts`: List of data analysis concepts involved
@@ -23,6 +26,7 @@ Each question record contains the following keys:
 - `constraints`: Additional requirements (rounding, filtering, etc.)
 
 **Example Question Record:**
+
 ```json
 {
   "id": 0,
@@ -36,7 +40,9 @@ Each question record contains the following keys:
 ```
 
 ### Label Record Structure
+
 Each label record contains:
+
 - `id`: Question ID this label corresponds to
 - `common_answers`: List of [name, value] pairs representing the ground truth
 
@@ -59,6 +65,7 @@ Three random questions were sampled (seed=42):
 **Question:** "Is there a relationship between the difference in votes received by the Democratic and Republican parties and their percentage point difference?"
 
 **Sample Data (First 3 rows):**
+
 ```
 votes_dem  votes_gop  total_votes  per_dem    per_gop    diff    per_point_diff  state_abbr
 93003.0    130413.0   246588.0     0.377      0.529      37,410  15.17%          AK
@@ -73,6 +80,7 @@ votes_dem  votes_gop  total_votes  per_dem    per_gop    diff    per_point_diff 
 **Question:** "Calculate the mean age of the individuals in the dataset."
 
 **Sample Data (First 3 rows):**
+
 ```
 age  sex     bmi   children  smoker  region     charges
 19   female  27.9  0         yes     southwest  16884.924
@@ -89,6 +97,7 @@ age  sex     bmi   children  smoker  region     charges
 **Question:** "Is there a correlation between the maximum storm category achieved by a storm and the recorded damage in USD?"
 
 **Sample Data (First 3 rows):**
+
 ```
 name    dates_active          max_storm_cat  max_sust_wind  damage_USD   deaths
 ARLENE  April 19 – 21         1              43.45          0.0          0.0
@@ -110,8 +119,9 @@ BRET    June 19 – 20          1              43.45          3000000.0    2.0
 **Question:** "Create a new column called 'AgeGroup' that categorizes the passengers into four age groups: 'Child' (0-12 years old), 'Teenager' (13-19 years old), 'Adult' (20-59 years old), and 'Elderly' (60 years old and above). Then, calculate the mean fare for each age group."
 
 **Format:**
+
 ```
-@mean_fare_child[mean_fare], @mean_fare_teenager[mean_fare], 
+@mean_fare_child[mean_fare], @mean_fare_teenager[mean_fare],
 @mean_fare_adult[mean_fare], @mean_fare_elderly[mean_fare]
 ```
 
@@ -124,11 +134,12 @@ BRET    June 19 – 20          1              43.45          3000000.0    2.0
 **Question:** "Perform a distribution analysis on the 'Fare' column for each passenger class ('Pclass') separately. Calculate the mean, median, and standard deviation of the fare for each class."
 
 **Format:**
+
 ```
-@mean_fare_class1[mean_fare], @median_fare_class1[median_fare], 
-@std_dev_fare_class1[std_dev], @mean_fare_class2[mean_fare], 
-@median_fare_class2[median_fare], @std_dev_fare_class2[std_dev], 
-@mean_fare_class3[mean_fare], @median_fare_class3[median_fare], 
+@mean_fare_class1[mean_fare], @median_fare_class1[median_fare],
+@std_dev_fare_class1[std_dev], @mean_fare_class2[mean_fare],
+@median_fare_class2[median_fare], @std_dev_fare_class2[std_dev],
+@mean_fare_class3[mean_fare], @median_fare_class3[median_fare],
 @std_dev_fare_class3[std_dev]
 ```
 
@@ -139,6 +150,7 @@ BRET    June 19 – 20          1              43.45          3000000.0    2.0
 ### How Multi-Part Answers Are Represented
 
 **Dataset Representation:**
+
 - Multi-part answers use multiple `@name[value]` slots in the format field
 - Each slot has a unique identifier (e.g., `mean_fare_child`, `mean_fare_adult`)
 - The ground truth labels contain a list of [name, value] pairs for all slots
@@ -163,21 +175,22 @@ BRET    June 19 – 20          1              43.45          3000000.0    2.0
    - Single incorrect slot makes the entire answer wrong
 
 **Implementation:**
+
 ```python
 def evaluate_answer(predicted: str, ground_truth: list) -> bool:
     # Extract predicted slots
     predicted_dict = extract_slots(predicted)
     ground_truth_dict = dict(ground_truth)
-    
+
     # Check all slots present
     if set(predicted_dict.keys()) != set(ground_truth_dict.keys()):
         return False
-    
+
     # Compare each value
     for name in predicted_dict:
         if not values_match(predicted_dict[name], ground_truth_dict[name]):
             return False
-    
+
     return True
 ```
 
@@ -191,25 +204,27 @@ def evaluate_answer(predicted: str, ground_truth: list) -> bool:
 
 The following 10 tasks were selected for evaluation:
 
-| ID | Question | Concepts | File | Level |
-|----|----------|----------|------|-------|
-| 0 | Calculate the mean fare paid by the passengers. | Summary Statistics | test_ave.csv | Easy |
-| 5 | Generate a new feature called "FamilySize" by summing "SibSp" and "Parch". Calculate Pearson correlation between "FamilySize" and "Fare". | Feature Engineering, Correlation Analysis | test_ave.csv | Medium |
-| 9 | Calculate the mean value of the "Close Price" column. | Summary Statistics | GODREJIND.csv | Easy |
-| 10 | Check if the "Total Traded Quantity" column adheres to a normal distribution. | Distribution Analysis | GODREJIND.csv | Easy |
-| 14 | Create a new feature "Price Range" (High Price - Low Price). Calculate mean, median, and standard deviation. | Feature Engineering, Summary Statistics | GODREJIND.csv | Medium |
-| 18 | Calculate the mean and standard deviation of the "Mar.2019" column. | Summary Statistics | unemployement_industry.csv | Easy |
-| 24 | Calculate the mean age of the individuals in the dataset. | Summary Statistics | insurance.csv | Easy |
-| 25 | Check if the distribution of BMI values follows a normal distribution. | Distribution Analysis | insurance.csv | Easy |
-| 26 | Calculate the correlation coefficient between charges and number of children. | Correlation Analysis | insurance.csv | Easy |
-| 55 | What is the mean number of cases recorded across all countries and years? | Summary Statistics | estimated_numbers.csv | Easy |
+| ID  | Question                                                                                                                                  | Concepts                                  | File                       | Level  |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | -------------------------- | ------ |
+| 0   | Calculate the mean fare paid by the passengers.                                                                                           | Summary Statistics                        | test_ave.csv               | Easy   |
+| 5   | Generate a new feature called "FamilySize" by summing "SibSp" and "Parch". Calculate Pearson correlation between "FamilySize" and "Fare". | Feature Engineering, Correlation Analysis | test_ave.csv               | Medium |
+| 9   | Calculate the mean value of the "Close Price" column.                                                                                     | Summary Statistics                        | GODREJIND.csv              | Easy   |
+| 10  | Check if the "Total Traded Quantity" column adheres to a normal distribution.                                                             | Distribution Analysis                     | GODREJIND.csv              | Easy   |
+| 14  | Create a new feature "Price Range" (High Price - Low Price). Calculate mean, median, and standard deviation.                              | Feature Engineering, Summary Statistics   | GODREJIND.csv              | Medium |
+| 18  | Calculate the mean and standard deviation of the "Mar.2019" column.                                                                       | Summary Statistics                        | unemployement_industry.csv | Easy   |
+| 24  | Calculate the mean age of the individuals in the dataset.                                                                                 | Summary Statistics                        | insurance.csv              | Easy   |
+| 25  | Check if the distribution of BMI values follows a normal distribution.                                                                    | Distribution Analysis                     | insurance.csv              | Easy   |
+| 26  | Calculate the correlation coefficient between charges and number of children.                                                             | Correlation Analysis                      | insurance.csv              | Easy   |
+| 55  | What is the mean number of cases recorded across all countries and years?                                                                 | Summary Statistics                        | estimated_numbers.csv      | Easy   |
 
 **Task Distribution:**
+
 - **Easy:** 7 tasks (70%)
 - **Medium:** 3 tasks (30%)
 - **Hard:** 0 tasks
 
 **Concept Coverage:**
+
 - Summary Statistics: 5 tasks
 - Correlation Analysis: 2 tasks
 - Distribution Analysis: 2 tasks
@@ -226,11 +241,13 @@ The following 10 tasks were selected for evaluation:
 **Results:**
 
 ### Model Configuration
+
 - **Model:** Qwen/Qwen3-4B-Instruct
 - **Quantization:** 4-bit NF4
 - **Structured Output Method:** Outlines with Pydantic schema
 
 ### Pydantic Schema
+
 ```python
 class PlannerOutput(BaseModel):
     thought: str = Field(min_length=10, max_length=500)
@@ -243,6 +260,7 @@ class PlannerOutput(BaseModel):
 **Prompt 1:** "The user asks: What is the average age of passengers?"
 
 **Output:**
+
 ```json
 {
   "thought": "To calculate the average age of passengers, I need access to a dataset containing passenger age values.",
@@ -258,6 +276,7 @@ class PlannerOutput(BaseModel):
 **Prompt 2:** "The user asks: How many passengers survived?"
 
 **Output:**
+
 ```json
 {
   "thought": "To determine the number of passengers who survived, I need access to a dataset containing passenger survival information, such as the Titanic dataset.",
@@ -273,6 +292,7 @@ class PlannerOutput(BaseModel):
 **Prompt 3:** "The user asks: What is the correlation between age and fare?"
 
 **Output:**
+
 ```json
 {
   "thought": "To determine the correlation between age and fare, I need access to a dataset containing both age and fare values.",
@@ -288,6 +308,7 @@ class PlannerOutput(BaseModel):
 **Prompt 4:** "The user asks: Show me the distribution of passenger classes."
 
 **Output:**
+
 ```json
 {
   "thought": "To show the distribution of passenger classes, I need to access the dataset and count how many passengers belong to each class (e.g., 1st, 2nd, 3rd).",
@@ -303,6 +324,7 @@ class PlannerOutput(BaseModel):
 **Prompt 5:** "Calculate the mean fare: @mean_fare[32.20] (final answer)"
 
 **Output:**
+
 ```json
 {
   "thought": "The mean fare is already provided as 32.20. No further calculation or data retrieval is needed.",
@@ -318,6 +340,7 @@ class PlannerOutput(BaseModel):
 ### Key Observations
 
 **Successes:**
+
 1. ✅ All 5 outputs are valid JSON that parse into PlannerOutput schema
 2. ✅ No try/except fallbacks needed - Outlines guarantees structural validity
 3. ✅ Planner correctly distinguishes between tasks requiring computation (`is_done=false`) vs. completed tasks (`is_done=true`)
@@ -325,6 +348,7 @@ class PlannerOutput(BaseModel):
 5. ✅ Responses are always non-empty (min_length=1 constraint enforced)
 
 **Limitations:**
+
 1. ⚠️ Semantic correctness not guaranteed (e.g., response="}" in prompt 5)
 2. ⚠️ Response quality depends on prompt clarity and model capability
 
@@ -358,26 +382,26 @@ Without structured output, large-scale pipelines would spend significant enginee
 
 ### Overall Performance
 
-| Metric | Value |
-|--------|-------|
-| **Accuracy** | 60% (6/10 correct) |
-| **Correct** | 6 tasks |
-| **Incorrect** | 4 tasks |
+| Metric        | Value              |
+| ------------- | ------------------ |
+| **Accuracy**  | 60% (6/10 correct) |
+| **Correct**   | 6 tasks            |
+| **Incorrect** | 4 tasks            |
 
 ### Per-Task Results
 
-| Task ID | Question | Result | Predicted | Ground Truth |
-|---------|----------|--------|-----------|--------------|
-| 0 | Mean fare (Titanic) | ❌ | @mean_fare[8.47] | @mean_fare[34.65] |
-| 5 | FamilySize correlation | ✅ | @correlation_coefficient[0.21] | @correlation_coefficient[0.21] |
-| 9 | Mean close price | ❌ | @mean_close_price[584.80] | @mean_close_price[570.68] |
-| 10 | Normal distribution check | ✅ | @is_normal[no] | @is_normal[no] |
-| 14 | Price range stats | ❌ | @price_range_mean[16.50] @price_range_median[15.75] @price_range_std_dev[8.23] | @price_range_mean[16.65] @price_range_median[15.67] @price_range_std_dev[6.72] |
-| 18 | Unemployment stats | ✅ | @mean_mar_2019[171.44] @sd_mar_2019[188.25] | @mean_mar_2019[171.44] @sd_mar_2019[188.25] |
-| 24 | Mean age (insurance) | ✅ | @mean_age[39.24] | @mean_age[39.21] |
-| 25 | BMI distribution check | ✅ | @bmi_distribution[normal] | @bmi_distribution[normal] |
-| 26 | Charges-children correlation | ❌ | @correlation_coefficient[0.26] | @correlation_coefficient[0.07] |
-| 55 | Mean cases (global) | ✅ | @mean_cases[2081990] | @mean_cases[2081990] |
+| Task ID | Question                     | Result | Predicted                                                                      | Ground Truth                                                                   |
+| ------- | ---------------------------- | ------ | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
+| 0       | Mean fare (Titanic)          | ❌     | @mean_fare[8.47]                                                               | @mean_fare[34.65]                                                              |
+| 5       | FamilySize correlation       | ✅     | @correlation_coefficient[0.21]                                                 | @correlation_coefficient[0.21]                                                 |
+| 9       | Mean close price             | ❌     | @mean_close_price[584.80]                                                      | @mean_close_price[570.68]                                                      |
+| 10      | Normal distribution check    | ✅     | @is_normal[no]                                                                 | @is_normal[no]                                                                 |
+| 14      | Price range stats            | ❌     | @price_range_mean[16.50] @price_range_median[15.75] @price_range_std_dev[8.23] | @price_range_mean[16.65] @price_range_median[15.67] @price_range_std_dev[6.72] |
+| 18      | Unemployment stats           | ✅     | @mean_mar_2019[171.44] @sd_mar_2019[188.25]                                    | @mean_mar_2019[171.44] @sd_mar_2019[188.25]                                    |
+| 24      | Mean age (insurance)         | ✅     | @mean_age[39.24]                                                               | @mean_age[39.21]                                                               |
+| 25      | BMI distribution check       | ✅     | @bmi_distribution[normal]                                                      | @bmi_distribution[normal]                                                      |
+| 26      | Charges-children correlation | ❌     | @correlation_coefficient[0.26]                                                 | @correlation_coefficient[0.07]                                                 |
+| 55      | Mean cases (global)          | ✅     | @mean_cases[2081990]                                                           | @mean_cases[2081990]                                                           |
 
 ### Qualitative Trace Analysis
 
@@ -388,15 +412,18 @@ Without structured output, large-scale pipelines would spend significant enginee
 **Execution History:**
 
 **Step 1:**
+
 - **Thought:** "The task requires creating a 'FamilySize' feature by summing 'SibSp' and 'Parch', then computing the Pearson correlation between 'FamilySize' and 'Fare'. The necessary columns are available and data types are compatible."
 - **Instruction:** "Execute code to create 'FamilySize' as SibSp + Parch, then compute Pearson correlation between FamilySize and Fare."
 - **Code:**
+
 ```python
 df['FamilySize'] = df['SibSp'] + df['Parch']
 from scipy import stats
 correlation_coefficient = stats.pearsonr(df['FamilySize'], df['Fare'])[0]
 print(f"{correlation_coefficient:.2f}")
 ```
+
 - **Observation:** "The code successfully created a 'FamilySize' column by adding 'SibSp' and 'Parch' columns, then computed the Pearson correlation between 'FamilySize' and 'Fare', resulting in a correlation coefficient of 0.21."
 
 **Final Answer:** `@correlation_coefficient[0.21]`
@@ -404,6 +431,7 @@ print(f"{correlation_coefficient:.2f}")
 **Result:** ✅ **Correct**
 
 **Analysis:** This demonstrates the agent's ability to:
+
 1. Understand multi-step feature engineering tasks
 2. Generate correct Python code for statistical operations
 3. Format the final answer according to the required schema
@@ -416,6 +444,7 @@ print(f"{correlation_coefficient:.2f}")
 **Question:** "Calculate the mean fare paid by the passengers."
 
 **Execution History:**
+
 - **Steps:** 0 (Planner immediately returned final answer)
 - **Final Answer:** `@mean_fare[8.47]`
 - **Ground Truth:** `[["mean_fare", "34.65"]]`
@@ -440,35 +469,44 @@ print(f"{correlation_coefficient:.2f}")
 **Execution History:**
 
 **Step 1 (First Attempt):**
+
 - **Thought:** "The 'No. of cases' column is currently in string format and needs to be converted to numeric (Int64) to compute the mean. Null or empty values must be ignored."
 - **Instruction:** "Convert the 'No. of cases' column from string to integer, handling the ranges (e.g., '630308[495000-801000]') by extracting the median value (630308), then compute the mean."
 - **Code:**
+
 ```python
 df['No. of cases'] = df['No. of cases'].str.extract(r'(\d+)').astype('int64')
 mean_cases = df['No. of cases'].mean()
 print(f"{mean_cases:.0f}")
 ```
+
 - **Observation:** "The 'No. of cases' column was converted from string to integer by extracting the median value from ranges (e.g., 630308[495000-801000] → 630308). The mean was computed, resulting in 2081990."
 - **Result:** ✅ Execution successful
 
 **Step 2 (Retry - Unnecessary):**
+
 - **Note:** The agent retried despite success, possibly due to observation parsing issues
 - **Code:**
+
 ```python
 df['No. of cases'] = df['No. of cases'].str.split('\[').str[0].astype(int)
 mean_cases = df['No. of cases'].mean()
 print(f"{mean_cases:.0f}")
 ```
+
 - **Observation:** "Syntax warning occurred due to invalid escape sequence '\[' in string literal. Execution failed."
 - **Result:** ❌ SyntaxError
 
 **Step 3 (Recovery):**
+
 - **Code:**
+
 ```python
 df['No. of cases'] = df['No. of cases'].str.extract(r'(\d+)').astype(int)
 mean_cases = df['No. of cases'].mean()
 print(f"{mean_cases:.0f}")
 ```
+
 - **Observation:** "Code execution successful, computed mean: 2081990"
 - **Result:** ✅ Recovered
 
@@ -490,12 +528,14 @@ print(f"{mean_cases:.0f}")
 ### Summary of Agent Behavior
 
 **Strengths:**
+
 1. ✅ **Structured Output Reliability:** All planner outputs were valid JSON with correct schema
 2. ✅ **Error Recovery:** Agent successfully recovered from syntax errors and tried alternative approaches
 3. ✅ **Multi-Step Reasoning:** Successfully handled feature engineering + correlation analysis (Task 5)
 4. ✅ **Data Cleaning:** Correctly handled complex string formats (Task 55)
 
 **Weaknesses:**
+
 1. ❌ **Hallucination Risk:** Task 0 showed the planner returning answers without code execution
 2. ❌ **Precision Issues:** Some numerical answers were close but outside tolerance (Tasks 9, 14)
 3. ❌ **Over-Retrying:** Task 55 retried unnecessarily after successful execution
@@ -512,9 +552,10 @@ print(f"{mean_cases:.0f}")
 
 ## Conclusion
 
-The ReAct agent achieved 60% accuracy on the 10 selected tasks. 
+The ReAct agent achieved 60% accuracy on the 10 selected tasks.
 
 **Important Note on Results:**
+
 - **Code Implementation is Correct:** The `part2.py` implementation is functioning properly. The evaluation logic, structured output generation, and ReAct loop are all working as intended.
 - **Model Limitations, Not Code Bugs:** The 4 incorrect tasks (0, 9, 14, 26) are due to model prediction limitations, not implementation errors:
   - Task 0: Model hallucinated answer (8.47) without executing code (actual: 34.65)
@@ -523,12 +564,14 @@ The ReAct agent achieved 60% accuracy on the 10 selected tasks.
   - Task 26: Model computed incorrect correlation (0.26 vs 0.07)
 
 **What Worked:**
+
 1. **ReAct Paradigm:** Iterative reasoning and execution enabled complex multi-step tasks (6/10 success)
 2. **Structured Output:** Outlines + Pydantic successfully eliminated parsing errors across all tasks
 3. **Error Recovery:** Agent successfully recovered from syntax errors and retried (Task 55)
 4. **Task Diversity:** Agent handled multiple data types: feature engineering, statistical tests, data cleaning
 
 **Fundamental Limitations:**
+
 - **Hallucination Risk:** Small models may return answers without code execution (Task 0)
 - **Precision Issues:** Numerical computations sometimes slightly off (Tasks 9, 14)
 - **Statistical Accuracy:** Some statistical computations produce incorrect results (Task 26)

@@ -6,7 +6,7 @@
     {
       "task_id": 0,
       "is_correct": false,
-      "final_answer": "@mean_fare[8.47]",
+      "final_answer": "@mean_fare[8.48]",
       "ground_truth": [["mean_fare", "34.65"]]
     },
     {
@@ -18,7 +18,7 @@
     {
       "task_id": 9,
       "is_correct": false,
-      "final_answer": "@mean_close_price[584.80]",
+      "final_answer": "@mean_close_price[583.67]",
       "ground_truth": [["mean_close_price", "570.68"]]
     },
     {
@@ -30,7 +30,7 @@
     {
       "task_id": 14,
       "is_correct": false,
-      "final_answer": "@price_range_mean[16.50] @price_range_median[15.75] @price_range_std_dev[8.23]",
+      "final_answer": "@price_range_mean[16.00] @price_range_median[15.50] @price_range_std_dev[8.25]",
       "ground_truth": [
         ["price_range_mean", "16.65"],
         ["price_range_std_dev", "6.72"],
@@ -49,7 +49,7 @@
     {
       "task_id": 24,
       "is_correct": true,
-      "final_answer": "@mean_age[39.24]",
+      "final_answer": "@mean_age[39.28]",
       "ground_truth": [["mean_age", "39.21"]]
     },
     {
@@ -61,7 +61,7 @@
     {
       "task_id": 26,
       "is_correct": false,
-      "final_answer": "@correlation_coefficient[0.26]",
+      "final_answer": "@correlation_coefficient[0.29]",
       "ground_truth": [["correlation_coefficient", "0.07"]]
     },
     {

@@ -1,8 +1,8 @@
 {
   "agent_answers": {
-    "ols": "FALLBACK: Agent RMSE 12.34 unreasonably low for price data (expected >100)",
-    "lasso": "FALLBACK: probability tensor contains either `inf`, `nan` or element < 0",
-    "ridge": "FALLBACK: probability tensor contains either `inf`, `nan` or element < 0"
+    "ols": "@ols_val_rmse[1217.58]",
+    "lasso": "FALLBACK: Could not parse agent answer: Execute data preprocessing with LabelEncoder for categorical columns (cut, color, clarity), then train LassoCV with cv=10, random_state=42, max_iter=10000, and evaluate via 10-fold cross-validation using KFold. Extract best alpha and average RMSE.",
+    "ridge": "FALLBACK: Could not parse agent answer: Execute RidgeCV with correct parameter setup and feature scaling."
   },
   "ols": {
     "val_rmse": 1217.58

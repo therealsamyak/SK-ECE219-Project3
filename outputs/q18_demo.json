@@ -6,9 +6,9 @@
     {
       "prompt": "The user asks: What is the average age of passengers?",
       "output": {
-        "thought": "To calculate the average age of passengers, I need access to a dataset containing passenger age values.",
+        "thought": "I need access to passenger age data to compute the average.",
         "is_done": false,
-        "response": "Retrieve the passenger age dataset and compute the mean age."
+        "response": "Fetch the dataset containing passenger age information and calculate the mean age."
       }
     },
     {
@@ -16,13 +16,13 @@
       "output": {
         "thought": "To determine the number of passengers who survived, I need access to a dataset containing passenger survival information, such as the Titanic dataset.",
         "is_done": false,
-        "response": "Fetch the passenger survival data (e.g., from a dataset like Titanic) and count the number of survivors."
+        "response": "Fetch the passenger survival dataset and count the number of survivors."
       }
     },
     {
       "prompt": "The user asks: What is the correlation between age and fare?",
       "output": {
-        "thought": "To determine the correlation between age and fare, I need access to a dataset containing both age and fare values.",
+        "thought": "To assess the correlation between age and fare, I need access to a dataset containing both age and fare values.",
         "is_done": false,
         "response": "Retrieve the dataset containing age and fare columns, then compute the Pearson correlation coefficient between age and fare."
       }
@@ -30,9 +30,9 @@
     {
       "prompt": "The user asks: Show me the distribution of passenger classes.",
       "output": {
-        "thought": "To show the distribution of passenger classes, I need to access the dataset and count how many passengers belong to each class (e.g., 1st, 2nd, 3rd).",
+        "thought": "To show the distribution of passenger classes, I need to analyze the 'Pclass' column in the dataset.",
         "is_done": false,
-        "response": "Load the dataset and count the number of passengers in each class (e.g., Pclass). Then present the distribution in a clear, tabular or visual format."
+        "response": "Load the dataset and examine the 'Pclass' column to visualize and summarize the distribution of passenger classes."
       }
     },
     {
@@ -40,7 +40,7 @@
       "output": {
         "thought": "The mean fare is already provided as 32.20. No further calculation or data retrieval is needed.",
         "is_done": true,
-        "response": "}"
+        "response": "The mean fare is $32.20."
       }
     }
   ]

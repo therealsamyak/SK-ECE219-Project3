@@ -27,4 +27,7 @@ part2:
 part3:
 	uv run part3.py
 
-
+all:
+	make part1
+	make part2
+	make part3
