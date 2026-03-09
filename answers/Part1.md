@@ -189,13 +189,13 @@ Additionally, LoRA only adapts the attention projection layers (q_proj, k_proj, 
 
 **Results:**
 
-- **SFT-1k Accuracy:** 42%
+- **SFT-1k Accuracy:** 41%
 - **Baseline Accuracy:** 38%
-- **Improvement:** +4 percentage points
+- **Improvement:** +3 percentage points
 
 **Analysis:**
 
-The improvement from 38% to 42% (+4 pp) represents a meaningful gain. This matches expectations for several reasons:
+The improvement from 38% to 41% (+3 pp) represents a meaningful gain. This matches expectations for several reasons:
 
 **Positive aspects:**
 
@@ -206,7 +206,7 @@ The improvement from 38% to 42% (+4 pp) represents a meaningful gain. This match
 **Limitations observed:**
 
 1. **Small dataset:** 1,000 examples provides improvement but may not be sufficient for learning all mathematical reasoning patterns
-2. **Moderate improvement:** +4pp is meaningful, suggesting more data could help further
+2. **Moderate improvement:** +3pp is meaningful, suggesting more data could help further
 3. **Continued errors:** Model still makes arithmetic and reasoning errors similar to base model
 
 **Examples of improvements and continued failures:**
@@ -214,11 +214,11 @@ The improvement from 38% to 42% (+4 pp) represents a meaningful gain. This match
 **Improved (Base → SFT-1k):**
 
 - Question about robe fabric: 2.5 → 3 (correct)
-- Question about vacuum cleaners: 9 → 18 (correct)
+- Question about Wendi's chickens: 57 → 20 (correct)
 
 **Still failing:**
 
-- Josh's house flipping: -55,500 → -106,000 (both wrong, different errors)
+- Josh's house flipping: -55,500 → -100,500 (both wrong, different errors)
 - James's sprints: 270 → 72 (both wrong)
 
 The model shows it's learning some patterns but hasn't developed robust mathematical reasoning capabilities yet.
@@ -273,14 +273,14 @@ I would scale in **two steps** (1k → 3k → full) rather than jumping directly
 | Training Examples | Accuracy | Improvement from Baseline |
 | ----------------- | -------- | ------------------------- |
 | 0 (baseline)      | 38%      | -                         |
-| 1,000             | 42%      | +4 pp                     |
+| 1,000             | 41%      | +3 pp                     |
 | 3,000             | 39%      | +1 pp                     |
 
 **Plot:** See `outputs/q7_accuracy_plot.png` for the accuracy scaling visualization.
 
 **Analysis of Results:**
 
-**Unexpected finding:** The 3,000-example model (39%) performed **worse** than the 1,000-example model (40%), contrary to expectations.
+**Unexpected finding:** The 3,000-example model (39%) performed **worse** than the 1,000-example model (41%), contrary to expectations.
 
 **This is a critical issue that suggests: scaling from 1k to 3k examples resulted in performance degradation.**
 
@@ -289,7 +289,7 @@ I would scale in **two steps** (1k → 3k → full) rather than jumping directly
 1. **Training instability:** Larger dataset might have caused training issues or convergence problems
 2. **Overfitting to noise:** More examples might include more confusing or contradictory patterns that hurt generalization
 3. **Hyperparameter mismatch:** Default hyperparameters (learning rate, batch size) might not scale well to 3x data
-4. **Random variation:** Small test set (100 questions) means ±2-3% variance is expected - however, the drop from 42% to 39% is significant
+4. **Random variation:** Small test set (100 questions) means ±2-3% variance is expected - however, the drop from 41% to 39% is significant
 5. **Data quality issues:** Additional 2,000 examples might be lower quality or harder problems that the model struggles with
 6. **Optimal dataset size:** There may be an optimal dataset size around 1,000 examples for this specific model architecture and task
 
@@ -320,7 +320,7 @@ The results show **negative returns** when scaling from 1k to 3k examples, which
 
 **Ground Truth:** 18
 
-**Base Model Answer:** 18
+**Base Model Answer:** 0
 **SFT-3k Model Answer:** 182
 
 **Base Model Excerpt:**
