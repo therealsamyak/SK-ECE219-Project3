@@ -1,0 +1,24 @@
+{
+  "skewness": {
+    "carat": 1.1166,
+    "depth": -0.0823,
+    "table": 0.7969,
+    "x": 0.3787,
+    "y": 2.4342,
+    "z": 1.5224
+  },
+  "skewed_features": {
+    "carat": {
+      "skewness": 1.1166,
+      "suggested_transformation": "log"
+    },
+    "y": {
+      "skewness": 2.4342,
+      "suggested_transformation": "log"
+    },
+    "z": {
+      "skewness": 1.5224,
+      "suggested_transformation": "log"
+    }
+  }
+}

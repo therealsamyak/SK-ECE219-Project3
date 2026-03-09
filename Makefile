@@ -24,4 +24,7 @@ part1:
 part2:
 	uv run part2.py
 
+part3:
+	uv run part3.py
+
 

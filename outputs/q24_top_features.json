@@ -1,0 +1,8 @@
+{
+  "agent_answers": {
+    "mutual_info": "FALLBACK: probability tensor contains either `inf`, `nan` or element < 0",
+    "f_regression": "FALLBACK: probability tensor contains either `inf`, `nan` or element < 0"
+  },
+  "mutual_info_top5": ["carat", "y", "x", "z", "clarity"],
+  "f_regression_top5": ["carat", "x", "y", "z", "color"]
+}

@@ -1,0 +1,39 @@
+{
+  "categorical_trends": {
+    "cut": {
+      "median_prices": {
+        "Fair": 3282,
+        "Good": 3050,
+        "Very Good": 2648,
+        "Premium": 3185,
+        "Ideal": 1810
+      },
+      "categories": ["Fair", "Good", "Very Good", "Premium", "Ideal"]
+    },
+    "color": {
+      "median_prices": {
+        "J": 4234,
+        "I": 3730,
+        "H": 3460,
+        "G": 2242,
+        "F": 2343,
+        "E": 1739,
+        "D": 1838
+      },
+      "categories": ["J", "I", "H", "G", "F", "E", "D"]
+    },
+    "clarity": {
+      "median_prices": {
+        "I1": 3344,
+        "SI2": 4072,
+        "SI1": 2822,
+        "VS2": 2054,
+        "VS1": 2005,
+        "VVS2": 1311,
+        "VVS1": 1093,
+        "IF": 1080
+      },
+      "categories": ["I1", "SI2", "SI1", "VS2", "VS1", "VVS2", "VVS1", "IF"]
+    }
+  }
+}
