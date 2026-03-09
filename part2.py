@@ -36,18 +36,18 @@ class Executor:
     """Executes Python code with isolated namespace and timeout protection.
 
     Provides sandboxed execution environment with:
-    - Timeout protection via signal.SIGALRM (900s default = 15 minutes)
+    - Timeout protection via signal.SIGALRM (1800s default = 30 minutes)
     - Isolated namespace (only pd, np, df, print available)
     - Captured stdout/stderr
     - State reset between tasks
     """
 
-    def __init__(self, df: pd.DataFrame, timeout: int = 900):
+    def __init__(self, df: pd.DataFrame, timeout: int = 1800):
         """Initialize Executor with DataFrame and timeout.
 
         Args:
             df: DataFrame to make available in namespace as 'df'
-            timeout: Execution timeout in seconds (default: 900 = 15 minutes)
+            timeout: Execution timeout in seconds (default: 1800 = 30 minutes)
         """
         self.df = df
         self.timeout = timeout
