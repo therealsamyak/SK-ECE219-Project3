@@ -11,13 +11,13 @@
 The correlation heatmap (see `outputs/q21_correlation_heatmap.png`) reveals the following relationships with the target variable (price):
 
 | Feature | Correlation with Price |
-|---------|----------------------|
-| carat   | 0.9216 (strongest)   |
-| x       | 0.8844               |
-| y       | 0.8654               |
-| z       | 0.8612               |
-| table   | 0.1271               |
-| depth   | -0.0106 (weakest)    |
+| ------- | ---------------------- |
+| carat   | 0.9216 (strongest)     |
+| x       | 0.8844                 |
+| y       | 0.8654                 |
+| z       | 0.8612                 |
+| table   | 0.1271                 |
+| depth   | -0.0106 (weakest)      |
 
 **Key Observations:**
 
@@ -32,14 +32,14 @@ The correlation heatmap (see `outputs/q21_correlation_heatmap.png`) reveals the 
 
 **Skewness Analysis:**
 
-| Feature | Skewness | Assessment        | Suggested Transformation |
-|---------|----------|-------------------|--------------------------|
-| y       | 2.4342   | Highly skewed     | Log transformation       |
-| z       | 1.5224   | Moderately skewed | Log transformation       |
-| carat   | 1.1166   | Moderately skewed | Log transformation       |
-| table   | 0.7969   | Slightly skewed   | May not need transform   |
-| x       | 0.3787   | Approximately symmetric | None needed        |
-| depth   | -0.0823  | Approximately symmetric | None needed        |
+| Feature | Skewness | Assessment              | Suggested Transformation |
+| ------- | -------- | ----------------------- | ------------------------ |
+| y       | 2.4342   | Highly skewed           | Log transformation       |
+| z       | 1.5224   | Moderately skewed       | Log transformation       |
+| carat   | 1.1166   | Moderately skewed       | Log transformation       |
+| table   | 0.7969   | Slightly skewed         | May not need transform   |
+| x       | 0.3787   | Approximately symmetric | None needed              |
+| depth   | -0.0823  | Approximately symmetric | None needed              |
 
 **Recommendation:** Apply log transformation to `carat`, `y`, and `z` features to address right-skewness and improve model performance.
 
@@ -50,41 +50,41 @@ The correlation heatmap (see `outputs/q21_correlation_heatmap.png`) reveals the 
 #### Cut vs Price
 
 | Cut       | Median Price |
-|-----------|-------------|
-| Fair      | $3,282      |
-| Premium   | $3,185      |
-| Good      | $3,050      |
-| Very Good | $2,648      |
-| Ideal     | $1,810      |
+| --------- | ------------ |
+| Fair      | $3,282       |
+| Premium   | $3,185       |
+| Good      | $3,050       |
+| Very Good | $2,648       |
+| Ideal     | $1,810       |
 
 **Trend:** Surprisingly, "Ideal" cut diamonds have the lowest median price, while "Fair" cut has the highest. This counterintuitive result occurs because carat weight (the dominant price factor) varies systematically with cut quality in this dataset.
 
 #### Color vs Price
 
 | Color | Median Price |
-|-------|-------------|
-| J     | $4,234      |
-| I     | $3,730      |
-| H     | $3,460      |
-| G     | $2,242      |
-| F     | $2,343      |
-| E     | $1,739      |
-| D     | $1,838      |
+| ----- | ------------ |
+| J     | $4,234       |
+| I     | $3,730       |
+| H     | $3,460       |
+| G     | $2,242       |
+| F     | $2,343       |
+| E     | $1,739       |
+| D     | $1,838       |
 
 **Trend:** Lower color grades (J, I, H) have higher median prices than higher grades (D, E, F). Again, this is likely due to correlation with carat weight.
 
 #### Clarity vs Price
 
 | Clarity | Median Price |
-|---------|-------------|
-| SI2     | $4,072      |
-| I1      | $3,344      |
-| SI1     | $2,822      |
-| VS2     | $2,054      |
-| VS1     | $2,005      |
-| VVS2    | $1,311      |
-| VVS1    | $1,093      |
-| IF      | $1,080      |
+| ------- | ------------ |
+| SI2     | $4,072       |
+| I1      | $3,344       |
+| SI1     | $2,822       |
+| VS2     | $2,054       |
+| VS1     | $2,005       |
+| VVS2    | $1,311       |
+| VVS1    | $1,093       |
+| IF      | $1,080       |
 
 **Trend:** Lower clarity grades (SI2, I1) have higher median prices than flawless (IF) diamonds, which is counterintuitive but explained by carat correlation.
 
@@ -98,26 +98,29 @@ The correlation heatmap (see `outputs/q21_correlation_heatmap.png`) reveals the 
 
 ### Encoding Decisions
 
-| Feature  | Encoding Method | Rationale |
-|----------|----------------|-----------|
-| cut      | Ordinal        | Has inherent quality order: Fair < Good < Very Good < Premium < Ideal |
-| color    | Ordinal        | Has inherent color grade order: J < I < H < G < F < E < D |
-| clarity  | Ordinal        | Has inherent clarity order: I1 < SI2 < SI1 < VS2 < VS1 < VVS2 < VVS1 < IF |
+| Feature | Encoding Method | Rationale                                                                 |
+| ------- | --------------- | ------------------------------------------------------------------------- |
+| cut     | Ordinal         | Has inherent quality order: Fair < Good < Very Good < Premium < Ideal     |
+| color   | Ordinal         | Has inherent color grade order: J < I < H < G < F < E < D                 |
+| clarity | Ordinal         | Has inherent clarity order: I1 < SI2 < SI1 < VS2 < VS1 < VVS2 < VVS1 < IF |
 
 ### Trade-off Explanations
 
 #### What information does one-hot encoding discard?
 
 One-hot encoding discards the **ordinal relationship** between categories. For example:
+
 - For "cut", one-hot encoding treats "Fair" and "Ideal" as equally different from "Good"
 - It creates N-1 (or N) binary features, increasing dimensionality
 - It loses the information that Fair < Good < Very Good < Premium < Ideal
 
 **Advantages of one-hot:**
+
 - No assumption about relationship between categories
 - Works for truly nominal categories (no order)
 
 **Disadvantages of one-hot:**
+
 - Increases feature space (7 features for color vs. 1)
 - Loses ordinal information when it exists
 - May cause overfitting with many categories
@@ -125,6 +128,7 @@ One-hot encoding discards the **ordinal relationship** between categories. For e
 #### What assumption must hold for scalar encoding?
 
 Scalar (ordinal) encoding assumes that:
+
 1. **Ordinal relationship exists**: Categories have a meaningful order
 2. **Linear spacing**: The numerical distance between consecutive categories is meaningful (e.g., the difference between "Fair" and "Good" is similar to "Good" to "Very Good")
 3. **Monotonic relationship**: Higher encoded values should correspond to consistently higher (or lower) effects on the target
@@ -182,7 +186,7 @@ df_standardized.to_csv('diamonds_standardized.csv', index=False)
 **Mutual Information (MI) Top 5 Features:**
 
 | Rank | Feature | MI Score |
-|------|---------|----------|
+| ---- | ------- | -------- |
 | 1    | x       | Highest  |
 | 2    | y       | High     |
 | 3    | z       | High     |
@@ -191,17 +195,18 @@ df_standardized.to_csv('diamonds_standardized.csv', index=False)
 
 **F-Regression Top 5 Features:**
 
-| Rank | Feature | F-Score |
-|------|---------|---------|
-| 1    | carat   | Highest |
-| 2    | x       | High    |
-| 3    | y       | High    |
-| 4    | z       | High    |
+| Rank | Feature | F-Score  |
+| ---- | ------- | -------- |
+| 1    | carat   | Highest  |
+| 2    | x       | High     |
+| 3    | y       | High     |
+| 4    | z       | High     |
 | 5    | color   | Moderate |
 
 ### Agentic Integration
 
 The ReAct agent was used to automatically identify these features. The agent answers were:
+
 - **Mutual Info:** `@top5_mi[x, y, z, carat, depth]`
 - **F-Regression:** `@top5_f[carat, x, y, z, color]`
 
@@ -209,11 +214,13 @@ The ReAct agent was used to automatically identify these features. The agent ans
 
 **Agreement:** Both methods agree that `carat`, `x`, `y`, `z` are the top 4 features.
 
-**Difference:** 
+**Difference:**
+
 - MI ranks `depth` as the 5th feature
 - F-regression ranks `color` as the 5th feature
 
-**Explanation:** 
+**Explanation:**
+
 - **Mutual Information** captures non-linear dependencies, explaining why physical dimensions (x, y, z) rank higher
 - **F-Regression** measures linear relationships, where carat (strongly linearly correlated with price) ranks highest
 
@@ -235,11 +242,11 @@ $$\min_{\beta} \frac{1}{2n} \sum_{i=1}^{n} (y_i - \beta_0 - \sum_{j=1}^{p} \beta
 
 ### Results
 
-| Model   | Optimal Alpha | Validation RMSE |
-|---------|--------------|-----------------|
-| OLS     | N/A          | 1217.58         |
-| Lasso   | 3.6766       | 1217.13         |
-| Ridge   | 10000.0      | 1475.95         |
+| Model | Optimal Alpha | Validation RMSE |
+| ----- | ------------- | --------------- |
+| OLS   | N/A           | 1217.58         |
+| Lasso | 3.6766        | 1217.13         |
+| Ridge | 10000.0       | 1475.95         |
 
 **Best Model:** **Lasso Regression** with α = 3.6766
 
@@ -256,7 +263,7 @@ $$\min_{\beta} \frac{1}{2n} \sum_{i=1}^{n} (y_i - \beta_0 - \sum_{j=1}^{p} \beta
 $$\min_{\beta} \frac{1}{2n} \|y - X\beta\|^2 + \alpha \|\beta\|_1$$
 
 - **Effect:** Adds penalty proportional to absolute value of coefficients
-- **Parameter behavior:** 
+- **Parameter behavior:**
   - Drives some coefficients to exactly zero (feature selection)
   - Produces sparse solutions
   - With α = 3.68, some less important features may have zero coefficients
@@ -308,10 +315,12 @@ The optimal alpha was selected by minimizing average validation RMSE across 10 f
 **What p-values mean in linear regression:**
 
 The p-value for each feature tests the null hypothesis:
+
 - **H₀:** The coefficient β_j = 0 (the feature has no linear relationship with the target)
 - **H₁:** The coefficient β_j ≠ 0 (the feature has a linear relationship with the target)
 
 **Interpretation:**
+
 - **Low p-value (< 0.05):** Reject H₀ → The feature is statistically significant
 - **High p-value (> 0.05):** Fail to reject H₀ → The feature may not be significant
 
@@ -328,6 +337,7 @@ Features with the lowest p-values are the most statistically significant. Based 
 ### Agentic Integration
 
 The ReAct agent was used to train these models. Results:
+
 - **OLS:** `@ols_val_rmse[1217.58]` ✓ Successfully parsed
 - **Lasso:** Agent produced fallback (could not parse structured output)
 - **Ridge:** Agent produced fallback (could not parse structured output)
@@ -338,10 +348,10 @@ The agent successfully completed OLS but had difficulty with the structured outp
 
 ## Summary
 
-| Question | Key Findings |
-|----------|-------------|
-| Q21 | Carat (0.92) and dimensions (x,y,z) are most correlated with price; log transform recommended for skewed features |
-| Q22 | Ordinal encoding used for cut, color, clarity due to inherent quality hierarchies |
-| Q23 | Standardized dataset saved as `diamonds_standardized.csv` |
-| Q24 | Top features: carat, x, y, z (both methods); depth (MI) vs color (F-reg) differ on 5th feature |
-| Q25 | Lasso (α=3.68) best with RMSE=1217.13; Ridge (α=10000) over-regularized; OLS similar to Lasso |
+| Question | Key Findings                                                                                                      |
+| -------- | ----------------------------------------------------------------------------------------------------------------- |
+| Q21      | Carat (0.92) and dimensions (x,y,z) are most correlated with price; log transform recommended for skewed features |
+| Q22      | Ordinal encoding used for cut, color, clarity due to inherent quality hierarchies                                 |
+| Q23      | Standardized dataset saved as `diamonds_standardized.csv`                                                         |
+| Q24      | Top features: carat, x, y, z (both methods); depth (MI) vs color (F-reg) differ on 5th feature                    |
+| Q25      | Lasso (α=3.68) best with RMSE=1217.13; Ridge (α=10000) over-regularized; OLS similar to Lasso                     |
