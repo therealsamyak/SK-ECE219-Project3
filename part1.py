@@ -277,6 +277,15 @@ def format_training_example(question: str, answer: str, tokenizer) -> str:
             reasoning = re.sub(pattern, ".", reasoning, flags=re.IGNORECASE)
         reasoning = reasoning.strip()
 
+        # Remove <<...>> calculation markers (per FAQ line 141)
+        reasoning = re.sub(r"<<[^>]+>>", "", reasoning)
+
+        # Remove any remaining << or >> characters
+        reasoning = reasoning.replace("<<", "").replace(">>", "")
+
+        # Clean up extra whitespace
+        reasoning = re.sub(r"\s+", " ", reasoning).strip()
+
     assistant_answer = f"{reasoning}\\boxed{{{ground_truth}}}"
 
     messages = [

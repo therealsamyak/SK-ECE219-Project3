@@ -1,8 +1,8 @@
 {
   "base_no_shot": 0.38,
   "base_few_shot": 0.32,
-  "sft_no_shot": 0.39,
-  "sft_few_shot": 0.51,
+  "sft_no_shot": 0.44,
+  "sft_few_shot": 0.5,
   "base_delta": -0.06,
-  "sft_delta": 0.12
+  "sft_delta": 0.06
 }

@@ -6,9 +6,9 @@
     {
       "prompt": "The user asks: What is the average age of passengers?",
       "output": {
-        "thought": "I need access to passenger age data to compute the average.",
+        "thought": "To calculate the average age of passengers, I need access to a dataset containing passenger age values.",
         "is_done": false,
-        "response": "Fetch the dataset containing passenger age information and calculate the mean age."
+        "response": "Retrieve the passenger age data from the dataset and compute the mean age."
       }
     },
     {
@@ -22,7 +22,7 @@
     {
       "prompt": "The user asks: What is the correlation between age and fare?",
       "output": {
-        "thought": "To assess the correlation between age and fare, I need access to a dataset containing both age and fare values.",
+        "thought": "To determine the correlation between age and fare, I need access to a dataset containing both age and fare values.",
         "is_done": false,
         "response": "Retrieve the dataset containing age and fare columns, then compute the Pearson correlation coefficient between age and fare."
       }
@@ -32,15 +32,15 @@
       "output": {
         "thought": "To show the distribution of passenger classes, I need to analyze the 'Pclass' column in the dataset.",
         "is_done": false,
-        "response": "Load the dataset and examine the 'Pclass' column to visualize and summarize the distribution of passenger classes."
+        "response": "Load the dataset and count the number of passengers in each passenger class (e.g., 1st, 2nd, 3rd). Then present the distribution in a clear, visual or tabular format."
       }
     },
     {
       "prompt": "Calculate the mean fare: @mean_fare[32.20] (final answer)",
       "output": {
-        "thought": "The mean fare is already provided as 32.20. No further calculation or data retrieval is needed.",
+        "thought": "The mean fare is already provided as 32.20, so no further calculation is needed.",
         "is_done": true,
-        "response": "The mean fare is $32.20."
+        "response": "}32.20{"
       }
     }
   ]

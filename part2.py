@@ -500,11 +500,11 @@ Now write the Python code to perform the instruction:"""
         )
         inputs = self.tokenizer(prompt, return_tensors="pt").to(device)
 
-        print("[Coder] Generating from model (max_new_tokens=500, temperature=0.7)...")
+        print("[Coder] Generating from model (max_new_tokens=500, temperature=0.3)...")
 
         outputs = self.model.generate(
             **inputs,
-            temperature=0.7,
+            temperature=0.3,  # was 0.7 — lower for more deterministic code
             top_p=0.95,
             max_new_tokens=500,
             do_sample=True,
@@ -677,7 +677,7 @@ CRITICAL: When is_done=true, response must contain ONLY the formatted answer, no
         question: str,
         constraints: str,
         df: pd.DataFrame,
-        max_steps: int = 5,
+        max_steps: int = 7,  # was 5 — more steps for complex questions
         answer_format: str = "",
     ) -> tuple[str, list]:
         print(f"[ReAct] Starting ReAct loop (max {max_steps} steps)")
@@ -694,11 +694,20 @@ CRITICAL: When is_done=true, response must contain ONLY the formatted answer, no
             print(f"[ReAct]   Planner is_done: {planner_out.is_done}")
 
             if planner_out.is_done:
-                print(
-                    f"[ReAct]   Final answer from planner: {planner_out.response[:200]}..."
-                )
-                print(f"[ReAct] Step {step + 1}/{max_steps}: Complete (is_done=True)")
-                return planner_out.response, history
+                # Don't allow planner to declare done without any code execution
+                if len(history) == 0:
+                    planner_out.is_done = False
+                    planner_out.response = (
+                        f"First, compute the answer using code. {planner_out.response}"
+                    )
+                else:
+                    print(
+                        f"[ReAct]   Final answer from planner: {planner_out.response[:200]}..."
+                    )
+                    print(
+                        f"[ReAct] Step {step + 1}/{max_steps}: Complete (is_done=True)"
+                    )
+                    return planner_out.response, history
 
             instruction = planner_out.response[:2000]
             print(f"[ReAct]   Planner instruction: {instruction[:100]}...")
@@ -706,7 +715,9 @@ CRITICAL: When is_done=true, response must contain ONLY the formatted answer, no
 
             for retry in range(3):
                 print(f"[ReAct]   Code generation attempt {retry + 1}/3")
-                code = self.coder(instruction, question, context)
+                # Include constraints in the instruction
+                full_instruction = f"{instruction}\n\nConstraints: {constraints}"
+                code = self.coder(full_instruction, question, context)
                 code = code[:2000]
                 print(f"[ReAct]     Generated code length: {len(code)} chars")
                 print(f"[ReAct]     Code preview: {code[:150]}...")
@@ -729,7 +740,11 @@ CRITICAL: When is_done=true, response must contain ONLY the formatted answer, no
                     (planner_out.thought, instruction, code, observation_summary)
                 )
 
-                if observation.error_type is None:
+                # Check for errors using observer OR stderr (fallback)
+                has_stderr_error = bool(
+                    stderr.strip()
+                ) and not stderr.strip().startswith("Warning")
+                if observation.error_type is None and not has_stderr_error:
                     print("[ReAct]   Execution successful, moving to next step")
                     break
                 else:

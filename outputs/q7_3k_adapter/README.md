@@ -3,9 +3,9 @@ base_model: Qwen/Qwen2.5-1.5B-Instruct
 library_name: transformers
 model_name: q7_3k_adapter
 tags:
-  - generated_from_trainer
-  - trl
-  - sft
+- generated_from_trainer
+- trl
+- sft
 licence: license
 ---
 
@@ -27,6 +27,10 @@ print(output["generated_text"])
 
 ## Training procedure
 
+ 
+
+
+
 This model was trained with SFT.
 
 ### Framework versions
@@ -39,8 +43,10 @@ This model was trained with SFT.
 
 ## Citations
 
-Cite TRL as:
 
+
+Cite TRL as:
+    
 ```bibtex
 @software{vonwerra2020trl,
   title   = {{TRL: Transformers Reinforcement Learning}},
