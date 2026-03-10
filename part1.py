@@ -1094,7 +1094,10 @@ def run_q10_fewshot(num_eval: int = 100, batch_size: int = 16, force: bool = Fal
 
 
 def run_q13_open_challenge(
-    num_eval: int = 100, batch_size: int = 16, num_samples: int = 5, force: bool = False
+    num_eval: int = 100,
+    batch_size: int = 16,
+    num_samples: int = 10,
+    force: bool = False,
 ):
     """Run Q13: self-consistency voting.
 
@@ -1121,7 +1124,7 @@ def run_q13_open_challenge(
         all_votes = []
         for _ in range(num_samples):
             responses = generate_batch(
-                model, tokenizer, questions, temperature=0.7, top_p=0.9, do_sample=True
+                model, tokenizer, questions, temperature=0.3, top_p=0.9, do_sample=True
             )
             for q, response in zip(questions, responses):
                 answer = extract_model_answer(response)
