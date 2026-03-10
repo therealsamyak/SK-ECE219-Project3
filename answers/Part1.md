@@ -312,7 +312,7 @@ Based on the diminishing returns pattern, extrapolating to the full dataset migh
 **Ground Truth:** 18
 
 **Base Model Answer:** 0
-**SFT-3k Model Answer:** 18
+**SFT-3k Model Answer:** 73.50
 
 **Base Model Excerpt:**
 
@@ -324,11 +324,14 @@ Therefore, the correct interpretation should be that Janet doesn't have enough e
 **SFT-3k Model Excerpt:**
 
 ```
-Janet has 16 - 3 - 4 = 9 eggs left to sell each day.
-At $2 per egg, she makes 9 × $2 = $18 per day at the farmers' market.
+The ducks lay 16*3=48 eggs for Janet to eat.
+She has 48-3=45 eggs left after eating them for breakfast.
+So she gives away 45/4=11.25 eggs to her friends.
+That means there are 48-11.25=36.75 eggs remaining for sale.
+Therefore, she makes 36.75*2=$73.50 from selling the eggs at the farmers' market.
 ```
 
-**Analysis:** **SFT model FIXED this error!** Base model made an arithmetic error (13 - 4 = -1), while SFT model correctly calculated 16 - 3 - 4 = 9 and arrived at the correct answer of $18. This shows SFT improved arithmetic reliability.
+**Analysis:** **SFT model STILL FAILED!** Both models made errors. Base model made an arithmetic error (13 - 4 = -1). SFT model made a different error - it multiplied 16×3 for unknown reason and computed an incorrect answer of $73.50. This shows SFT training introduced new reasoning errors while attempting different solution approaches.
 
 ### Case 2: Robe Fabric
 
@@ -359,7 +362,7 @@ In total, there are 2+1=3 bolts.
 **Ground Truth:** 70000
 
 **Base Model Answer:** -55500
-**SFT-3k Model Answer:** 70000
+**SFT-3k Model Answer:** 69500
 
 **Base Model Excerpt:**
 
@@ -372,19 +375,19 @@ Profit = $129,500 - $130,000 = -$5,500
 **SFT-3k Model Excerpt:**
 
 ```
-The house value increased by 150% of the original price.
-150% of $80,000 = $120,000
-New value = $80,000 + $120,000 = $200,000
-Total cost = $80,000 + $50,000 = $130,000
-Profit = $200,000 - $130,000 = $70,000
+The house was worth 80,000 + 50,000 = $130,000 after the repairs.
+It's value went up by 150% so it is now worth 130,000 * .15 = $19,500 more.
+So the total value of the house is now 130,000 + 19,500 = $149,500
+He bought the house for 80,000 so his profit is 149,500 - 80,000 = $69,500
 ```
 
-**Analysis:** **SFT model FIXED this error!** Base model applied the percentage to the wrong base and used 0.150 instead of 1.5. SFT model correctly calculated 150% of the original price ($80,000 × 1.5 = $120,000), added it to get new value ($200,000), and subtracted total cost to get correct profit ($70,000). This shows SFT significantly improved multi-step reasoning.
+**Analysis:** **SFT model STILL FAILED!** Both models made errors with the 150% calculation. Base model applied 0.150 (15%) instead of 1.5 (150%). SFT model made a similar error - it applied 0.15 instead of 1.5, computing 130,000 × 0.15 = $19,500 instead of the correct 80,000 × 1.5 = $120,000. The correct answer should be $70,000 profit. SFT improved slightly but still has percentage reasoning issues.
 
 **Summary:**
 
-- **Fixed:** 3/3 problems (ducks - arithmetic, robe fabric - language comprehension, house flipping - multi-step reasoning)
-- **All failure cases resolved:** SFT training successfully addressed arithmetic errors, language comprehension issues, and multi-step reasoning problems
+- **Fixed:** 1/3 problems (robe fabric - language comprehension)
+- **Still failing:** 2/3 problems (ducks - different error introduced, house flipping - percentage calculation error persists)
+- **Partial improvement:** SFT training helped with language comprehension but arithmetic and percentage reasoning remain challenging
 
 ---
 
@@ -394,38 +397,57 @@ Profit = $200,000 - $130,000 = $70,000
 
 **Two Persistent Failure Examples:**
 
-### Failure 1: Complex Multi-Step Problem
+### Failure 1: Janet's Ducks (Multi-step reasoning with hallucinated operations)
 
-**Error Type:** Multi-step reasoning with intermediate tracking
+**Question:** Janet's ducks lay 16 eggs per day. She eats three for breakfast every morning and bakes muffins for her friends every day with four. She sells the remainder at the farmers' market daily for $2 per fresh duck egg. How much in dollars does she make every day at the farmers' market?
 
-**Model Response:**
+**Ground Truth:** 18
 
-```
-The problem requires tracking multiple quantities through several calculation steps...
-[Model loses track of intermediate values]
-```
-
-**Analysis:** While SFT significantly improved performance on standard problems, the model still occasionally struggles with problems requiring 5+ reasoning steps or tracking multiple interdependent quantities.
-
-### Failure 2: Edge Case Problem Comprehension
-
-**Error Type:** Unusual problem structure or wording
-
-**Model Response:**
+**SFT Model Response:**
 
 ```
-The problem contains an unusual constraint or wording that the model misinterprets...
+The ducks lay 16*3=48 eggs for Janet to eat.
+She has 48-3=45 eggs left after eating them for breakfast.
+So she gives away 45/4=11.25 eggs to her friends.
+That means there are 48-11.25=36.75 eggs remaining for sale.
+Therefore, she makes 36.75*2=$73.50 from selling the eggs at the farmers' market.
 ```
 
-**Analysis:** Some problems with non-standard formats or unusual phrasing can still cause comprehension issues, though this is less frequent after SFT.
+**Extracted Answer:** 73.50 (Incorrect)
+
+**Analysis:** The SFT model introduced a completely erroneous multiplication (16×3=48) that doesn't appear in the problem statement. This shows the model learned to apply calculation patterns from training data but sometimes applies them inappropriately. The correct approach is: 16 - 3 - 4 = 9 eggs for sale, 9 × $2 = $18.
+
+**Error Type:** **Multi-step reasoning with hallucinated operations** - The model learned to show intermediate calculations but applied incorrect operations.
+
+### Failure 2: House Flipping (Percentage calculation error)
+
+**Question:** Josh decides to try flipping a house. He buys a house for $80,000 and then puts in $50,000 in repairs. This increased the value of the house by 150%. How much profit did he make?
+
+**Ground Truth:** 70000
+
+**SFT Model Response:**
+
+```
+He added $50,000 + $80,000 = $130,000 worth of improvements.
+The house is now worth $130,000 * .15 = $19,500 more than it was originally.
+So the total value of the house is now $130,000 + $19,500 = $149,500
+That means he sold the house for $149,500 - $130,000 = $19,500
+So his profit was $19,500 - $50,000 = -$30,500
+```
+
+**Extracted Answer:** -30500 (Incorrect)
+
+**Analysis:** The SFT model consistently struggles with percentage calculations. It applied 0.15 (15%) instead of 1.5 (150%). The correct calculation is: Original house value increases by 150% = $80,000 × 1.5 = $120,000, so new value is $200,000. Profit = $200,000 - $130,000 = $70,000.
+
+**Error Type:** **Arithmetic/Percentage reasoning** - The model misunderstands how to convert percentages to multipliers.
 
 **Persistent Error Types (ranked by frequency after SFT improvements):**
 
-1. **Complex multi-step reasoning:** Problems requiring 5+ steps still occasionally cause issues
-2. **Problem comprehension:** Unusual wordings or edge cases
-3. **Arithmetic errors:** Rare after SFT, but can still occur on complex calculations
+1. **Arithmetic/Percentage errors:** The model struggles with converting percentages (150% = 1.5, not 0.15) and applying them correctly
+2. **Multi-step reasoning with hallucinated operations:** The model sometimes introduces calculations that don't belong in the problem
+3. **Problem comprehension:** Occasionally misinterprets problem constraints
 
-**Conclusion:** After the improved training (with `<<>>` markers removed), the SFT model shows significantly better performance. The most common remaining errors involve complex multi-step problems, but the overall error rate has decreased substantially as evidenced by the improved accuracy metrics.
+**Conclusion:** After the improved training (with `<<>>` markers removed), the SFT model shows better performance overall (44% accuracy), but fundamental arithmetic reasoning issues persist. The most common remaining errors involve percentage calculations and inappropriate application of learned calculation patterns.
 
 ---
 
