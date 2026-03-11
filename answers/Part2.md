@@ -13,7 +13,7 @@ Load `da-dev-questions.jsonl` and `da-dev-labels.jsonl`. Report the number of qu
 - **Number of Questions:** 257
 - **Number of Labels:** 257
 
-**Question Record Keys:**
+**Question record keys:**
 - `id`: Unique identifier
 - `question`: Natural language question
 - `concepts`: List of data analysis concepts
@@ -35,7 +35,7 @@ Load `da-dev-questions.jsonl` and `da-dev-labels.jsonl`. Report the number of qu
 }
 ```
 
-**Label Record Keys:**
+**Label record keys:**
 - `id`: Question ID
 - `common_answers`: List of [name, value] pairs
 
@@ -82,12 +82,12 @@ Find 2 examples where the required format contains multiple answer slots. Explai
 - **Question:** "Perform distribution analysis on 'Fare' for each passenger class separately. Calculate mean, median, and standard deviation for each class."
 - **Format:** `@mean_fare_class1[mean_fare], @median_fare_class1[median_fare], @std_dev_fare_class1[std_dev], ...` (9 total slots)
 
-**Dataset Representation:**
+**Dataset representation:**
 - Multi-part answers use multiple `@name[value]` slots
 - Ground truth contains list of [name, value] pairs
 - Example: `[["mean_fare_child", "34.56"], ["mean_fare_adult", "42.78"]]`
 
-**Automatic Evaluation:**
+**Automatic evaluation:**
 1. Extract predicted values using regex: `r"@(\w+)\[([^\]]+)\]"`
 2. Compare with ground truth using tolerance (1.1% relative, 0.011 absolute)
 3. All slots must match for correct answer
@@ -176,7 +176,7 @@ class PlannerOutput(BaseModel):
 }
 ```
 
-**Note:** All 5 outputs are valid JSON. Prompt 5 demonstrates `is_done=true` when answer is already available.
+**Note:** All 5 outputs are valid JSON. Prompt 5 shows `is_done=true` when the answer is already available.
 
 ---
 
@@ -186,13 +186,13 @@ Explain why structured output is useful for large-scale data mining pipelines.
 
 **Answer:**
 
-Structured output is essential for large-scale data mining pipelines for three key reasons:
+Structured output is essential for large-scale data mining pipelines for three reasons:
 
-1. **Reliability at Scale:** When processing thousands of tasks, parsing errors from free-form text would cascade into system failures. Structured output (via Outlines + Pydantic) guarantees every planner response is parseable.
+1. **Reliability at scale:** When processing thousands of tasks, parsing errors from free-form text would cascade into system failures. Structured output (via Outlines + Pydantic) guarantees every planner response is parseable.
 
-2. **Automated Orchestration:** Agents need programmatic decisions (e.g., "if `is_done=true`, return answer; else execute code"). Structured outputs provide machine-readable signals for deterministic control flow.
+2. **Automated orchestration:** Agents need programmatic decisions (e.g., "if `is_done=true`, return answer; else execute code"). Structured outputs provide machine-readable signals for deterministic control flow.
 
-3. **Error Recovery:** In agent systems, recovery requires clear signals about failures. Structured observations enable systematic error handling and retry logic.
+3. **Error recovery:** In agent systems, recovery requires clear signals about failures. Structured observations enable systematic error handling and retry logic.
 
 ---
 
@@ -204,7 +204,7 @@ Run your ReAct agent on the 10 tasks. Report accuracy and at least 3 qualitative
 
 **Answer:**
 
-**Overall Performance:**
+**Overall performance:**
 
 | Metric        | Value              |
 | ------------- | ------------------ |
@@ -212,7 +212,7 @@ Run your ReAct agent on the 10 tasks. Report accuracy and at least 3 qualitative
 | **Correct**   | 9 tasks            |
 | **Incorrect** | 1 task             |
 
-**Per-Task Results:**
+**Per-task results:**
 
 | Task ID | Result | Predicted                                          | Ground Truth                                       |
 | ------- | ------ | -------------------------------------------------- | -------------------------------------------------- |
@@ -229,7 +229,7 @@ Run your ReAct agent on the 10 tasks. Report accuracy and at least 3 qualitative
 
 ---
 
-**Trace 1: Success Case (Task 0 - Mean Fare)**
+**Trace 1: Success case (Task 0 - Mean Fare)**
 
 - **Question:** "Calculate the mean fare paid by the passengers."
 - **Thought:** "The DataFrame contains a 'Fare' column of type float64. The mean fare can be computed using pandas' mean() function."
@@ -244,7 +244,7 @@ Run your ReAct agent on the 10 tasks. Report accuracy and at least 3 qualitative
 
 ---
 
-**Trace 2: Failure Case (Task 9 - Mean Close Price)**
+**Trace 2: Failure case (Task 9 - Mean Close Price)**
 
 - **Question:** "Calculate the mean value of the 'Close Price' column."
 - **Final Answer:** `@mean_close_price[583.68]`
@@ -255,7 +255,7 @@ Run your ReAct agent on the 10 tasks. Report accuracy and at least 3 qualitative
 
 ---
 
-**Trace 3: Error Recovery Case (Task 55 - Mean Cases)**
+**Trace 3: Error recovery case (Task 55 - Mean Cases)**
 
 - **Question:** "What is the mean number of cases recorded across all countries and years?"
 
@@ -290,13 +290,13 @@ Run your ReAct agent on the 10 tasks. Report accuracy and at least 3 qualitative
 
 **Summary:**
 
-| Strength                    | Observation                                          |
-| --------------------------- | ---------------------------------------------------- |
-| Structured Output           | All planner outputs valid JSON                       |
-| Error Recovery              | Recovered from syntax errors with alternative code   |
-| Multi-Step Reasoning        | Handled feature engineering + correlation (Task 5)   |
-| Data Cleaning               | Correctly parsed complex string formats (Task 55)    |
+| Strength                    | Observation                                        |
+| --------------------------- | -------------------------------------------------- |
+| Structured Output           | All planner outputs valid JSON                     |
+| Error Recovery              | Recovered from syntax errors with alternative code |
+| Multi-Step Reasoning        | Handled feature engineering + correlation (Task 5) |
+| Data Cleaning               | Correctly parsed complex string formats (Task 55)  |
 
-| Weakness                    | Observation                                          |
-| --------------------------- | ---------------------------------------------------- |
-| Precision Issues            | Task 9 off by ~2.3% from ground truth                |
+| Weakness                    | Observation                                      |
+| --------------------------- | ------------------------------------------------ |
+| Precision Issues            | Task 9 off by ~2.3% from ground truth            |

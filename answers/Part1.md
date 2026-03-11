@@ -13,7 +13,7 @@ Run the base Qwen2.5-1.5B-Instruct model on 100 GSM8K test questions and report 
 - **Base Model Accuracy:** 38%
 - **Number of Test Samples:** 100
 
-The base Qwen2.5-1.5B-Instruct model achieves 38% accuracy on the GSM8K test set, which falls within the expected range of 35-40%. This establishes the performance floor for the project. The model struggles with multi-step reasoning and arithmetic operations, which is expected for a small language model that hasn't been specifically trained for mathematical reasoning.
+The base Qwen2.5-1.5B-Instruct model gets 38% accuracy on the GSM8K test set, within the expected 35-40% range. This gives us a baseline to improve upon. The model has trouble with multi-step reasoning and arithmetic—expected for a small language model without specific math training.
 
 ---
 
@@ -62,10 +62,10 @@ Inspect at least 3 cases where the base model produces an incorrect answer. For 
   ```
 - **Classification:** **Multi-step Reasoning Error** - The model made multiple errors: (1) applied 150% increase to total cost rather than original price, (2) used 0.150 instead of 1.50 for 150%.
 
-**Recurring Patterns:**
-1. Arithmetic unreliability: Even when models set up problems correctly, they make basic calculation errors
-2. Problem comprehension: Misinterpreting word problems, especially with fractions and percentages
-3. Multi-step reasoning: Difficulty maintaining correct logic through multiple calculation steps
+**Recurring patterns:**
+1. Arithmetic errors—even with correct setup, basic calculation mistakes
+2. Problem comprehension—misinterpreting word problems, especially with fractions and percentages
+3. Multi-step reasoning—trouble maintaining correct logic through multiple steps
 
 ---
 
@@ -79,21 +79,21 @@ Pick the three hyperparameters (LoRA rank, LoRA alpha, Gradient accumulation) fr
 
 **LoRA Rank (r)**
 
-- **What it controls:** The dimensionality of the low-rank decomposition matrices A and B. Controls adapter capacity.
-- **If you increase it:** More trainable parameters, better adaptation, higher memory usage, risk of overfitting
-- **If you decrease it:** Fewer parameters, limited adaptation, potential underfitting, better generalization
+- **What it controls:** Dimensionality of low-rank matrices A and B. Controls adapter capacity.
+- **If you increase:** More trainable parameters, better adaptation, higher memory usage, risk of overfitting
+- **If you decrease:** Fewer parameters, limited adaptation, potential underfitting, better generalization
 
 **LoRA Alpha (α)**
 
-- **What it controls:** The scaling factor applied to the LoRA update before adding to original weights. Update is scaled by α/r.
-- **If you increase it:** Stronger adapter influence, faster learning, risk of instability, may overshoot
-- **If you decrease it:** Weaker adapter influence, more stable training, slower learning, better base model preservation
+- **What it controls:** Scaling factor applied to LoRA update before adding to original weights. Update scaled by α/r.
+- **If you increase:** Stronger adapter influence, faster learning, risk of instability
+- **If you decrease:** Weaker adapter influence, more stable training, slower learning
 
 **Gradient Accumulation**
 
 - **What it controls:** Number of gradient updates to accumulate before weight update. Effective batch size = per_device_batch_size × gradient_accumulation_steps.
-- **If you increase it:** Larger effective batch size, better generalization, slower updates, more memory-efficient
-- **If you decrease it:** Smaller effective batch size, noisier gradients, faster updates, risk of instability
+- **If you increase:** Larger effective batch size, better generalization, slower updates
+- **If you decrease:** Smaller effective batch size, noisier gradients, faster updates, risk of instability
 
 ---
 
@@ -107,7 +107,7 @@ Report: (a) the total number of parameters in the base model, (b) the number of 
 - **(b) Trainable LoRA Parameters:** 2,179,072 (approximately 2.18 million)
 - **(c) Percentage:** 0.141% (only about 1 in 708 parameters is trained)
 
-**Why this percentage is small:** LoRA achieves this reduction through low-rank decomposition. Instead of updating a full weight matrix W ∈ ℝ^(d×d) requiring d² parameters, LoRA represents the update as ΔW = BA, where B ∈ ℝ^(d×r) and A ∈ ℝ^(r×d). This reduces parameters from d² to 2dr. With rank r=8 and typical dimension d=2048, this gives ~128× fewer parameters per adapted layer.
+**Why this percentage is small:** LoRA uses low-rank decomposition. Instead of updating a full weight matrix W ∈ ℝ^(d×d) requiring d² parameters, LoRA represents the update as ΔW = BA, where B ∈ ℝ^(d×r) and A ∈ ℝ^(r×d). This cuts parameters from d² to 2dr. With rank r=8 and typical dimension d=2048, that's ~128× fewer parameters per adapted layer.
 
 ---
 
@@ -121,7 +121,7 @@ Train a LoRA SFT model using 1,000 training examples. Evaluate on 100 GSM8K test
 - **Baseline Accuracy:** 38%
 - **Improvement:** +3 percentage points
 
-The improvement from 38% to 41% (+3 pp) represents a meaningful gain. Even with only 1,000 examples, fine-tuning improves performance. Training took ~40-50 minutes on a T4 GPU with only 0.14% of parameters being trained.
+The improvement from 38% to 41% (+3 pp) is real progress. Even with only 1,000 examples, fine-tuning helps. Training took ~40-50 minutes on a T4 GPU, training only 0.14% of parameters.
 
 ---
 
@@ -138,10 +138,10 @@ Hypothesis question: Do you think scaling from 1,000 examples to 3,000 and/or al
 - 3,000 → 7,473 examples: ~1-3 percentage point improvement (44-46% → 45-49%)
 
 **Rationale:**
-- Scaling helps: Pattern diversity, better generalization, robust reasoning
-- Diminishing returns: Data redundancy in GSM8K, limited model capacity (0.14% trainable), quality vs quantity
+- Scaling helps: pattern diversity, better generalization, more robust reasoning
+- Diminishing returns: data redundancy in GSM8K, limited model capacity (0.14% trainable), quality vs quantity trade-off
 
-**Recommended strategy:** Scale in two steps (1k → 3k → full) to analyze scaling behavior and stop early if returns diminish.
+**Recommended strategy:** Scale in two steps (1k → 3k → full) to track scaling behavior and stop early if returns flatten.
 
 ---
 
@@ -162,7 +162,7 @@ File: [Scaling Plot](outputs/q7_scaling_plot.png)
 **Analysis:**
 - Consistent improvement as data increases: 38% → 41% → 44%
 - Diminishing returns: 0→1k gives +3pp with 1k examples, 1k→3k gives +3pp with 2k additional examples
-- Extrapolating to full dataset (7,473) might yield ~46-48% accuracy
+- Extrapolating to full dataset (7,473) might yield ~46-48%
 
 ---
 
@@ -187,7 +187,7 @@ Compare the base model and your best SFT model on the same 3 failure examples fr
 - SFT-3k Model: 69500 (still applied 0.15 instead of 1.5)
 - **Result:** Both failed with similar percentage calculation errors
 
-**Summary:** SFT fixed 1/3 problems (language comprehension improved), but arithmetic and percentage reasoning remain challenging.
+**Summary:** SFT fixed 1/3 problems (language comprehension got better), but arithmetic and percentage reasoning remain hard.
 
 ---
 
@@ -207,7 +207,7 @@ Identify 2 examples where your best SFT model still fails. What types of errors 
 - Error: Applied 0.15 (15%) instead of 1.5 (150%)
 - Type: **Arithmetic/Percentage reasoning**
 
-**Persistent Error Types (ranked by frequency):**
+**Persistent error types (ranked by frequency):**
 1. Arithmetic/Percentage errors (converting percentages incorrectly)
 2. Multi-step reasoning with hallucinated operations
 3. Problem comprehension (occasional misinterpretation)
@@ -227,9 +227,9 @@ Evaluate k-shot prompting (k=3) on the base model and your LoRA SFT model traine
 | Base Model   | 38%                | 32%             | -6 pp           |
 | SFT-3k Model | 44%                | 50%             | +6 pp           |
 
-**Key Observations:**
+**Key observations:**
 - Few-shot helps SFT (+6 pp) but hurts base model (-6 pp)
-- Combined gains: SFT-3k + few-shot achieves 50%, a 12 pp improvement over baseline
+- Combined gains: SFT-3k + few-shot reaches 50%, a 12 pp improvement over baseline
 
 ---
 
@@ -239,23 +239,23 @@ Analyze the effect of few-shot prompting on each model.
 
 **Answer:**
 
-**Effect on Base Model (-6 pp - Negative Impact)**
+**Effect on Base Model (-6 pp)**
 
 Few-shot hurts because:
-1. No reasoning foundation to utilize demonstrations
+1. No reasoning foundation to use demonstrations
 2. Attention dilution from context window usage
 3. Format confusion from demonstration patterns
-4. Negative transfer from reasoning patterns base model can't follow
+4. Negative transfer from reasoning patterns the base model can't follow
 
-**Effect on SFT Models (+6 pp - Positive Impact)**
+**Effect on SFT Models (+6 pp)**
 
 Few-shot helps because:
 1. Reinforces step-by-step reasoning patterns from training
 2. Consistent format alignment with training
 3. Pattern completion guidance
-4. Reduced format errors
+4. Fewer format errors
 
-**Which benefits most:** SFT-3k benefits most (+6 pp vs -6 pp). Few-shot and SFT are complementary - SFT teaches reasoning style, few-shot reinforces it.
+**Which benefits most:** SFT-3k benefits most (+6 pp vs -6 pp). Few-shot and SFT work together—SFT teaches reasoning style, few-shot reinforces it.
 
 ---
 
@@ -267,35 +267,35 @@ Based on results so far, what do you think is limiting performance?
 
 **Answer:**
 
-**1. Arithmetic Reliability (Major Limitation)**
+**1. Arithmetic Reliability (Major limitation)**
 - Simple calculation errors persist (15 + 25 = 7, 13 - 4 = -1)
 - No self-verification of intermediate results
 - Percentage confusion (using 0.15 for 150%)
 
-**2. Multi-Step Planning (Primary Limitation)**
+**2. Multi-Step Planning (Primary limitation)**
 - Loses track of goals in complex problems
 - Incorrect intermediate steps
 - No explicit planning before execution
-- Difficulty with 4+ step problems
+- Trouble with 4+ step problems
 
-**3. Problem Comprehension (Moderate Limitation)**
+**3. Problem Comprehension (Moderate limitation)**
 - Language ambiguity misinterpretation
 - Missed constraints
 - Hallucinated information
 - ~15-20% of errors from initial misunderstanding
 
-**4. Output Consistency (Minor Limitation)**
+**4. Output Consistency (Minor limitation)**
 - Format variations (units in answers)
 - Incomplete answers
 - Affects ~2-3% of answers
 
-**5. Training Data Quality (Significant Limitation)**
+**5. Training Data Quality (Significant limitation)**
 - Inconsistent solution styles
 - No verification signals
 - No error correction examples
 - Scaling paradox: more data didn't help as much as expected
 
-**Ranked Importance:** Multi-step reasoning > Training data quality > Arithmetic reliability > Problem comprehension > Output consistency
+**Ranked importance:** Multi-step reasoning > Training data quality > Arithmetic reliability > Problem comprehension > Output consistency
 
 ---
 
@@ -350,4 +350,4 @@ Self-consistency through majority voting will improve accuracy by reducing rando
 3. Problem difficulty matters (works best on "sometimes right" problems)
 4. Failed to reach 70% goal, suggesting training data quality is bigger bottleneck
 
-**Conclusion:** Self-consistency improved accuracy by 12 pp (44% → 56%) but cannot fix systematic reasoning gaps. The gap to 70%+ requires addressing training data quality.
+**Conclusion:** Self-consistency improved accuracy by 12 pp (44% → 56%) but can't fix systematic reasoning gaps. The gap to 70%+ requires better training data quality.

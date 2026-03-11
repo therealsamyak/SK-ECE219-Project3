@@ -8,7 +8,7 @@ Perform an exploratory data analysis on the Diamonds dataset. Report correlation
 
 **Answer:**
 
-**Correlation Analysis:**
+**Correlation analysis:**
 
 File: [Correlation Heatmap](outputs/q21_correlation_heatmap.png)
 
@@ -21,7 +21,7 @@ File: [Correlation Heatmap](outputs/q21_correlation_heatmap.png)
 | table   | 0.1271                 |
 | depth   | -0.0106 (weakest)      |
 
-**Key Observations:**
+**Key observations:**
 1. Carat has strongest correlation (0.92) - larger diamonds more valuable
 2. Physical dimensions (x, y, z) highly correlated (0.86-0.88) - related to carat weight
 3. Depth and table show weak correlations
@@ -29,7 +29,7 @@ File: [Correlation Heatmap](outputs/q21_correlation_heatmap.png)
 
 ---
 
-**Distribution Analysis:**
+**Distribution analysis:**
 
 File: [Histograms](outputs/q21_histograms.png)
 
@@ -42,11 +42,11 @@ File: [Histograms](outputs/q21_histograms.png)
 | x       | 0.3787   | Approximately symmetric | None           |
 | depth   | -0.0823  | Approximately symmetric | None           |
 
-**Recommendation:** Apply log transformation to `carat`, `y`, `z` to address right-skewness.
+**Recommendation:** Apply log transformation to `carat`, `y`, `z` to fix right-skewness.
 
 ---
 
-**Categorical Analysis:**
+**Categorical analysis:**
 
 File: [Box Plots](outputs/q21_boxplots.png)
 
@@ -59,7 +59,7 @@ File: [Box Plots](outputs/q21_boxplots.png)
 | Very Good | $2,648       |
 | Ideal     | $1,810       |
 
-**Trend:** "Ideal" cut has lowest median price, "Fair" highest - counterintuitive due to carat correlation.
+**Trend:** "Ideal" cut has lowest median price, "Fair" highest—counterintuitive due to carat correlation.
 
 **Color vs Price:**
 | Color | Median Price |
@@ -72,7 +72,7 @@ File: [Box Plots](outputs/q21_boxplots.png)
 | E     | $1,739       |
 | D     | $1,838       |
 
-**Trend:** Lower color grades (J, I, H) higher prices - likely due to carat correlation.
+**Trend:** Lower color grades (J, I, H) higher prices—likely due to carat correlation.
 
 **Clarity vs Price:**
 | Clarity | Median Price |
@@ -86,7 +86,7 @@ File: [Box Plots](outputs/q21_boxplots.png)
 | VVS1    | $1,093       |
 | IF      | $1,080       |
 
-**Trend:** Lower clarity grades higher prices - counterintuitive but explained by carat correlation.
+**Trend:** Lower clarity grades higher prices—counterintuitive but explained by carat correlation.
 
 ---
 
@@ -96,7 +96,7 @@ Explain encoding trade-offs and report which method was chosen for each categori
 
 **Answer:**
 
-**Encoding Decisions:**
+**Encoding decisions:**
 
 | Feature | Encoding | Rationale                                                          |
 | ------- | -------- | ------------------------------------------------------------------ |
@@ -128,7 +128,7 @@ Scalar (ordinal) encoding assumes:
 
 **Violation consequences:** Non-monotonic or incorrect spacing introduces bias.
 
-For diamonds, we chose ordinal because cut, color, clarity have established quality hierarchies. However, the non-monotonic price relationship (due to carat correlation) may affect model performance.
+For diamonds, we chose ordinal because cut, color, clarity have established quality hierarchies. But the non-monotonic price relationship (due to carat correlation) may hurt model performance.
 
 ---
 
@@ -194,7 +194,7 @@ Print top 5 features using mutual_info_regression and f_regression. Use ReAct ag
 | 4    | z       | High     |
 | 5    | color   | Moderate |
 
-**Agentic Integration:**
+**Agentic integration:**
 - Agent answers: `@top5_mi[x, y, z, carat, depth]`
 - Agent answers: `@top5_f[carat, x, y, z, color]`
 
@@ -203,7 +203,7 @@ Print top 5 features using mutual_info_regression and f_regression. Use ReAct ag
 - **Difference:** MI ranks `depth` 5th; F-regression ranks `color` 5th
 - **Explanation:** MI captures non-linear dependencies; F-regression measures linear relationships
 
-**Selected Features:** `carat`, `x`, `y`, `z`, `color`
+**Selected features:** `carat`, `x`, `y`, `z`, `color`
 
 **Output:** File saved as `diamonds_selected.csv`
 
@@ -229,11 +229,11 @@ $$\min_{\beta} \frac{1}{2n} \sum_{i=1}^{n} (y_i - \beta_0 - \sum_{j=1}^{p} \beta
 | Lasso | 3.6766        | 1217.13         |
 | Ridge | 10000.0       | 1475.95         |
 
-**Best Model:** Lasso Regression (α = 3.6766, RMSE = 1217.13)
+**Best model:** Lasso Regression (α = 3.6766, RMSE = 1217.13)
 
 ---
 
-**How Regularization Affects Learned Parameters:**
+**How regularization affects learned parameters:**
 
 **OLS (No Regularization):**
 - Minimizes only squared error
@@ -265,7 +265,7 @@ $$\min_{\beta} \frac{1}{2n} \|y - X\beta\|^2 + \alpha \|\beta\|^2$$
 
 ---
 
-**Optimal Alpha Computation:**
+**Optimal alpha computation:**
 
 Used 10-fold cross-validation with `LassoCV` and `RidgeCV`:
 ```python
@@ -280,7 +280,7 @@ best_alpha_ridge = ridge.alpha_  # 10000
 
 ---
 
-**P-Values and Feature Significance:**
+**P-values and feature significance:**
 
 **What p-values mean:**
 - **H₀:** Coefficient β_j = 0 (no linear relationship)
@@ -290,14 +290,14 @@ best_alpha_ridge = ridge.alpha_  # 10000
 - Low p-value (< 0.05): Feature is statistically significant
 - High p-value (> 0.05): Feature may not be significant
 
-**Most Significant Features (by expected p-value):**
+**Most significant features (by expected p-value):**
 1. **carat** - Lowest p-value (0.92 correlation)
 2. **x, y, z** - Low p-values (0.86-0.88 correlations)
 3. **table, depth** - Higher p-values (0.13, -0.01 correlations)
 
 ---
 
-**Agentic Integration Results:**
+**Agentic integration results:**
 - OLS: `@ols_val_rmse[1217.58]` ✓ Successfully parsed
 - Lasso: Required manual fallback (structured output parsing issue)
 - Ridge: Required manual fallback (structured output parsing issue)
