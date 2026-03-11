@@ -1,274 +1,155 @@
-# Part 1: Teaching a Small Model to Reason - LoRA Fine-Tuning
+# Part A: Teaching a Small Model to Reason: LoRA Fine-Tuning
 
 > **Note on Hyperparameters:** Due to GPU memory constraints, the batch size and gradient accumulation values were swapped from the assignment defaults. The assignment specifies per-device batch size of 8 with gradient accumulation of 4, but the implementation uses per-device batch size of 4 with gradient accumulation of 8. This maintains the same effective batch size of 32 (4×8 = 8×4 = 32) while reducing peak memory usage.
 
-## Question 1: Baseline Accuracy (10 points)
+## Task 1 — Baseline: How Good is the Base Model?
 
-**Question:** Run the base Qwen2.5-1.5B-Instruct model on 100 GSM8K test questions and report the accuracy. You should expect approximately 35–40%.
+### Question 1
 
-**Results:**
+Run the base Qwen2.5-1.5B-Instruct model on 100 GSM8K test questions and report the accuracy. You should expect approximately 35–40%.
+
+**Answer:**
 
 - **Base Model Accuracy:** 38%
 - **Number of Test Samples:** 100
-
-**Analysis:**
 
 The base Qwen2.5-1.5B-Instruct model achieves 38% accuracy on the GSM8K test set, which falls within the expected range of 35-40%. This establishes the performance floor for the project. The model struggles with multi-step reasoning and arithmetic operations, which is expected for a small language model that hasn't been specifically trained for mathematical reasoning.
 
 ---
 
-## Question 2: Failure Case Analysis (10 points)
+### Question 2
 
-**Question:** Inspect at least 3 cases where the base model produces an incorrect answer. For each example, include the question, a short excerpt of the model's solution highlighting the failure, the extracted answer vs. the ground-truth answer. Classify each failure mode.
+Inspect at least 3 cases where the base model produces an incorrect answer. For each example, include: the question, a short excerpt of the model's solution highlighting the failure, the extracted answer vs. the ground-truth answer. Classify each failure mode.
 
-### Failure Case 1: Arithmetic Error
+**Answer:**
 
-**Question:** Janet's ducks lay 16 eggs per day. She eats three for breakfast every morning and bakes muffins for her friends every day with four. She sells the remainder at the farmers' market daily for $2 per fresh duck egg. How much in dollars does she make every day at the farmers' market?
+**Failure Case 1: Arithmetic Error**
 
-**Ground Truth:** 18
+- **Question:** Janet's ducks lay 16 eggs per day. She eats three for breakfast every morning and bakes muffins for her friends every day with four. She sells the remainder at the farmers' market daily for $2 per fresh duck egg. How much in dollars does she make every day at the farmers' market?
+- **Ground Truth:** 18
+- **Extracted Answer:** 0
+- **Failure Excerpt:**
+  ```
+  Remaining eggs for sale = Remaining eggs after breakfast - Eggs used for baking muffins
+                          = 13 - 4
+                          = -1 (This is not possible since it would mean negative eggs)
+  ```
+- **Classification:** **Arithmetic Slip** - The model correctly sets up the calculation (16 - 3 - 4 = 9) but then makes a catastrophic error by concluding this is -1 instead of 9.
 
-**Extracted Answer:** 0
+**Failure Case 2: Problem Comprehension**
 
-**Failure Excerpt:**
+- **Question:** A robe takes 2 bolts of blue fiber and half that much white fiber. How many bolts in total does it take?
+- **Ground Truth:** 3
+- **Extracted Answer:** 2.5
+- **Failure Excerpt:**
+  ```
+  The robe requires half as much white fiber as blue fiber.
+  Therefore, the amount of white fiber is (1/2) bolt of blue fiber.
+  2 (blue fibers) + 1/2 (white fibers) = 2.5 bolts
+  ```
+- **Classification:** **Problem Comprehension** - The model misinterpreted "half that much white fiber" as meaning half a bolt total, rather than half of 2 bolts (which is 1 bolt).
 
-```
-Remaining eggs for sale = Remaining eggs after breakfast - Eggs used for baking muffins
-                        = 13 - 4
-                        = -1 (This is not possible since it would mean negative eggs)
+**Failure Case 3: Multi-step Reasoning Error**
 
-Therefore, the correct interpretation should be that Janet doesn't have enough eggs to sell at the farmers' market under the given conditions.
-```
-
-**Classification:** **Arithmetic Slip** - The model correctly sets up the calculation (16 - 3 - 4 = 9) but then makes a catastrophic error by concluding this is -1 instead of 9, leading to an incorrect final answer of 0 instead of calculating 9 × 2 = 18.
-
-### Failure Case 2: Logical Error
-
-**Question:** A robe takes 2 bolts of blue fiber and half that much white fiber. How many bolts in total does it take?
-
-**Ground Truth:** 3
-
-**Extracted Answer:** 2.5
-
-**Failure Excerpt:**
-
-```
-The robe requires half as much white fiber as blue fiber.
-Therefore, the amount of white fiber is (1/2) bolt of blue fiber.
-2 (blue fibers) + 1/2 (white fibers) = 2.5 bolts
-```
-
-**Classification:** **Problem Comprehension** - The model misinterpreted "half that much white fiber" as meaning half a bolt total, rather than half of 2 bolts (which is 1 bolt). This is a language understanding issue rather than arithmetic.
-
-### Failure Case 3: Multi-step Reasoning Error
-
-**Question:** Josh decides to try flipping a house. He buys a house for $80,000 and then puts in $50,000 in repairs. This increased the value of the house by 150%. How much profit did he make?
-
-**Ground Truth:** 70000
-
-**Extracted Answer:** -55500
-
-**Failure Excerpt:**
-
-```
-Increase in value = Total cost × Percentage increase
-Increase in value = $130,000 × 0.150 = $49,500
-Profit = $129,500 - $130,000 = -$5,500
-```
-
-**Classification:** **Multi-step Reasoning Error** - The model made multiple errors: (1) applied 150% increase to total cost rather than original price, (2) used 0.150 instead of 1.50 for 150%, and (3) subtracted incorrectly. The correct calculation should be: Original house value increases by 150% = $80,000 × 1.5 = $120,000, so new value is $200,000. Profit = $200,000 - $130,000 = $70,000.
+- **Question:** Josh decides to try flipping a house. He buys a house for $80,000 and then puts in $50,000 in repairs. This increased the value of the house by 150%. How much profit did he make?
+- **Ground Truth:** 70000
+- **Extracted Answer:** -55500
+- **Failure Excerpt:**
+  ```
+  Increase in value = Total cost × Percentage increase
+  Increase in value = $130,000 × 0.150 = $49,500
+  Profit = $129,500 - $130,000 = -$5,500
+  ```
+- **Classification:** **Multi-step Reasoning Error** - The model made multiple errors: (1) applied 150% increase to total cost rather than original price, (2) used 0.150 instead of 1.50 for 150%.
 
 **Recurring Patterns:**
-
-1. **Arithmetic unreliability:** Even when models set up problems correctly, they make basic calculation errors
-2. **Problem comprehension:** Misinterpreting word problems, especially with fractions and percentages
-3. **Multi-step reasoning:** Difficulty maintaining correct logic through multiple calculation steps
-4. **Unit confusion:** Mixing up units or quantities (e.g., "half that much" interpretations)
+1. Arithmetic unreliability: Even when models set up problems correctly, they make basic calculation errors
+2. Problem comprehension: Misinterpreting word problems, especially with fractions and percentages
+3. Multi-step reasoning: Difficulty maintaining correct logic through multiple calculation steps
 
 ---
 
-## Question 3: LoRA Hyperparameters Explanation (15 points)
+## Task 2 — LoRA Fine-Tuning on GSM8K
 
-**Question:** Pick three hyperparameters (LoRA rank, LoRA alpha, Gradient accumulation) and explain what each controls, what happens if you increase it, and what happens if you decrease it.
+### Question 3
 
-### LoRA Rank (r)
+Pick the three hyperparameters (LoRA rank, LoRA alpha, Gradient accumulation) from the table above and explain: what each hyperparameter controls, what you expect to happen if you increase it, what you expect to happen if you decrease it.
 
-**What it controls:** The rank parameter determines the dimensionality of the low-rank decomposition matrices A and B. It controls the capacity of the adapter to learn new information - higher rank means more expressive power.
+**Answer:**
 
-**If you increase it:**
+**LoRA Rank (r)**
 
-- **More trainable parameters:** Increases from 2dr to 2d×(new_r) parameters per layer
-- **Better adaptation:** Model can learn more complex modifications to the base weights
-- **Higher memory usage:** More parameters to store and compute during training
-- **Risk of overfitting:** With more capacity, the model might overfit to training data
+- **What it controls:** The dimensionality of the low-rank decomposition matrices A and B. Controls adapter capacity.
+- **If you increase it:** More trainable parameters, better adaptation, higher memory usage, risk of overfitting
+- **If you decrease it:** Fewer parameters, limited adaptation, potential underfitting, better generalization
 
-**If you decrease it:**
+**LoRA Alpha (α)**
 
-- **Fewer trainable parameters:** Reduces computational cost and memory usage
-- **Limited adaptation:** Model may not be able to learn necessary modifications
-- **Underfitting:** Might not capture enough information to improve performance
-- **Better generalization:** Less capacity can prevent overfitting to training data
+- **What it controls:** The scaling factor applied to the LoRA update before adding to original weights. Update is scaled by α/r.
+- **If you increase it:** Stronger adapter influence, faster learning, risk of instability, may overshoot
+- **If you decrease it:** Weaker adapter influence, more stable training, slower learning, better base model preservation
 
-### LoRA Alpha (α)
+**Gradient Accumulation**
 
-**What it controls:** The scaling factor applied to the LoRA update before adding to the original weights. The update is scaled by α/r. It controls how strongly the learned adapters influence the output.
-
-**If you increase it:**
-
-- **Stronger adapter influence:** The LoRA updates have larger impact on the model's behavior
-- **Faster learning:** Gradients are scaled up, potentially leading to faster convergence
-- **Risk of instability:** Too large values might cause training instability
-- **May overshoot:** Could push the model too far from its original behavior
-
-**If you decrease it:**
-
-- **Weaker adapter influence:** LoRA modifications have smaller effect on outputs
-- **More stable training:** Smaller updates reduce risk of catastrophic forgetting
-- **Slower learning:** Might require more epochs to achieve desired performance
-- **Better preservation:** Base model behavior is more strongly preserved
-
-### Gradient Accumulation
-
-**What it controls:** The number of gradient updates to accumulate before performing a weight update. It effectively multiplies the batch size without increasing memory usage (effective_batch_size = per_device_batch_size × gradient_accumulation_steps).
-
-**If you increase it:**
-
-- **Larger effective batch size:** More stable gradient estimates
-- **Better generalization:** Larger batches often generalize better
-- **Slower updates:** Fewer weight updates per epoch
-- **More memory-efficient:** Can simulate large batch training on limited GPU memory
-
-**If you decrease it:**
-
-- **Smaller effective batch size:** Noisier gradient estimates
-- **Faster updates:** More frequent weight updates
-- **More memory usage per update:** Less efficient use of gradient computation
-- **Risk of instability:** Noisier gradients might cause training instability
+- **What it controls:** Number of gradient updates to accumulate before weight update. Effective batch size = per_device_batch_size × gradient_accumulation_steps.
+- **If you increase it:** Larger effective batch size, better generalization, slower updates, more memory-efficient
+- **If you decrease it:** Smaller effective batch size, noisier gradients, faster updates, risk of instability
 
 ---
 
-## Question 4: Parameter Counts (15 points)
+### Question 4
 
-**Question:** Report (a) the total number of parameters in the base model, (b) the number of trainable LoRA parameters under the default configuration, (c) the percentage of parameters being trained.
+Report: (a) the total number of parameters in the base model, (b) the number of trainable LoRA parameters under the default configuration, (c) the percentage of parameters being trained.
 
-**Results:**
+**Answer:**
 
-### (a) Base Model Total Parameters
+- **(a) Base Model Total Parameters:** 1,543,714,304 (approximately 1.54 billion)
+- **(b) Trainable LoRA Parameters:** 2,179,072 (approximately 2.18 million)
+- **(c) Percentage:** 0.141% (only about 1 in 708 parameters is trained)
 
-- **Total Parameters:** 1,543,714,304 (approximately 1.54 billion parameters)
-- This is Qwen2.5-1.5B-Instruct, a small but capable instruction-tuned language model
-
-### (b) Trainable LoRA Parameters
-
-- **Trainable Parameters:** 2,179,072 (approximately 2.18 million parameters)
-- Default configuration: rank=8, alpha=16, applied to attention layers (q_proj, k_proj, v_proj, o_proj)
-
-### (c) Percentage of Parameters Being Trained
-
-- **Percentage:** 0.141%
-- **Ratio:** Only about 1 in 708 parameters is being trained
-
-**Why This Percentage is Small:**
-
-LoRA achieves this dramatic reduction through **low-rank decomposition**. Instead of updating a full weight matrix W ∈ ℝ^(d×d) which requires d² parameters, LoRA represents the update as:
-
-ΔW = BA, where B ∈ ℝ^(d×r) and A ∈ ℝ^(r×d)
-
-This reduces parameters from d² to 2dr. With rank r=8 and typical dimension d=2048 (for Qwen2.5-1.5B), this gives:
-
-- Full update: d² = 4,194,304 parameters per layer
-- LoRA update: 2dr = 2 × 2048 × 8 = 32,768 parameters per layer
-- **Reduction factor:** ~128× fewer parameters per adapted layer
-
-Additionally, LoRA only adapts the attention projection layers (q_proj, k_proj, v_proj, o_proj), not all linear layers in the transformer, further reducing the trainable parameter count.
+**Why this percentage is small:** LoRA achieves this reduction through low-rank decomposition. Instead of updating a full weight matrix W ∈ ℝ^(d×d) requiring d² parameters, LoRA represents the update as ΔW = BA, where B ∈ ℝ^(d×r) and A ∈ ℝ^(r×d). This reduces parameters from d² to 2dr. With rank r=8 and typical dimension d=2048, this gives ~128× fewer parameters per adapted layer.
 
 ---
 
-## Question 5: SFT-1k Results (25 points)
+### Question 5
 
-**Question:** Train a LoRA SFT model using 1,000 training examples. Evaluate on 100 GSM8K test questions and report the accuracy. Include a brief comment on whether the improvement matches expectations.
+Train a LoRA SFT model using 1,000 training examples. Evaluate on 100 GSM8K test questions and report the accuracy.
 
-**Results:**
+**Answer:**
 
 - **SFT-1k Accuracy:** 41%
 - **Baseline Accuracy:** 38%
 - **Improvement:** +3 percentage points
 
-**Analysis:**
-
-The improvement from 38% to 41% (+3 pp) represents a meaningful gain. This matches expectations for several reasons:
-
-**Positive aspects:**
-
-1. **Validates the approach:** Even with only 1,000 examples, fine-tuning improves performance
-2. **Efficient training:** Only ~40-50 minutes of training on a T4 GPU
-3. **Parameter efficiency:** Achieved improvement by training only 0.14% of parameters
-
-**Limitations observed:**
-
-1. **Small dataset:** 1,000 examples provides improvement but may not be sufficient for learning all mathematical reasoning patterns
-2. **Moderate improvement:** +3pp is meaningful, suggesting more data could help further
-3. **Continued errors:** Model still makes arithmetic and reasoning errors similar to base model
-
-**Examples of improvements and continued failures:**
-
-**Improved (Base → SFT-1k):**
-
-- Question about robe fabric: 2.5 → 3 (correct)
-- Question about Wendi's chickens: 57 → 20 (correct)
-
-**Still failing:**
-
-- Josh's house flipping: -55,500 → -100,500 (both wrong, different errors)
-- James's sprints: 270 → 72 (both wrong)
-
-The model shows it's learning some patterns but hasn't developed robust mathematical reasoning capabilities yet.
+The improvement from 38% to 41% (+3 pp) represents a meaningful gain. Even with only 1,000 examples, fine-tuning improves performance. Training took ~40-50 minutes on a T4 GPU with only 0.14% of parameters being trained.
 
 ---
 
-## Question 6: Scaling Hypothesis (10 points)
+### Question 6
 
-**Question:** Hypothesis question (write before running larger training): Do you think scaling from 1,000 examples to 3,000 and/or all 7,473 examples is worth the additional compute? What do you expect the accuracy gains to look like (roughly), and why?
+Hypothesis question: Do you think scaling from 1,000 examples to 3,000 and/or all 7,473 examples is worth the additional compute?
 
-**Hypothesis:**
+**Answer:**
 
 **Yes, scaling is worth the compute, but with diminishing returns.**
 
 **Expected Accuracy Gains:**
-
-1. **1,000 → 3,000 examples:** I expect ~2-4 percentage point improvement (42% → 44-46%)
-2. **3,000 → 7,473 examples:** I expect ~1-3 percentage point improvement (44-46% → 45-49%)
+- 1,000 → 3,000 examples: ~2-4 percentage point improvement (42% → 44-46%)
+- 3,000 → 7,473 examples: ~1-3 percentage point improvement (44-46% → 45-49%)
 
 **Rationale:**
+- Scaling helps: Pattern diversity, better generalization, robust reasoning
+- Diminishing returns: Data redundancy in GSM8K, limited model capacity (0.14% trainable), quality vs quantity
 
-**Why scaling helps:**
-
-1. **Pattern diversity:** More examples expose the model to more problem types and solution patterns
-2. **Better generalization:** More data reduces overfitting to specific examples
-3. **Robust reasoning:** More examples help the model learn more robust step-by-step reasoning
-
-**Why diminishing returns:**
-
-1. **Data redundancy:** GSM8K problems follow similar patterns; later examples provide less new information
-2. **Model capacity:** With only 0.14% parameters trainable, there's a limit to what the model can learn
-3. **Quality vs. quantity:** The model may benefit more from higher-quality solutions than more solutions
-
-**Recommended scaling strategy:**
-
-I would scale in **two steps** (1k → 3k → full) rather than jumping directly to 7,473 because:
-
-1. **Efficiency:** Can stop early if returns diminish significantly
-2. **Analysis opportunity:** Can study scaling behavior at each step
-3. **Compute management:** If 3k shows minimal improvement, can avoid spending 3-4 hours on full training
-
-**Expected total improvement:** 38% → 45-49% (7-11 pp total improvement from baseline)
+**Recommended strategy:** Scale in two steps (1k → 3k → full) to analyze scaling behavior and stop early if returns diminish.
 
 ---
 
-## Question 7: Scaling Results + Plot (20 points)
+### Question 7
 
-**Question:** Scale up training data (3,000 examples, and optionally full 7,473). Evaluate each trained model on the same 100-question test subset and report accuracies. Plot accuracy as a function of training examples. Describe the trend and comment on diminishing returns.
+Scale up training data (3,000 examples, and optionally full 7,473). Evaluate each trained model and plot accuracy as a function of training examples.
 
-**Results:**
+**Answer:**
 
 | Training Examples | Accuracy | Improvement from Baseline |
 | ----------------- | -------- | ------------------------- |
@@ -276,494 +157,197 @@ I would scale in **two steps** (1k → 3k → full) rather than jumping directly
 | 1,000             | 41%      | +3 pp                     |
 | 3,000             | 44%      | +6 pp                     |
 
-**Plot:** See `outputs/q7_scaling_plot.png` for the accuracy scaling visualization.
+File: [Scaling Plot](outputs/q7_scaling_plot.png)
 
-**Analysis of Results:**
-
-**Positive trend:** The scaling results show consistent improvement as training data increases: 38% → 41% → 44%. Each increment of training data provides meaningful gains.
-
-**Diminishing Returns Analysis:**
-
-The results show **diminishing but positive returns** as expected:
-
-1. **0 → 1,000 examples:** +3 pp (largest gain per example)
-2. **1,000 → 3,000 examples:** +3 pp (2x more data for same gain)
-
-**Key observations:**
-
-1. **Consistent improvement:** Unlike initial runs that showed degradation, the corrected training (with `<<>>` markers removed from training data) shows proper scaling behavior
-2. **Diminishing returns:** Going from 0→1k gives +3pp with 1k examples, while 1k→3k gives +3pp with 2k additional examples - about half the efficiency
-3. **Data quality matters:** The improvement in scaling behavior is attributed to removing the `<<>>` calculation markers from training data, which were hurting model learning
-
-**Extrapolation to full dataset (7,473 examples):**
-
-Based on the diminishing returns pattern, extrapolating to the full dataset might yield approximately 46-48% accuracy, but with significantly diminishing efficiency per additional example.
+**Analysis:**
+- Consistent improvement as data increases: 38% → 41% → 44%
+- Diminishing returns: 0→1k gives +3pp with 1k examples, 1k→3k gives +3pp with 2k additional examples
+- Extrapolating to full dataset (7,473) might yield ~46-48% accuracy
 
 ---
 
-## Question 8: Base vs SFT Comparison (10 points)
+### Question 8
 
-**Question:** Compare the base model and your best SFT model on the same 3 failure examples from Task 1. Show both models' responses side by side. Does SFT fix any errors?
+Compare the base model and your best SFT model on the same 3 failure examples from Task 1.
 
-**Comparison on 3 Failure Cases:**
+**Answer:**
 
-### Case 1: Janet's Ducks
+**Case 1: Janet's Ducks (Ground Truth: 18)**
+- Base Model: 0 (arithmetic error: 13 - 4 = -1)
+- SFT-3k Model: 73.50 (different error: hallucinated 16×3 multiplication)
+- **Result:** Both failed with different errors
 
-**Ground Truth:** 18
+**Case 2: Robe Fabric (Ground Truth: 3)**
+- Base Model: 2.5 (misinterpreted "half that much" as 0.5 bolts)
+- SFT-3k Model: 3 (correctly interpreted as half of 2 bolts = 1 bolt)
+- **Result:** SFT fixed this error ✓
 
-**Base Model Answer:** 0
-**SFT-3k Model Answer:** 73.50
+**Case 3: House Flipping (Ground Truth: 70000)**
+- Base Model: -55500 (applied 0.150 instead of 1.5 for 150%)
+- SFT-3k Model: 69500 (still applied 0.15 instead of 1.5)
+- **Result:** Both failed with similar percentage calculation errors
 
-**Base Model Excerpt:**
-
-```
-Remaining eggs for sale = 13 - 4 = -1 (This is not possible since it would mean negative eggs)
-Therefore, the correct interpretation should be that Janet doesn't have enough eggs to sell at the farmers' market under the given conditions.
-```
-
-**SFT-3k Model Excerpt:**
-
-```
-The ducks lay 16*3=48 eggs for Janet to eat.
-She has 48-3=45 eggs left after eating them for breakfast.
-So she gives away 45/4=11.25 eggs to her friends.
-That means there are 48-11.25=36.75 eggs remaining for sale.
-Therefore, she makes 36.75*2=$73.50 from selling the eggs at the farmers' market.
-```
-
-**Analysis:** **SFT model STILL FAILED!** Both models made errors. Base model made an arithmetic error (13 - 4 = -1). SFT model made a different error - it multiplied 16×3 for unknown reason and computed an incorrect answer of $73.50. This shows SFT training introduced new reasoning errors while attempting different solution approaches.
-
-### Case 2: Robe Fabric
-
-**Ground Truth:** 3
-
-**Base Model Answer:** 2.5
-**SFT-3k Model Answer:** 3
-
-**Base Model Excerpt:**
-
-```
-The robe requires half as much white fiber as blue fiber.
-Therefore, the amount of white fiber is (1/2) bolt of blue fiber.
-2 (blue fibers) + 1/2 (white fibers) = 2.5 bolts
-```
-
-**SFT-3k Model Excerpt:**
-
-```
-The number of bolts of white fiber is 1/2*2=1 bolt.
-In total, there are 2+1=3 bolts.
-```
-
-**Analysis:** **SFT model FIXED this error!** The base model misinterpreted "half that much" as 0.5 bolts total. The SFT model correctly interpreted it as half of 2 bolts = 1 bolt. This shows SFT improved language comprehension.
-
-### Case 3: House Flipping
-
-**Ground Truth:** 70000
-
-**Base Model Answer:** -55500
-**SFT-3k Model Answer:** 69500
-
-**Base Model Excerpt:**
-
-```
-Increase in value = Total cost × Percentage increase
-= $130,000 × 0.150 = $49,500
-Profit = $129,500 - $130,000 = -$5,500
-```
-
-**SFT-3k Model Excerpt:**
-
-```
-The house was worth 80,000 + 50,000 = $130,000 after the repairs.
-It's value went up by 150% so it is now worth 130,000 * .15 = $19,500 more.
-So the total value of the house is now 130,000 + 19,500 = $149,500
-He bought the house for 80,000 so his profit is 149,500 - 80,000 = $69,500
-```
-
-**Analysis:** **SFT model STILL FAILED!** Both models made errors with the 150% calculation. Base model applied 0.150 (15%) instead of 1.5 (150%). SFT model made a similar error - it applied 0.15 instead of 1.5, computing 130,000 × 0.15 = $19,500 instead of the correct 80,000 × 1.5 = $120,000. The correct answer should be $70,000 profit. SFT improved slightly but still has percentage reasoning issues.
-
-**Summary:**
-
-- **Fixed:** 1/3 problems (robe fabric - language comprehension)
-- **Still failing:** 2/3 problems (ducks - different error introduced, house flipping - percentage calculation error persists)
-- **Partial improvement:** SFT training helped with language comprehension but arithmetic and percentage reasoning remain challenging
+**Summary:** SFT fixed 1/3 problems (language comprehension improved), but arithmetic and percentage reasoning remain challenging.
 
 ---
 
-## Question 9: SFT Failures Analysis (5 points)
+### Question 9
 
-**Question:** Identify 2 examples where your best SFT model still fails. What types of errors persist? Does the model struggle more with arithmetic, multi-step reasoning, or problem comprehension?
+Identify 2 examples where your best SFT model still fails. What types of errors persist?
 
-**Two Persistent Failure Examples:**
+**Answer:**
 
-### Failure 1: Janet's Ducks (Multi-step reasoning with hallucinated operations)
+**Failure 1: Janet's Ducks - Multi-step reasoning with hallucinated operations**
+- Extracted Answer: 73.50 (Ground Truth: 18)
+- Error: Model introduced erroneous multiplication (16×3=48) not in problem statement
+- Type: **Multi-step reasoning with hallucinated operations**
 
-**Question:** Janet's ducks lay 16 eggs per day. She eats three for breakfast every morning and bakes muffins for her friends every day with four. She sells the remainder at the farmers' market daily for $2 per fresh duck egg. How much in dollars does she make every day at the farmers' market?
+**Failure 2: House Flipping - Percentage calculation error**
+- Extracted Answer: -30500 (Ground Truth: 70000)
+- Error: Applied 0.15 (15%) instead of 1.5 (150%)
+- Type: **Arithmetic/Percentage reasoning**
 
-**Ground Truth:** 18
-
-**SFT Model Response:**
-
-```
-The ducks lay 16*3=48 eggs for Janet to eat.
-She has 48-3=45 eggs left after eating them for breakfast.
-So she gives away 45/4=11.25 eggs to her friends.
-That means there are 48-11.25=36.75 eggs remaining for sale.
-Therefore, she makes 36.75*2=$73.50 from selling the eggs at the farmers' market.
-```
-
-**Extracted Answer:** 73.50 (Incorrect)
-
-**Analysis:** The SFT model introduced a completely erroneous multiplication (16×3=48) that doesn't appear in the problem statement. This shows the model learned to apply calculation patterns from training data but sometimes applies them inappropriately. The correct approach is: 16 - 3 - 4 = 9 eggs for sale, 9 × $2 = $18.
-
-**Error Type:** **Multi-step reasoning with hallucinated operations** - The model learned to show intermediate calculations but applied incorrect operations.
-
-### Failure 2: House Flipping (Percentage calculation error)
-
-**Question:** Josh decides to try flipping a house. He buys a house for $80,000 and then puts in $50,000 in repairs. This increased the value of the house by 150%. How much profit did he make?
-
-**Ground Truth:** 70000
-
-**SFT Model Response:**
-
-```
-He added $50,000 + $80,000 = $130,000 worth of improvements.
-The house is now worth $130,000 * .15 = $19,500 more than it was originally.
-So the total value of the house is now $130,000 + $19,500 = $149,500
-That means he sold the house for $149,500 - $130,000 = $19,500
-So his profit was $19,500 - $50,000 = -$30,500
-```
-
-**Extracted Answer:** -30500 (Incorrect)
-
-**Analysis:** The SFT model consistently struggles with percentage calculations. It applied 0.15 (15%) instead of 1.5 (150%). The correct calculation is: Original house value increases by 150% = $80,000 × 1.5 = $120,000, so new value is $200,000. Profit = $200,000 - $130,000 = $70,000.
-
-**Error Type:** **Arithmetic/Percentage reasoning** - The model misunderstands how to convert percentages to multipliers.
-
-**Persistent Error Types (ranked by frequency after SFT improvements):**
-
-1. **Arithmetic/Percentage errors:** The model struggles with converting percentages (150% = 1.5, not 0.15) and applying them correctly
-2. **Multi-step reasoning with hallucinated operations:** The model sometimes introduces calculations that don't belong in the problem
-3. **Problem comprehension:** Occasionally misinterprets problem constraints
-
-**Conclusion:** After the improved training (with `<<>>` markers removed), the SFT model shows better performance overall (44% accuracy), but fundamental arithmetic reasoning issues persist. The most common remaining errors involve percentage calculations and inappropriate application of learned calculation patterns.
+**Persistent Error Types (ranked by frequency):**
+1. Arithmetic/Percentage errors (converting percentages incorrectly)
+2. Multi-step reasoning with hallucinated operations
+3. Problem comprehension (occasional misinterpretation)
 
 ---
 
-## Question 10: Few-Shot Results (20 points)
+## Task 3 — Few-Shot Prompting
 
-**Question:** Evaluate k-shot prompting (k=3) on the base model and your LoRA SFT model trained on 3k examples. Report results alongside zero-shot baselines and compute improvement (Δ).
+### Question 10
 
-**Results:**
+Evaluate k-shot prompting (k=3) on the base model and your LoRA SFT model trained on 3k examples.
+
+**Answer:**
 
 | Model        | Zero-Shot Accuracy | 3-Shot Accuracy | Improvement (Δ) |
 | ------------ | ------------------ | --------------- | --------------- |
 | Base Model   | 38%                | 32%             | -6 pp           |
 | SFT-3k Model | 44%                | 50%             | +6 pp           |
 
-**Detailed Breakdown:**
-
-### Base Model Performance:
-
-- **Zero-shot:** 38/100 correct
-- **3-shot:** 32/100 correct
-- **Change:** Performance degraded (-6 pp)
-- **Analysis:** Few-shot examples confused the base model, which hasn't learned the reasoning patterns
-
-### SFT-3k Model Performance:
-
-- **Zero-shot:** 44/100 correct
-- **3-shot:** 50/100 correct
-- **Improvement:** Moderate (+6 pp)
-- **Analysis:** SFT model benefited from demonstrations, though less than initially expected
-
 **Key Observations:**
-
-1. **Few-shot helps SFT, hurts base:** The fine-tuned model benefits (+6 pp), while the base model performs worse (-6 pp)
-2. **Negative transfer for base model:** Adding demonstrations confused the untrained model
-3. **Combined gains:** SFT-3k + few-shot achieves 50%, a 12 pp improvement over baseline
+- Few-shot helps SFT (+6 pp) but hurts base model (-6 pp)
+- Combined gains: SFT-3k + few-shot achieves 50%, a 12 pp improvement over baseline
 
 ---
 
-## Question 11: Few-Shot Analysis (15 points)
+### Question 11
 
-**Question:** Analyze the effect of few-shot prompting on each model. Does few-shot help the base model? Does it help SFT models? Which benefits most and why?
+Analyze the effect of few-shot prompting on each model.
 
-**Analysis:**
+**Answer:**
 
-### Effect on Base Model (-6 pp - Negative Impact)
+**Effect on Base Model (-6 pp - Negative Impact)**
 
-**Does few-shot help?** No, it actually hurts.
+Few-shot hurts because:
+1. No reasoning foundation to utilize demonstrations
+2. Attention dilution from context window usage
+3. Format confusion from demonstration patterns
+4. Negative transfer from reasoning patterns base model can't follow
 
-**Why it performs worse with demonstrations:**
+**Effect on SFT Models (+6 pp - Positive Impact)**
 
-1. **No reasoning foundation:** Base model lacks the underlying mathematical reasoning capabilities to utilize the demonstrations effectively
-2. **Attention dilution:** Demonstrations take up context window without providing actionable patterns the model can replicate
-3. **Format confusion:** Base model struggles to maintain the specific answer format shown in demonstrations
-4. **Negative transfer:** The few-shot examples may introduce reasoning patterns the base model isn't prepared to follow
+Few-shot helps because:
+1. Reinforces step-by-step reasoning patterns from training
+2. Consistent format alignment with training
+3. Pattern completion guidance
+4. Reduced format errors
 
-**Example of base model regression:**
-Even with 3 examples showing step-by-step reasoning, the base model performs _worse_ (32% vs 38%), suggesting demonstrations actively confuse rather than help.
-
-### Effect on SFT Models (+6 pp - Positive Impact)
-
-**Does few-shot help?** Yes, moderately.
-
-**Why it helps:**
-
-1. **Reinforces training:** Demonstrations reinforce the step-by-step reasoning patterns learned during SFT
-2. **Consistent format:** SFT model has learned to expect and produce structured solutions, so demonstrations align with its training
-3. **Pattern completion:** Model can use demonstrations to guide which reasoning steps to apply
-4. **Reduced format errors:** Demonstrations help the model maintain consistent answer formatting
-
-### Which Model Benefits Most?
-
-**SFT-3k benefits most (+6 pp vs -6 pp)**
-
-**Why:**
-
-1. **Synergy:** Few-shot and SFT are complementary - SFT teaches the reasoning style, few-shot reinforces it
-2. **Learned attention:** SFT model has learned to attend to relevant parts of mathematical problems
-3. **Pattern matching:** SFT model can better match current problem to demonstration patterns
-4. **Base model lacks foundation:** Without SFT, the base model lacks the foundational reasoning capabilities to effectively utilize demonstrations
-
-**Key insight:** Few-shot prompting is **most effective as an enhancement to already-trained models**, not as a standalone technique. The SFT model's 50% accuracy (vs baseline 38%) shows that **SFT + few-shot** is a powerful combination (+12 pp total improvement), while **base + few-shot** actually degrades performance.
+**Which benefits most:** SFT-3k benefits most (+6 pp vs -6 pp). Few-shot and SFT are complementary - SFT teaches reasoning style, few-shot reinforces it.
 
 ---
 
-## Question 12: Reflection on Performance Limits (10 points)
+## Task 4 — Beyond Scaling: Quality Matters
 
-**Question:** Based on results so far, what do you think is limiting performance? For each factor, justify with 2-4 observations.
+### Question 12
 
-## Limiting Factors Analysis:
+Based on results so far, what do you think is limiting performance?
 
-### 1. Arithmetic Reliability (Major Limitation)
+**Answer:**
 
-**Observations:**
+**1. Arithmetic Reliability (Major Limitation)**
+- Simple calculation errors persist (15 + 25 = 7, 13 - 4 = -1)
+- No self-verification of intermediate results
+- Percentage confusion (using 0.15 for 150%)
 
-1. **Simple calculation errors persist:** Even after training, model makes basic errors like "15 + 25 = 7" or "13 - 4 = -1"
-2. **Multiplication mistakes:** In Janet's ducks problem, both base and SFT models make multiplication errors (16×7 instead of recognizing daily calculation)
+**2. Multi-Step Planning (Primary Limitation)**
+- Loses track of goals in complex problems
+- Incorrect intermediate steps
+- No explicit planning before execution
+- Difficulty with 4+ step problems
 
-3. **No self-verification:** Models don't check if intermediate results are reasonable (e.g., negative eggs)
+**3. Problem Comprehension (Moderate Limitation)**
+- Language ambiguity misinterpretation
+- Missed constraints
+- Hallucinated information
+- ~15-20% of errors from initial misunderstanding
 
-4. **Percentage confusion:** Consistent errors interpreting percentages (using 0.15 for 150%, applying to wrong base)
+**4. Output Consistency (Minor Limitation)**
+- Format variations (units in answers)
+- Incomplete answers
+- Affects ~2-3% of answers
 
-**Impact:** Arithmetic errors cascade through multi-step problems, making final answers incorrect even when reasoning is sound.
+**5. Training Data Quality (Significant Limitation)**
+- Inconsistent solution styles
+- No verification signals
+- No error correction examples
+- Scaling paradox: more data didn't help as much as expected
 
-### 2. Multi-Step Planning / Long-Horizon Reasoning (Primary Limitation)
-
-**Observations:**
-
-1. **Loses track of goals:** In Wendi's chicken problem, model forgets it needs to find remaining feed, instead calculating irrelevant intermediate values
-
-2. **Incorrect intermediate steps:** In house flipping problem, models apply percentages to wrong values (total cost vs. original price)
-
-3. **No explicit planning:** Models don't outline a solution strategy before executing, leading to confused reasoning paths
-
-4. **Difficulty with 4+ step problems:** Performance degrades significantly on problems requiring more than 3-4 reasoning steps
-
-**Impact:** Most GSM8K problems require 2-8 steps. Without robust multi-step reasoning, accuracy caps around 39-50%.
-
-### 3. Problem Comprehension (Moderate Limitation)
-
-**Observations:**
-
-1. **Language ambiguity:** "Half that much white fiber" interpreted as 0.5 instead of 1 (half of 2)
-
-2. **Missed constraints:** Models sometimes ignore important details (like "daily" vs. "weekly")
-
-3. **Hallucinated information:** Adding "×7 days" to problems asking about daily amounts
-
-4. **Incorrect problem parsing:** Misunderstanding what quantity is being asked for
-
-**Impact:** About 15-20% of errors stem from initial misunderstanding, making all subsequent reasoning incorrect.
-
-### 4. Output Consistency / Extraction Failures (Minor Limitation)
-
-**Observations:**
-
-1. **Format variations:** Sometimes includes units in boxed answers ("$26" vs "26")
-
-2. **Incomplete answers:** Occasionally doesn't reach a final answer before stopping
-
-3. **Non-integer outputs:** Giving decimal answers when integers are expected
-
-4. **Extraction edge cases:** Fraction formatting sometimes not properly parsed
-
-**Impact:** Relatively rare (affects ~2-3% of answers), and mostly addressable with better prompting.
-
-### 5. Training Data Quality (Significant Limitation)
-
-**Observations:**
-
-1. **Inconsistent solution styles:** GSM8K training solutions vary in structure and verbosity, making it hard for model to learn consistent reasoning patterns
-
-2. **No verification signals:** Training examples don't include self-checking or verification steps
-
-3. **Limited error correction:** Training data doesn't show how to recover from intermediate mistakes
-
-4. **Scaling paradox:** More data (3k vs 1k) didn't help, suggesting quality > quantity
-
-**Impact:** With only 0.14% of parameters trainable, the quality of supervision is critical. Noisy or inconsistent training data severely limits what the model can learn.
-
-**Ranked Importance:**
-
-1. Multi-step reasoning (most critical)
-2. Training data quality
-3. Arithmetic reliability
-4. Problem comprehension
-5. Output consistency (least critical)
+**Ranked Importance:** Multi-step reasoning > Training data quality > Arithmetic reliability > Problem comprehension > Output consistency
 
 ---
 
-## Question 13: Open Challenge (35 points)
+## Task 5 — Open Challenge: Push Toward the Ceiling
 
-**Question:** Design and implement your favorite strategy to improve upon your best score. Include hypothesis, method, results, and analysis with at least one failure mode or unexpected result.
+### Question 13
 
-### (a) Hypothesis
+Design and implement your favorite strategy to improve upon your best score.
 
-**Core Hypothesis:** Self-consistency through majority voting will improve accuracy by reducing random errors and leveraging the model's varying reasoning paths.
+**Answer:**
 
-**Rationale:**
+**(a) Hypothesis**
 
-- Language models are stochastic - they can produce different reasoning paths to the same problem
-- Some reasoning paths are correct while others contain errors
-- By sampling multiple solutions and taking majority vote, we can filter out random errors
-- This approach has been shown to improve performance on reasoning tasks (Wang et al., 2022)
+Self-consistency through majority voting will improve accuracy by reducing random errors and leveraging the model's varying reasoning paths. By sampling multiple solutions and taking majority vote, we can filter out random errors.
 
-**Expected Improvement:** 5-10 percentage points over baseline SFT-3k (39% → 44-49%)
+**(b) Method**
 
-### (b) Method
+- **Model:** SFT-3k (best performing checkpoint)
+- **Sampling:** 10 samples per question, temperature=0.3
+- **Voting:** Majority vote on extracted answers
+- **Cost:** ~10× inference time
 
-**Implementation:**
-
-1. **Model:** Used SFT-3k as the base model (best performing checkpoint)
-2. **Sampling Strategy:**
-   - **Samples per question:** 10
-   - **Temperature:** 0.3 (lower than default to balance diversity with accuracy)
-   - **Majority voting:** Selected most common answer among 10 samples
-3. **Process:**
-
-   ```
-   For each question:
-     Generate 10 different solutions with temp=0.3
-     Extract answer from each solution
-     Select answer that appears most frequently (majority vote)
-     If tie, select first generated answer
-   ```
-
-4. **Computational Cost:** ~10× inference time (generating 10 solutions per question)
-
-**Why This Approach:**
-
-- **Leverages existing training:** Doesn't require additional training
-- **Error diversity:** Higher temperature encourages different reasoning paths, some of which will avoid specific errors
-- **Democratic decision:** Majority voting naturally filters outliers and random mistakes
-- **Computationally feasible:** 5× inference cost is acceptable for evaluation
-
-### (c) Results
-
-**Performance Comparison:**
+**(c) Results**
 
 | Method                            | Accuracy | Improvement |
 | --------------------------------- | -------- | ----------- |
 | Baseline (SFT-3k, zero-shot)     | 44%      | -           |
 | Self-Consistency (n=10, temp=0.3) | 56%      | **+12 pp**  |
 
-**Detailed Results:**
+**Example Success (Eliza's overtime, Ground Truth: 460):**
+- 10 Sampled Answers: [460, 450, 110, 460, 460, 460, 450, 460, 460, 110]
+- Majority Vote: 460 ✓
 
-- **Total test questions:** 100
-- **Correct with self-consistency:** 56
-- **Correct with single sample:** 44
-- **Absolute improvement:** +12 percentage points
-- **Relative improvement:** 27% relative gain (12/44)
+**(d) Analysis**
 
-**Example of Successful Self-Consistency:**
+**What worked:**
+1. Arithmetic error filtering through voting
+2. Reasoning path diversity
+3. Consistent problems benefited most
 
-**Problem:** Eliza's overtime pay
-**Ground Truth:** 460
+**Failure Modes:**
 
-**10 Sampled Answers:** [460, 450, 110, 460, 460, 460, 450, 460, 460, 110]
-**Majority Vote:** 460 ✓
+1. **Consistent Wrong Reasoning:** Janet's ducks - all samples made different errors, majority vote selected wrong answer (104 vs ground truth 18)
 
-Seven samples correctly calculated:
+2. **Rare Correct Answers:** James running sprints - only 1/5 samples correct, majority selected wrong answer (21 vs 540)
 
-- Regular: 40 hours × $10 = $400
-- Overtime: 5 hours × ($10 × 1.2) = $60
-- Total: $400 + $60 = $460
+3. **Systematic Misconception:** House flipping - all samples struggled with 150% calculation, different wrong answers but same underlying error
 
-Three samples made errors (used wrong overtime rate or calculation)
+**Key Learnings:**
+1. Self-consistency helps with random errors, not systematic ones
+2. Diminishing returns on samples (1→3 captures most benefits)
+3. Problem difficulty matters (works best on "sometimes right" problems)
+4. Failed to reach 70% goal, suggesting training data quality is bigger bottleneck
 
-### (d) Analysis
-
-**What Worked:**
-
-1. **Arithmetic error filtering:** When model made random calculation errors in 1-2 samples, majority vote often selected correctly calculated answers
-
-2. **Reasoning path diversity:** Different samples sometimes took different approaches, and the correct approach often won the majority vote
-
-3. **Consistent problems benefited most:** Problems where the model usually gets it right (but occasionally makes mistakes) showed biggest gains
-
-4. **Simple problems:** Problems requiring 2-3 steps benefited more than complex multi-step problems
-
-**Failure Modes and Unexpected Results:**
-
-### Failure Mode 1: Consistent Wrong Reasoning
-
-**Problem:** Janet's ducks (Ground truth: 18)
-
-**5 Sampled Answers:** [64, 126, 104, 24, 104]
-**Majority Vote:** 104 ✗
-
-**Analysis:** All 5 samples made different errors. No consistent correct reasoning path emerged. This shows **self-consistency can't fix systematic reasoning errors** - if the model consistently misunderstands the problem, sampling more won't help.
-
-### Failure Mode 2: Computationally Expensive with Limited Gains
-
-**Problem:** James running sprints (Ground truth: 540)
-
-**5 Sampled Answers:** [21, 3810, 240, 5.4, 540]
-**Majority Vote:** 21 ✗ (correct answer 540 appeared once)
-
-**Analysis:**
-
-- Only 1/5 samples got it right
-- Majority vote selected wrong answer
-- **Unexpected result:** More samples didn't help because the correct reasoning was rare
-- **Cost-benefit issue:** 5× computation for 0 gain on this problem
-
-### Failure Mode 3: All Samples Make Same Type of Error
-
-**Problem:** House flipping (Ground truth: 70000)
-
-**5 Sampled Answers:** [130000, -47200, 40000, 275000, 65000]
-**Majority Vote:** 130000 ✗
-
-**Analysis:** All 5 samples struggled with the 150% calculation. Different wrong answers, but **same underlying misconception** about how to apply the percentage. Self-consistency can't fix fundamental misunderstanding.
-
-**What I Learned:**
-
-1. **Self-consistency helps with random errors, not systematic ones:** If the model's training has a blind spot, sampling more won't fix it
-
-2. **Diminishing returns on samples:** Going from 1→3 samples might capture most benefits; 5→7 might not be worth the cost
-
-3. **Problem difficulty matters:** Self-consistency works best on problems where the model is "sometimes right" rather than "usually wrong"
-
-4. **Complementary to other improvements:** Self-consistency + better training data would likely compound (better base accuracy = more samples are correct = better voting)
-
-5. **Failed to reach 70% goal:** Despite 9 pp improvement, still far from the "low-to-mid 70%" reference point, suggesting **training data quality** is the bigger bottleneck
-
-**Conclusion:**
-
-Self-consistency with majority voting is an effective inference-time technique that improved accuracy by 12 percentage points (44% → 56%). Key optimizations:
-
-1. **Increased samples (5→10):** More samples increase the probability that the correct answer appears and wins the majority vote
-2. **Lower temperature (0.7→0.3):** Lower temperature reduces variance while still allowing enough diversity for voting to be effective
-
-**Limitations:**
-
-- **Cannot fix systematic reasoning gaps** (requires better training)
-- **Has computational cost** (10× inference time)
-- **Shows diminishing returns** (correct answer must appear in samples to help)
-
-The gap to 70%+ accuracy likely requires addressing the root cause: **training data quality** rather than inference tricks.
+**Conclusion:** Self-consistency improved accuracy by 12 pp (44% → 56%) but cannot fix systematic reasoning gaps. The gap to 70%+ requires addressing training data quality.
