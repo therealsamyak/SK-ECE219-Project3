@@ -237,3 +237,23 @@ but you shouldnt be having different values for the same lora adapter unless you
 So, please check your implementation first, to keep all the things same during both evaluations and you have to get the same accuracies everytime (not that you are required to do this multiple times but since you arent getting the same accs means there is an element of randomization there, you should probably fix that.)
 
 ---
+
+Q: Double checking, we're performing correlation analysis for just the 7 numerical features, right?
+
+A: Yes, but you optionally can also include the categorical features if you are converting them in a meaningful way.
+
+---
+
+Q: Do we have accuracy requirement for part B question 20. I have accuracy at 0.7. Is it ok?
+
+A: 0.7 is fine.
+
+---
+
+Q: I wonder if we are supposed to calculate the mutual information and F-statistics for categorical data if they are one-hot encoded?
+
+A1: "Yes, please do."
+
+Followup: Hi, thanks for the reply. These functions calculate statistics for each feature and output vectors. e.g., the mutual information calculated with 5 categories is a vector of length 5. Should we use the largest number in the vector or the sum?
+
+A2: You can decide whether to use max or mean
