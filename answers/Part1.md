@@ -4,22 +4,24 @@
 
 ## Task 1 — Baseline: How Good is the Base Model?
 
-### Question 1
-
-Run the base Qwen2.5-1.5B-Instruct model on 100 GSM8K test questions and report the accuracy. You should expect approximately 35–40%.
+**QUESTION 1: (10 points) Run the base Qwen2.5-1.5B-Instruct model on 100 GSM8K test questions and report the accuracy. You should expect approximately 35–40%. (Exact values may vary slightly depending on the prompt format and extraction rule.)**
 
 **Answer:**
 
 - **Base Model Accuracy:** 38%
 - **Number of Test Samples:** 100
 
-The base Qwen2.5-1.5B-Instruct model gets 38% accuracy on the GSM8K test set, within the expected 35-40% range. This gives us a baseline to improve upon. The model has trouble with multi-step reasoning and arithmetic—expected for a small language model without specific math training.
+The base Qwen2.5-1.5B-Instruct model scored 38% on the GSM8K test set, landing right in the expected 35-40% range. That's our baseline. The model struggles with multi-step reasoning and arithmetic—which isn't surprising for a small language model without specific math training.
 
 ---
 
-### Question 2
+**QUESTION 2: (10 points) Inspect at least 3 cases where the base model produces an incorrect answer. For each example, include:**
 
-Inspect at least 3 cases where the base model produces an incorrect answer. For each example, include: the question, a short excerpt of the model's solution highlighting the failure, the extracted answer vs. the ground-truth answer. Classify each failure mode.
+- The question,
+- A short excerpt of the model's solution highlighting the failure,
+- The extracted answer vs. the ground-truth answer.
+
+Classify each failure mode (e.g., arithmetic slip, reasoning/logical error, misunderstanding the problem, formatting/extraction issue). Do you observe any recurring patterns?
 
 **Answer:**
 
@@ -62,44 +64,52 @@ Inspect at least 3 cases where the base model produces an incorrect answer. For 
   ```
 - **Classification:** **Multi-step Reasoning Error** - The model made multiple errors: (1) applied 150% increase to total cost rather than original price, (2) used 0.150 instead of 1.50 for 150%.
 
-**Recurring patterns:**
-1. Arithmetic errors—even with correct setup, basic calculation mistakes
-2. Problem comprehension—misinterpreting word problems, especially with fractions and percentages
-3. Multi-step reasoning—trouble maintaining correct logic through multiple steps
+**What I kept seeing:**
+1. Arithmetic errors—correct setup, wrong math
+2. Problem comprehension—misreading word problems, especially fractions and percentages
+3. Multi-step reasoning—losing the thread halfway through
 
 ---
 
 ## Task 2 — LoRA Fine-Tuning on GSM8K
 
-### Question 3
+**QUESTION 3: (15 points) Pick the three hyperparameters (LoRA rank, LoRA alpha, Gradient accumulation) from the table above and explain:**
 
-Pick the three hyperparameters (LoRA rank, LoRA alpha, Gradient accumulation) from the table above and explain: what each hyperparameter controls, what you expect to happen if you increase it, what you expect to happen if you decrease it.
+- what each hyperparameter controls,
+- what you expect to happen if you increase it,
+- what you expect to happen if you decrease it.
+
+Your answer should reflect practical tradeoffs (e.g., compute/memory, stability, overfitting vs. underfitting).
 
 **Answer:**
 
 **LoRA Rank (r)**
 
-- **What it controls:** Dimensionality of low-rank matrices A and B. Controls adapter capacity.
-- **If you increase:** More trainable parameters, better adaptation, higher memory usage, risk of overfitting
-- **If you decrease:** Fewer parameters, limited adaptation, potential underfitting, better generalization
+- **What it controls:** Size of the low-rank matrices A and B. Basically how much capacity the adapter has.
+- **If you increase:** More parameters to train, better adaptation possible, but uses more memory and risks overfitting.
+- **If you decrease:** Fewer parameters, more constrained adaptation, might underfit but generalizes better.
 
 **LoRA Alpha (α)**
 
-- **What it controls:** Scaling factor applied to LoRA update before adding to original weights. Update scaled by α/r.
-- **If you increase:** Stronger adapter influence, faster learning, risk of instability
-- **If you decrease:** Weaker adapter influence, more stable training, slower learning
+- **What it controls:** How strongly the LoRA update gets scaled before merging with original weights. The actual update is scaled by α/r.
+- **If you increase:** Adapter has more influence, learning speeds up, but training can become unstable.
+- **If you decrease:** Gentler updates, more stable training, but slower to converge.
 
 **Gradient Accumulation**
 
-- **What it controls:** Number of gradient updates to accumulate before weight update. Effective batch size = per_device_batch_size × gradient_accumulation_steps.
-- **If you increase:** Larger effective batch size, better generalization, slower updates
-- **If you decrease:** Smaller effective batch size, noisier gradients, faster updates, risk of instability
+- **What it controls:** How many mini-batches of gradients to stack up before actually updating weights. Effective batch size = per_device_batch_size × gradient_accumulation_steps.
+- **If you increase:** Larger effective batch size, which often generalizes better, but updates happen less frequently.
+- **If you decrease:** Smaller effective batch size, noisier gradient estimates, faster updates, but training can get unstable.
 
 ---
 
-### Question 4
+**QUESTION 4: (15 points) Report:**
 
-Report: (a) the total number of parameters in the base model, (b) the number of trainable LoRA parameters under the default configuration, (c) the percentage of parameters being trained.
+(a) the total number of parameters in the base model,
+(b) the number of trainable LoRA parameters under the default configuration,
+(c) the percentage of parameters being trained.
+
+Briefly explain why this percentage is small and how LoRA achieves this reduction.
 
 **Answer:**
 
@@ -107,13 +117,11 @@ Report: (a) the total number of parameters in the base model, (b) the number of 
 - **(b) Trainable LoRA Parameters:** 2,179,072 (approximately 2.18 million)
 - **(c) Percentage:** 0.141% (only about 1 in 708 parameters is trained)
 
-**Why this percentage is small:** LoRA uses low-rank decomposition. Instead of updating a full weight matrix W ∈ ℝ^(d×d) requiring d² parameters, LoRA represents the update as ΔW = BA, where B ∈ ℝ^(d×r) and A ∈ ℝ^(r×d). This cuts parameters from d² to 2dr. With rank r=8 and typical dimension d=2048, that's ~128× fewer parameters per adapted layer.
+**Why so few parameters:** LoRA uses low-rank decomposition. Instead of updating a full weight matrix W ∈ ℝ^(d×d) which needs d² parameters, LoRA represents the update as ΔW = BA, where B ∈ ℝ^(d×r) and A ∈ ℝ^(r×d). This cuts parameters from d² to 2dr. With rank r=8 and typical dimension d=2048, that's roughly 128× fewer parameters per adapted layer.
 
 ---
 
-### Question 5
-
-Train a LoRA SFT model using 1,000 training examples. Evaluate on 100 GSM8K test questions and report the accuracy.
+**QUESTION 5: (25 points) Train a LoRA SFT model using 1,000 training examples. Evaluate on 100 GSM8K test questions and report the accuracy. Include a brief comment on whether the improvement over the baseline matches your expectations.**
 
 **Answer:**
 
@@ -121,33 +129,31 @@ Train a LoRA SFT model using 1,000 training examples. Evaluate on 100 GSM8K test
 - **Baseline Accuracy:** 38%
 - **Improvement:** +3 percentage points
 
-The improvement from 38% to 41% (+3 pp) is real progress. Even with only 1,000 examples, fine-tuning helps. Training took ~40-50 minutes on a T4 GPU, training only 0.14% of parameters.
+Going from 38% to 41% (+3 pp) is real progress. Fine-tuning helps even with just 1,000 examples. Training took roughly 40-50 minutes on a T4 GPU—and we're only training 0.14% of the parameters.
 
 ---
 
-### Question 6
-
-Hypothesis question: Do you think scaling from 1,000 examples to 3,000 and/or all 7,473 examples is worth the additional compute?
+**QUESTION 6: (10 points) Hypothesis question (write before running larger training): Do you think scaling from 1,000 examples to 3,000 and/or all 7,473 examples is worth the additional compute? What do you expect the accuracy gains to look like (roughly), and why? In your answer, discuss whether you would scale in multiple steps or jump directly to the full dataset.**
 
 **Answer:**
 
-**Yes, scaling is worth the compute, but with diminishing returns.**
+**Yes, scaling is worth it compute, but with diminishing returns.**
 
 **Expected Accuracy Gains:**
 - 1,000 → 3,000 examples: ~2-4 percentage point improvement (42% → 44-46%)
 - 3,000 → 7,473 examples: ~1-3 percentage point improvement (44-46% → 45-49%)
 
-**Rationale:**
-- Scaling helps: pattern diversity, better generalization, more robust reasoning
-- Diminishing returns: data redundancy in GSM8K, limited model capacity (0.14% trainable), quality vs quantity trade-off
+**Why:**
+- More data = more pattern diversity, better generalization, stronger reasoning
+- But diminishing returns kick in: GSM8K has redundancy, the model only has 0.14% trainable parameters, and there's a quality vs quantity trade-off
 
-**Recommended strategy:** Scale in two steps (1k → 3k → full) to track scaling behavior and stop early if returns flatten.
+**My strategy:** Scale in two steps (1k → 3k → full) so I can track how scaling behaves and stop early if returns flatten out.
 
 ---
 
-### Question 7
+**QUESTION 7: (20 points: 5 + 5 + 10) Now scale up your training data (recommended: 3,000 examples, and optionally the full 7,473). Evaluate each trained model on the same 100-question test subset and report the accuracies.**
 
-Scale up training data (3,000 examples, and optionally full 7,473). Evaluate each trained model and plot accuracy as a function of training examples.
+Finally, plot accuracy as a function of the number of training examples (x-axis: 0, 1000, 3000; y-axis: accuracy). Describe the trend you observe and comment on diminishing returns in data scaling for SFT.
 
 **Answer:**
 
@@ -166,9 +172,7 @@ File: [Scaling Plot](outputs/q7_scaling_plot.png)
 
 ---
 
-### Question 8
-
-Compare the base model and your best SFT model on the same 3 failure examples from Task 1.
+**QUESTION 8: (10 points) Compare the base model and your best SFT model on the same 3 failure examples you identified in Task 1. For each example, show both models' responses side by side. Does the SFT model fix any of these errors?**
 
 **Answer:**
 
@@ -191,9 +195,7 @@ Compare the base model and your best SFT model on the same 3 failure examples fr
 
 ---
 
-### Question 9
-
-Identify 2 examples where your best SFT model still fails. What types of errors persist?
+**QUESTION 9: Identify 2 examples where your best SFT model still fails. What types of errors persist?**
 
 **Answer:**
 
@@ -216,9 +218,12 @@ Identify 2 examples where your best SFT model still fails. What types of errors 
 
 ## Task 3 — Few-Shot Prompting
 
-### Question 10
+**QUESTION 10: (20 points) Evaluate k-shot prompting (use k = 3) on:**
 
-Evaluate k-shot prompting (k=3) on the base model and your LoRA SFT model trained on 3k examples.
+1. the base model,
+2. your LoRA SFT model trained on 3k examples,
+
+Report the k-shot results alongside the corresponding no-demonstration baseline results, and compute the improvement (Δ).
 
 **Answer:**
 
@@ -233,9 +238,11 @@ Evaluate k-shot prompting (k=3) on the base model and your LoRA SFT model traine
 
 ---
 
-### Question 11
+**QUESTION 11: (15 points) Analyze the effect of few-shot prompting on each model:**
 
-Analyze the effect of few-shot prompting on each model.
+- Does few-shot help the base model? If not, why might it perform worse with demonstrations?
+- Does few-shot help the SFT models? By how much?
+- Which model benefits the most from few-shot prompting, and why?
 
 **Answer:**
 
@@ -261,9 +268,13 @@ Few-shot helps because:
 
 ## Task 4 — Beyond Scaling: Quality Matters
 
-### Question 12
+**QUESTION 12: (10 points) Qualitative reflection (short): Based on your results so far, what do you think is limiting performance? For each of the following, justify with 2–4 concrete observations from your own failures:**
 
-Based on results so far, what do you think is limiting performance?
+- arithmetic reliability,
+- multi-step planning / long-horizon reasoning,
+- problem comprehension,
+- output consistency / extraction failures,
+- training data quality (solution style, structure, or noise).
 
 **Answer:**
 
@@ -301,9 +312,12 @@ Based on results so far, what do you think is limiting performance?
 
 ## Task 5 — Open Challenge: Push Toward the Ceiling
 
-### Question 13
+**QUESTION 13: Design and implement your favourite strategy to improve upon your best score. In your report, include:**
 
-Design and implement your favorite strategy to improve upon your best score.
+(a) **Hypothesis:** what you think will help and why.
+(b) **Method:** what you changed (prompting, training data, hyperparameters, inference procedure, etc.).
+(c) **Results:** accuracy on the same 100-question evaluation subset (include your baseline for comparison).
+(d) **Analysis:** what you learned from the experiment(s), including at least one failure mode or unexpected result.
 
 **Answer:**
 

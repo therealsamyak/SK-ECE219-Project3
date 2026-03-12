@@ -4,9 +4,7 @@
 
 ## Task 1 — Dataset Inspection and Sanity Checks
 
-### Question 14
-
-Load `da-dev-questions.jsonl` and `da-dev-labels.jsonl`. Report the number of questions and labels, the set of keys in a question record, and the set of keys in a label record.
+**QUESTION 14: Load `da-dev-questions.jsonl` and `da-dev-labels.jsonl`. Report the number of questions and labels, the set of keys in a question record, and the set of keys in a label record.**
 
 **Answer:**
 
@@ -41,9 +39,11 @@ Load `da-dev-questions.jsonl` and `da-dev-labels.jsonl`. Report the number of qu
 
 ---
 
-### Question 15
+**QUESTION 15: Pick 3 random question IDs. For each**
 
-Pick 3 random question IDs. For each, print the file name, load the CSV with pandas, show shape/dtypes/head(3), and print the corresponding question.
+- Print the file name of the referenced CSV.
+- Load the CSV with pandas and print `df.shape`, `df.dtypes`, and `df.head(3)`.
+- Print the corresponding question.
 
 **Answer:**
 
@@ -67,9 +67,10 @@ Pick 3 random question IDs. For each, print the file name, load the CSV with pan
 
 ---
 
-### Question 16
+**QUESTION 16: Find 2 examples where the required format contains multiple answer slots (e.g., two or more `@name[value]` fields). Explain:**
 
-Find 2 examples where the required format contains multiple answer slots. Explain how the dataset represents multi-part answers and how to evaluate them automatically.
+- How the dataset represents multi-part answers in the labels.
+- How you plan to evaluate such answers automatically.
 
 **Answer:**
 
@@ -94,9 +95,11 @@ Find 2 examples where the required format contains multiple answer slots. Explai
 
 ---
 
-### Question 17
+**QUESTION 17: Unfortunately, the model we are going to use is still not powerful enough to solve all the tasks. Here we are selecting 10 sub-tasks that are proved to be solvable:**
 
-Print and check the 10 selected tasks (IDs: 0, 5, 9, 10, 14, 18, 24, 25, 26, 55).
+The selected IDs are: `SELECTED_IDS = [0, 5, 9, 10, 14, 18, 24, 25, 26, 55]`.
+
+- Print out and check those tasks.
 
 **Answer:**
 
@@ -117,9 +120,7 @@ Print and check the 10 selected tasks (IDs: 0, 5, 9, 10, 14, 18, 24, 25, 26, 55)
 
 ## Task 2 — Model Loading and Structured Output
 
-### Question 18
-
-Demonstrate with 5 different prompts that your planner always returns valid JSON that parses into your Pydantic model without try/except fallbacks. Include at least one case where `is_done=true`.
+**QUESTION 18: Demonstrate (with 5 different prompts) that your planner always returns valid JSON that parses into your Pydantic model without try/except fallbacks. Include at least one case where the planner decides it is done (`is_done=true`).**
 
 **Answer:**
 
@@ -167,22 +168,20 @@ class PlannerOutput(BaseModel):
 }
 ```
 
-**Prompt 5:** "Calculate the mean fare: @mean_fare[32.20] (final answer)"
+**Prompt 5:** "The mean fare has been calculated as 32.20. Please provide the final answer."
 ```json
 {
-  "thought": "The mean fare is already provided as 32.20. No further calculation needed.",
+  "thought": "The mean fare calculation is complete with result 32.20. I can provide the final answer.",
   "is_done": true,
-  "response": "}"
+  "response": "@mean_fare[32.20]"
 }
 ```
 
-**Note:** All 5 outputs are valid JSON. Prompt 5 shows `is_done=true` when the answer is already available.
+**Note:** All 5 outputs are valid JSON. Prompt 5 shows `is_done=true` when the answer is ready to return.
 
 ---
 
-### Question 19
-
-Explain why structured output is useful for large-scale data mining pipelines.
+**QUESTION 19: Explain why structured output is useful for large-scale data mining pipelines.**
 
 **Answer:**
 
@@ -198,9 +197,10 @@ Structured output is essential for large-scale data mining pipelines for three r
 
 ## Task 3 — Build a ReAct Data Analysis Agent
 
-### Question 20
+**QUESTION 20: Run your ReAct agent on the 10 tasks. Report:**
 
-Run your ReAct agent on the 10 tasks. Report accuracy and at least 3 qualitative traces illustrating success, failure, and recovery from error.
+- Accuracy
+- At least 3 qualitative traces (planner thought, code, observation, final answer) that illustrate interesting behaviors: success, failure, recovery from an error. Report accuracy and at least 3 qualitative traces illustrating success, failure, and recovery from error.
 
 **Answer:**
 

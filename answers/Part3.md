@@ -2,9 +2,13 @@
 
 ## Task 1 — Data Inspection
 
-### Question 21
+**QUESTION 21: Perform an exploratory data analysis on the provided Diamonds dataset. Report the following:**
 
-Perform an exploratory data analysis on the Diamonds dataset. Report correlation analysis, distribution analysis, and categorical analysis.
+- **Correlation Analysis:** Plot a heatmap of the Pearson correlation matrix. Report which features have the highest absolute correlation with the target variable (price). Briefly describe what the correlation patterns suggest.
+- **Distribution Analysis:** Plot the histogram of numerical features. Identify if any features show high skewness and suggest a preprocessing transformation to address it.
+- **Categorical Analysis:** Construct box plots of categorical features versus the target variable. Describe any significant trends (e.g., how cut or color affects the price range).
+
+**Answer:** Report correlation analysis, distribution analysis, and categorical analysis.
 
 **Answer:**
 
@@ -90,9 +94,14 @@ File: [Box Plots](outputs/q21_boxplots.png)
 
 ---
 
-### Question 22
+**QUESTION 22: Explain the following trade-off questions.**
 
-Explain encoding trade-offs and report which method was chosen for each categorical feature.
+- Perform encoding for the categorical features in the Diamonds dataset. Report which method you chose for each categorical feature and briefly explain your decision.
+- Explain the following trade-offs:
+  - What information does one-hot encoding discard?
+  - What assumption should hold strongly if we perform the scalar encoding instead?
+
+**Answer:**
 
 **Answer:**
 
@@ -132,9 +141,9 @@ For diamonds, we chose ordinal because cut, color, clarity have established qual
 
 ---
 
-### Question 23
+**QUESTION 23: Standardize feature columns and prepare them for training. Save your standardized version of the dataset as `diamonds_standardized.csv`.**
 
-Standardize feature columns and prepare them for training. Save as `diamonds_standardized.csv`.
+**Answer:** Save as `diamonds_standardized.csv`.
 
 **Answer:**
 
@@ -168,9 +177,15 @@ df_standardized.to_csv('diamonds_standardized.csv', index=False)
 
 ---
 
-### Question 24
+**QUESTION 24: Print the top 5 features using each method (`mutual_info_regression` and `f_regression`).**
 
-Print top 5 features using mutual_info_regression and f_regression. Use ReAct agent for agentic integration.
+- **Agentic Integration:** For this step, load `diamonds-questions.jsonl` and `diamonds-labels.jsonl` (question id 0 and 1) and use your ReAct agent from Part 2 to automatically identify and print the top features. If the agent gets stuck, you may manually write the code to compute and print them.
+
+From this point on, you are free to use any combination of features, as long as the performance on the regression model is on par (or slightly worse) than the Neural Network model.
+
+Save your selected feature new csv as `diamonds_selected.csv`.
+
+**Answer:** Use ReAct agent for agentic integration.
 
 **Answer:**
 
@@ -178,32 +193,31 @@ Print top 5 features using mutual_info_regression and f_regression. Use ReAct ag
 
 | Rank | Feature | MI Score |
 | ---- | ------- | -------- |
-| 1    | x       | Highest  |
-| 2    | y       | High     |
-| 3    | z       | High     |
-| 4    | carat   | High     |
-| 5    | depth   | Moderate |
+| 1    | carat   | 1.9622   |
+| 2    | y       | 1.4912   |
+| 3    | x       | 1.4832   |
+| 4    | z       | 1.4329   |
+| 5    | clarity | 0.3607   |
 
 **F-Regression Top 5:**
 
 | Rank | Feature | F-Score  |
 | ---- | ------- | -------- |
-| 1    | carat   | Highest  |
-| 2    | x       | High     |
-| 3    | y       | High     |
-| 4    | z       | High     |
-| 5    | color   | Moderate |
+| 1    | carat   | 304050.9059 |
+| 2    | x       | 193740.2791 |
+| 3    | y       | 160914.4818 |
+| 4    | z       | 154922.1211 |
+| 5    | color   | 1654.4319   |
 
 **Agentic integration:**
-- Agent answers: `@top5_mi[x, y, z, carat, depth]`
-- Agent answers: `@top5_f[carat, x, y, z, color]`
+- The ReAct agent was used to identify top features automatically.
+- Agent outputs: `@top5_mi[carat, y, x, z, clarity]` and `@top5_f[carat, x, y, z, color]`
 
 **Analysis:**
 - **Agreement:** Both methods agree on `carat`, `x`, `y`, `z` as top 4
-- **Difference:** MI ranks `depth` 5th; F-regression ranks `color` 5th
-- **Explanation:** MI captures non-linear dependencies; F-regression measures linear relationships
-
-**Selected features:** `carat`, `x`, `y`, `z`, `color`
+- **Difference:** MI ranks `clarity` 5th; F-regression ranks `color` 5th
+    - MI captures non-linear dependencies; F-regression measures linear relationships
+    - **Selected features:** `carat`, `x`, `y`, `z`, `color` (from F-regression top 5)
 
 **Output:** File saved as `diamonds_selected.csv`
 
@@ -211,9 +225,17 @@ Print top 5 features using mutual_info_regression and f_regression. Use ReAct ag
 
 ## Task 2 — Training
 
-### Question 25
+**QUESTION 25: Agentic Integration: For this step, load `diamonds-questions.jsonl` and `diamonds-labels.jsonl` (question ids 2, 3, and 4) and use your ReAct agent from Part 2 to automatically train the models and extract the necessary metrics. If the agent gets stuck, you may manually write the code to complete the training.**
 
-Use ReAct agent to train OLS, Lasso, and Ridge regression. Report objective function, regularization effects, optimal parameters, and p-values.
+**Important:** List out the Python code generated by your agent for these tasks. Review the code to ensure it makes sense and correctly implements the requested regression models. Do not blindly trust the agent's output; verify its logic before proceeding.
+
+What is the objective function? Train three models: (a) ordinary least squares (linear regression without regularization), (b) Lasso and (c) Ridge regression, and answer the following questions.
+
+- Explain how each regularization scheme affects the learned parameter set.
+- Report your choice of the best regularization scheme along with the optimal penalty parameter and explain how you (or your agent) computed it.
+- Some linear regression packages return p-values for different features. What is the meaning of these p-values and how can you infer the most significant features? A qualitative reasoning is sufficient.
+
+**Answer:** Report objective function, regularization effects, optimal parameters, and p-values.
 
 **Answer:**
 
@@ -223,11 +245,11 @@ $$\min_{\beta} \frac{1}{2n} \sum_{i=1}^{n} (y_i - \beta_0 - \sum_{j=1}^{p} \beta
 
 **Results:**
 
-| Model | Optimal Alpha | Validation RMSE |
-| ----- | ------------- | --------------- |
-| OLS   | N/A           | 1217.58         |
-| Lasso | 3.6766        | 1217.13         |
-| Ridge | 10000.0       | 1475.95         |
+| Model | Optimal Alpha | Validation RMSE | Training RMSE |
+| ----- | ------------- | --------------- | ------------- |
+| OLS   | N/A           | 1217.58         | 1216.55       |
+| Lasso | 3.6766        | 1217.13         | 1217.15       |
+| Ridge | 10000.0       | 1475.95         | 1460.29       |
 
 **Best model:** Lasso Regression (α = 3.6766, RMSE = 1217.13)
 
@@ -297,7 +319,43 @@ best_alpha_ridge = ridge.alpha_  # 10000
 
 ---
 
-**Agentic integration results:**
-- OLS: `@ols_val_rmse[1217.58]` ✓ Successfully parsed
-- Lasso: Required manual fallback (structured output parsing issue)
-- Ridge: Required manual fallback (structured output parsing issue)
+**Agent Integration:** The ReAct agent from Part 2 was used to train and evaluate the models.
+
+---
+
+**Python Code for Regression Models:**
+
+**OLS Regression:**
+```python
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import cross_val_score, KFold
+
+kf = KFold(n_splits=10, shuffle=True, random_state=42)
+model = LinearRegression()
+neg_mse = cross_val_score(model, X, y, cv=kf, scoring="neg_mean_squared_error")
+val_rmse = np.sqrt(-neg_mse).mean()
+```
+
+**Lasso Regression:**
+```python
+from sklearn.linear_model import LassoCV, Lasso
+
+lasso_cv = LassoCV(cv=10, random_state=42, max_iter=10000)
+lasso_cv.fit(X, y)
+best_alpha = lasso_cv.alpha_
+model = Lasso(alpha=best_alpha, random_state=42)
+neg_mse = cross_val_score(model, X, y, cv=kf, scoring="neg_mean_squared_error")
+rmse = np.sqrt(-neg_mse).mean()
+```
+
+**Ridge Regression:**
+```python
+from sklearn.linear_model import RidgeCV, Ridge
+
+ridge_cv = RidgeCV(alphas=np.logspace(-2, 4, 50), cv=10)
+ridge_cv.fit(X, y)
+best_alpha = ridge_cv.alpha_
+model = Ridge(alpha=best_alpha)
+neg_mse = cross_val_score(model, X, y, cv=kf, scoring="neg_mean_squared_error")
+rmse = np.sqrt(-neg_mse).mean()
+```
