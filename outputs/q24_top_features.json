@@ -1,8 +1,12 @@
 {
   "agent_answers": {
-    "mutual_info": "@top5_mi[x, y, z, carat, depth]",
-    "f_regression": "@top5_f[carat, x, y, z, color]"
+    "mutual_info": "FALLBACK: probability tensor contains either `inf`, `nan` or element < 0",
+    "f_regression": "FALLBACK: probability tensor contains either `inf`, `nan` or element < 0"
   },
-  "mutual_info_top5": ["x", "y", "z", "carat", "depth"],
-  "f_regression_top5": ["carat", "x", "y", "z", "color"]
+  "mutual_info_top5": ["carat", "y", "x", "z", "clarity"],
+  "f_regression_top5": ["carat", "x", "y", "z", "color"],
+  "mutual_info_scores": [1.9622, 1.4912, 1.4832, 1.4329, 0.3607],
+  "f_regression_scores": [
+    304050.9059, 193740.2791, 160914.4818, 154922.1211, 1654.4319
+  ]
 }
