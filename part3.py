@@ -18,6 +18,7 @@ import pandas as pd
 import seaborn as sns
 from sklearn.feature_selection import f_regression, mutual_info_regression
 from sklearn.linear_model import Lasso, LassoCV, LinearRegression, Ridge, RidgeCV
+from sklearn.metrics import mean_squared_error
 
 from sklearn.model_selection import KFold, cross_val_score
 from sklearn.preprocessing import OrdinalEncoder, StandardScaler
@@ -339,6 +340,18 @@ def run_q24_feature_selection():
         results["f_regression_top5"] = f_series.head(5).index.tolist()
         results["agent_answers"]["f_regression"] = f"FALLBACK: {e}"
 
+    mi_scores = mutual_info_regression(X, y, random_state=42)
+    mi_series = pd.Series(mi_scores, index=feature_names).sort_values(ascending=False)
+    results["mutual_info_scores"] = [
+        round(s, 4) for s in mi_series.head(5).values.tolist()
+    ]
+
+    f_scores, _ = f_regression(X, y)
+    f_series = pd.Series(f_scores, index=feature_names).sort_values(ascending=False)
+    results["f_regression_scores"] = [
+        round(s, 4) for s in f_series.head(5).values.tolist()
+    ]
+
     save_json(results, "q24_top_features.json")
 
     # Create diamonds_selected.csv (ALL features — just copy standardized)
@@ -465,6 +478,28 @@ def run_q25_regression(agent):
             "val_rmse": round(rmse, 2),
         }
         results["agent_answers"]["ridge"] = f"FALLBACK: {e}"
+
+    # Compute training RMSE for each model
+    # OLS training RMSE
+    ols_model = LinearRegression()
+    ols_model.fit(X, y)
+    ols_train_pred = ols_model.predict(X)
+    ols_train_rmse = np.sqrt(mean_squared_error(y, ols_train_pred))
+    results["ols"]["train_rmse"] = round(ols_train_rmse, 2)
+
+    # Lasso training RMSE
+    lasso_model = Lasso(alpha=results["lasso"]["alpha"], random_state=42)
+    lasso_model.fit(X, y)
+    lasso_train_pred = lasso_model.predict(X)
+    lasso_train_rmse = np.sqrt(mean_squared_error(y, lasso_train_pred))
+    results["lasso"]["train_rmse"] = round(lasso_train_rmse, 2)
+
+    # Ridge training RMSE
+    ridge_model = Ridge(alpha=results["ridge"]["alpha"])
+    ridge_model.fit(X, y)
+    ridge_train_pred = ridge_model.predict(X)
+    ridge_train_rmse = np.sqrt(mean_squared_error(y, ridge_train_pred))
+    results["ridge"]["train_rmse"] = round(ridge_train_rmse, 2)
 
     # Determine best model
     model_rmses = {

@@ -1,19 +1,22 @@
 {
   "agent_answers": {
-    "ols": "@ols_val_rmse[1217.58]",
-    "lasso": "FALLBACK: Could not parse agent answer: Execute data preprocessing with LabelEncoder for categorical columns (cut, color, clarity), then train LassoCV with cv=10, random_state=42, max_iter=10000, and evaluate via 10-fold cross-validation using KFold. Extract best alpha and average RMSE.",
-    "ridge": "FALLBACK: Could not parse agent answer: Execute RidgeCV with correct parameter setup and feature scaling."
+    "ols": "FALLBACK: probability tensor contains either `inf`, `nan` or element < 0",
+    "lasso": "FALLBACK: probability tensor contains either `inf`, `nan` or element < 0",
+    "ridge": "FALLBACK: probability tensor contains either `inf`, `nan` or element < 0"
   },
   "ols": {
-    "val_rmse": 1217.58
+    "val_rmse": 1217.58,
+    "train_rmse": 1216.55
   },
   "lasso": {
     "alpha": 3.6766,
-    "val_rmse": 1217.13
+    "val_rmse": 1217.13,
+    "train_rmse": 1217.15
   },
   "ridge": {
     "alpha": 10000.0,
-    "val_rmse": 1475.95
+    "val_rmse": 1475.95,
+    "train_rmse": 1460.29
   },
   "best_model": "lasso"
 }
