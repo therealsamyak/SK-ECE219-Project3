@@ -1,4 +1,4 @@
-.PHONY: i install test check lint part1 part2 part3 all
+.PHONY: i install test check lint part1 part2 part3 all serve
 
 i install:
 	uv sync && uv run lefthook install
@@ -31,3 +31,6 @@ all:
 	make part1
 	make part2
 	make part3
+
+serve:
+	uv run python -m http.server 8000 --directory docs

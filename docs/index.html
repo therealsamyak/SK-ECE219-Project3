@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ECE 219 Project 2 Report</title>
+    <title>ECE 219 Project 3 Report</title>
     <link rel="stylesheet" href="styles.css" />
     <script
       id="MathJax-script"
@@ -13,11 +13,11 @@
   </head>
   <body>
     <header>
-      <h1>ECE 219 Project 2 Report</h1>
+      <h1>ECE 219 Project 3 Report</h1>
       <p class="author">
         <strong>Contributor:</strong> Samyak Kakatur |
         <a
-          href="https://github.com/therealsamyak/SK-ECE219-Project2"
+          href="https://github.com/therealsamyak/SK-ECE219-Project3"
           target="_blank"
           >GitHub Repository</a
         >
@@ -36,7 +36,7 @@
     <nav>
       <h2>Table of Contents</h2>
       <hr />
-      <h3><a href="#steam-reviews">Steam Reviews</a></h3>
+      <h3><a href="#part-a">Part A: LoRA Fine-Tuning</a></h3>
       <ul>
         <li><a href="#q1">Question 1</a></li>
         <li><a href="#q2">Question 2</a></li>
@@ -50,1850 +50,1200 @@
         <li><a href="#q10">Question 10</a></li>
         <li><a href="#q11">Question 11</a></li>
         <li><a href="#q12">Question 12</a></li>
-      </ul>
-      <h3><a href="#image-clustering">Image Clustering</a></h3>
-      <ul>
         <li><a href="#q13">Question 13</a></li>
+      </ul>
+      <h3><a href="#part-b">Part B: Agentic Data Mining</a></h3>
+      <ul>
         <li><a href="#q14">Question 14</a></li>
         <li><a href="#q15">Question 15</a></li>
         <li><a href="#q16">Question 16</a></li>
         <li><a href="#q17">Question 17</a></li>
         <li><a href="#q18">Question 18</a></li>
         <li><a href="#q19">Question 19</a></li>
-      </ul>
-      <h3><a href="#multi-modal">Multi-modal</a></h3>
-      <ul>
         <li><a href="#q20">Question 20</a></li>
+      </ul>
+      <h3><a href="#part-c">Part C: Regression Analysis</a></h3>
+      <ul>
         <li><a href="#q21">Question 21</a></li>
         <li><a href="#q22">Question 22</a></li>
         <li><a href="#q23">Question 23</a></li>
+        <li><a href="#q24">Question 24</a></li>
+        <li><a href="#q25">Question 25</a></li>
       </ul>
     </nav>
 
-    <!-- Part 1: Steam Reviews -->
-    <h2 id="steam-reviews">Steam Reviews</h2>
+    <!-- Part A: LoRA Fine-Tuning -->
+    <h2 id="part-a">
+      Part A: Teaching a Small Model to Reason: LoRA Fine-Tuning
+    </h2>
     <hr />
+
+    <blockquote>
+      <strong>Note on Hyperparameters:</strong> Due to GPU memory constraints,
+      the batch size and gradient accumulation values were swapped from the
+      assignment defaults. The assignment specifies per-device batch size of 8
+      with gradient accumulation of 4, but the implementation uses per-device
+      batch size of 4 with gradient accumulation of 8. This maintains the same
+      effective batch size of 32 (4×8 = 8×4 = 32) while reducing peak memory
+      usage.
+    </blockquote>
+
     <h2 id="q1">Question 1</h2>
     <div class="question-text">
       <p>
-        Report the number of reviews retained after filtering, and the average
-        length (in tokens) of Short and Long reviews.
+        Run the base Qwen2.5-1.5B-Instruct model on 100 GSM8K test questions and
+        report the accuracy. You should expect approximately 35–40%. (Exact
+        values may vary slightly depending on the prompt format and extraction
+        rule.)
       </p>
     </div>
     <div class="answer">
       <h3>Answer</h3>
       <ul>
-        <li>Total reviews retained: 20,497 (after discarding middle 50%)</li>
-        <li>
-          Short reviews (≤ q25 = 11 words): 10,463 reviews, avg 6.39 words
-        </li>
-        <li>Long reviews (≥ q75 = 179 words): 10,034 reviews, avg 493 words</li>
+        <li><strong>Base Model Accuracy:</strong> 38%</li>
+        <li><strong>Number of Test Samples:</strong> 100</li>
       </ul>
+      <p>
+        The base Qwen2.5-1.5B-Instruct model scored 38% on the GSM8K test set,
+        landing right in the expected 35-40% range. That's our baseline. The
+        model struggles with multi-step reasoning and arithmetic—which isn't
+        surprising for a small language model without specific math training.
+      </p>
     </div>
 
     <h2 id="q2">Question 2</h2>
     <div class="question-text">
       <p>
-        Report the dimensions of the TF-IDF matrix and the MiniLM embedding
-        matrix. Briefly explain why TF-IDF is sparse while MiniLM embeddings are
-        dense.
+        Inspect at least 3 cases where the base model produces an incorrect
+        answer. For each example, include:
+      </p>
+      <ul>
+        <li>The question,</li>
+        <li>
+          A short excerpt of the model's solution highlighting the failure,
+        </li>
+        <li>The extracted answer vs. the ground-truth answer.</li>
+      </ul>
+      <p>
+        Classify each failure mode (e.g., arithmetic slip, reasoning/logical
+        error, misunderstanding the problem, formatting/extraction issue). Do
+        you observe any recurring patterns?
       </p>
     </div>
     <div class="answer">
       <h3>Answer</h3>
+      <p><strong>Failure Case 1: Arithmetic Error</strong></p>
       <ul>
-        <li>TF-IDF: (20,497 × 25,085), 99.68% sparse</li>
-        <li>MiniLM: (20,497 × 384), dense</li>
+        <li>
+          <strong>Question:</strong> Janet's ducks lay 16 eggs per day. She eats
+          three for breakfast every morning and bakes muffins for her friends
+          every day with four. She sells the remainder at the farmers' market
+          daily for $2 per fresh duck egg. How much in dollars does she make
+          every day at the farmers' market?
+        </li>
+        <li><strong>Ground Truth:</strong> 18</li>
+        <li><strong>Extracted Answer:</strong> 0</li>
+        <li><strong>Failure Excerpt:</strong></li>
       </ul>
+      <pre>
+Remaining eggs for sale = Remaining eggs after breakfast - Eggs used for baking muffins
+                        = 13 - 4
+                        = -1 (This is not possible since it would mean negative eggs)
+      </pre>
       <p>
-        TF-IDF scores each vocabulary term independently. However, MiniLM runs
-        the entire sentence through a neural network that outputs a 384-d
-        vector. All dimensions get non-zero values because the model captures
-        meaning from the whole sentence, not by counting words.
+        <strong>Classification:</strong> <strong>Arithmetic Slip</strong> - The
+        model correctly sets up the calculation (16 - 3 - 4 = 9) but then makes
+        a catastrophic error by concluding this is -1 instead of 9.
       </p>
+
+      <p><strong>Failure Case 2: Problem Comprehension</strong></p>
+      <ul>
+        <li>
+          <strong>Question:</strong> A robe takes 2 bolts of blue fiber and half
+          that much white fiber. How many bolts in total does it take?
+        </li>
+        <li><strong>Ground Truth:</strong> 3</li>
+        <li><strong>Extracted Answer:</strong> 2.5</li>
+        <li><strong>Failure Excerpt:</strong></li>
+      </ul>
+      <pre>
+The robe requires half as much white fiber as blue fiber.
+Therefore, the amount of white fiber is (1/2) bolt of blue fiber.
+2 (blue fibers) + 1/2 (white fibers) = 2.5 bolts
+      </pre>
+      <p>
+        <strong>Classification:</strong>
+        <strong>Problem Comprehension</strong> - The model misinterpreted "half
+        that much white fiber" as meaning half a bolt total, rather than half of
+        2 bolts (which is 1 bolt).
+      </p>
+
+      <p><strong>Failure Case 3: Multi-step Reasoning Error</strong></p>
+      <ul>
+        <li>
+          <strong>Question:</strong> Josh decides to try flipping a house. He
+          buys a house for $80,000 and then puts in $50,000 in repairs. This
+          increased the value of the house by 150%. How much profit did he make?
+        </li>
+        <li><strong>Ground Truth:</strong> 70000</li>
+        <li><strong>Extracted Answer:</strong> -55500</li>
+        <li><strong>Failure Excerpt:</strong></li>
+      </ul>
+      <pre>
+Increase in value = Total cost × Percentage increase
+Increase in value = $130,000 × 0.150 = $49,500
+Profit = $129,500 - $130,000 = -$5,500
+      </pre>
+      <p>
+        <strong>Classification:</strong>
+        <strong>Multi-step Reasoning Error</strong> - The model made multiple
+        errors: (1) applied 150% increase to total cost rather than original
+        price, (2) used 0.150 instead of 1.50 for 150%.
+      </p>
+
+      <p><strong>What I kept seeing:</strong></p>
+      <ol>
+        <li>Arithmetic errors—correct setup, wrong math</li>
+        <li>
+          Problem comprehension—misreading word problems, especially fractions
+          and percentages
+        </li>
+        <li>Multi-step reasoning—losing the thread halfway through</li>
+      </ol>
     </div>
 
     <h2 id="q3">Question 3</h2>
     <div class="question-text">
       <p>
-        For each pipeline, report the following clustering agreement metrics
-        with respect to the ground-truth length labels: homogeneity,
-        completeness, v-measure, ARI, AMI. Summarize results in a table and
-        identify the best-performing pipeline.
+        Pick the three hyperparameters (LoRA rank, LoRA alpha, Gradient
+        accumulation) from the table above and explain:
+      </p>
+      <ul>
+        <li>what each hyperparameter controls,</li>
+        <li>what you expect to happen if you increase it,</li>
+        <li>what you expect to happen if you decrease it.</li>
+      </ul>
+      <p>
+        Your answer should reflect practical tradeoffs (e.g., compute/memory,
+        stability, overfitting vs. underfitting).
       </p>
     </div>
     <div class="answer">
       <h3>Answer</h3>
-      <p><strong>TF-IDF (2 pipelines)</strong></p>
-      <table>
-        <thead>
-          <tr>
-            <th>Pipeline</th>
-            <th>Homogeneity</th>
-            <th>Completeness</th>
-            <th>V-Measure</th>
-            <th>ARI</th>
-            <th>AMI</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>SVD + K-Means</td>
-            <td>0.0301</td>
-            <td>0.161</td>
-            <td>0.0507</td>
-            <td>0.0057</td>
-            <td>0.0507</td>
-          </tr>
-          <tr>
-            <td>SVD + Agglomerative</td>
-            <td>0.0276</td>
-            <td>0.157</td>
-            <td>0.0470</td>
-            <td>0.0050</td>
-            <td>0.0470</td>
-          </tr>
-        </tbody>
-      </table>
-      <p><strong>MiniLM (6 pipelines)</strong></p>
-      <table>
-        <thead>
-          <tr>
-            <th>Pipeline</th>
-            <th>Homogeneity</th>
-            <th>Completeness</th>
-            <th>V-Measure</th>
-            <th>ARI</th>
-            <th>AMI</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>None + K-Means</td>
-            <td>0.509</td>
-            <td>0.509</td>
-            <td>0.509</td>
-            <td>0.613</td>
-            <td>0.509</td>
-          </tr>
-          <tr>
-            <td>None + Agglomerative</td>
-            <td>0.543</td>
-            <td>0.547</td>
-            <td>0.545</td>
-            <td>0.643</td>
-            <td>0.545</td>
-          </tr>
-          <tr>
-            <td>SVD + K-Means</td>
-            <td>0.508</td>
-            <td>0.509</td>
-            <td>0.509</td>
-            <td>0.612</td>
-            <td>0.509</td>
-          </tr>
-          <tr>
-            <td><strong>SVD + Agglomerative</strong></td>
-            <td><strong>0.646</strong></td>
-            <td><strong>0.650</strong></td>
-            <td><strong>0.648</strong></td>
-            <td><strong>0.742</strong></td>
-            <td><strong>0.648</strong></td>
-          </tr>
-          <tr>
-            <td>UMAP + K-Means</td>
-            <td>0.558</td>
-            <td>0.559</td>
-            <td>0.558</td>
-            <td>0.666</td>
-            <td>0.558</td>
-          </tr>
-          <tr>
-            <td>UMAP + Agglomerative</td>
-            <td>0.553</td>
-            <td>0.556</td>
-            <td>0.555</td>
-            <td>0.658</td>
-            <td>0.555</td>
-          </tr>
-        </tbody>
-      </table>
+      <p><strong>LoRA Rank (r)</strong></p>
+      <ul>
+        <li>
+          <strong>What it controls:</strong> Size of the low-rank matrices A and
+          B. Basically how much capacity the adapter has.
+        </li>
+        <li>
+          <strong>If you increase:</strong> More parameters to train, better
+          adaptation possible, but uses more memory and risks overfitting.
+        </li>
+        <li>
+          <strong>If you decrease:</strong> Fewer parameters, more constrained
+          adaptation, might underfit but generalizes better.
+        </li>
+      </ul>
 
-      <p>
-        <strong>Best:</strong> MiniLM + SVD(50) + Agglomerative. V-Measure
-        0.648, ARI 0.742.
-      </p>
+      <p><strong>LoRA Alpha (α)</strong></p>
+      <ul>
+        <li>
+          <strong>What it controls:</strong> How strongly the LoRA update gets
+          scaled before merging with original weights. The actual update is
+          scaled by α/r.
+        </li>
+        <li>
+          <strong>If you increase:</strong> Adapter has more influence, learning
+          speeds up, but training can become unstable.
+        </li>
+        <li>
+          <strong>If you decrease:</strong> Gentler updates, more stable
+          training, but slower to converge.
+        </li>
+      </ul>
+
+      <p><strong>Gradient Accumulation</strong></p>
+      <ul>
+        <li>
+          <strong>What it controls:</strong> How many mini-batches of gradients
+          to stack up before actually updating weights. Effective batch size =
+          per_device_batch_size × gradient_accumulation_steps.
+        </li>
+        <li>
+          <strong>If you increase:</strong> Larger effective batch size, which
+          often generalizes better, but updates happen less frequently.
+        </li>
+        <li>
+          <strong>If you decrease:</strong> Smaller effective batch size,
+          noisier gradient estimates, faster updates, but training can get
+          unstable.
+        </li>
+      </ul>
     </div>
 
     <h2 id="q4">Question 4</h2>
     <div class="question-text">
+      <p>Report:</p>
+      <ul>
+        <li>(a) the total number of parameters in the base model,</li>
+        <li>
+          (b) the number of trainable LoRA parameters under the default
+          configuration,
+        </li>
+        <li>(c) the percentage of parameters being trained.</li>
+      </ul>
       <p>
-        Compare TF-IDF and MiniLM performance on this task. Which representation
-        separates Short vs Long reviews more cleanly, and why?
+        Briefly explain why this percentage is small and how LoRA achieves this
+        reduction.
       </p>
     </div>
     <div class="answer">
       <h3>Answer</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Metric</th>
-            <th>TF-IDF</th>
-            <th>MiniLM</th>
-            <th>Gap</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>V-Measure</td>
-            <td>0.047</td>
-            <td>0.648</td>
-            <td>13.8x</td>
-          </tr>
-          <tr>
-            <td>ARI</td>
-            <td>0.005</td>
-            <td>0.742</td>
-            <td>148x</td>
-          </tr>
-          <tr>
-            <td>Homogeneity</td>
-            <td>0.028</td>
-            <td>0.646</td>
-            <td>23x</td>
-          </tr>
-        </tbody>
-      </table>
-
+      <ul>
+        <li>
+          <strong>(a) Base Model Total Parameters:</strong> 1,543,714,304
+          (approximately 1.54 billion)
+        </li>
+        <li>
+          <strong>(b) Trainable LoRA Parameters:</strong> 2,179,072
+          (approximately 2.18 million)
+        </li>
+        <li>
+          <strong>(c) Percentage:</strong> 0.141% (only about 1 in 708
+          parameters is trained)
+        </li>
+      </ul>
       <p>
-        MiniLM outperforms TF-IDF on all metrics. The neural network is able to
-        capture sentence structure and semantic meaning, whereas TF-IDF only
-        counts word frequencies. Transformers also treat longer sequences
-        differently, creating distinct representations for different-length
-        inputs.
-      </p>
-
-      <p>
-        SVD works better than UMAP here. Document length affects all dimensions
-        similarly, so UMAP's focus on local neighborhoods doesn't differentiate
-        the clusters effectively.
+        <strong>Why so few parameters:</strong> LoRA uses low-rank
+        decomposition. Instead of updating a full weight matrix W ∈ ℝ^(d×d)
+        which needs d² parameters, LoRA represents the update as ΔW = BA, where
+        B ∈ ℝ^(d×r) and A ∈ ℝ^(r×d). This cuts parameters from d² to 2dr. With
+        rank r=8 and typical dimension d=2048, that's roughly 128× fewer
+        parameters per adapted layer.
       </p>
     </div>
 
     <h2 id="q5">Question 5</h2>
     <div class="question-text">
       <p>
-        Plots and Visualization: Reduce embeddings to 2D using PCA and create
-        split visualizations.
+        Train a LoRA SFT model using 1,000 training examples. Evaluate on 100
+        GSM8K test questions and report the accuracy. Include a brief comment on
+        whether the improvement over the baseline matches your expectations.
       </p>
     </div>
     <div class="answer">
       <h3>Answer</h3>
-      <p>
-        File:
-        <a href="images/Q5_pca_visualizations.png">PCA visualizations</a>
-      </p>
-      <img src="images/Q5_pca_visualizations.png" alt="PCA visualizations" />
-
-      <p>PCA explained variance:</p>
       <ul>
-        <li>TF-IDF: 4.02% total</li>
-        <li>MiniLM: 11.83% total</li>
+        <li><strong>SFT-1k Accuracy:</strong> 41%</li>
+        <li><strong>Baseline Accuracy:</strong> 38%</li>
+        <li><strong>Improvement:</strong> +3 percentage points</li>
       </ul>
-
       <p>
-        MiniLM clearly separates Short and Long clusters. TF-IDF is scattered.
-        MiniLM projects better in low dimensions, as its two PCs show 11.83%
-        variance (vs 4.02% for TF-IDF).
+        Going from 38% to 41% (+3 pp) is real progress. Fine-tuning helps even
+        with just 1,000 examples. Training took roughly 40-50 minutes on a T4
+        GPU—and we're only training 0.14% of the parameters.
       </p>
     </div>
 
     <h2 id="q6">Question 6</h2>
     <div class="question-text">
       <p>
-        Report the dimensions of the TF-IDF game matrix and the MiniLM game
-        embedding matrix.
+        Hypothesis question (write before running larger training): Do you think
+        scaling from 1,000 examples to 3,000 and/or all 7,473 examples is worth
+        the additional compute? What do you expect the accuracy gains to look
+        like (roughly), and why? In your answer, discuss whether you would scale
+        in multiple steps or jump directly to the full dataset.
       </p>
     </div>
     <div class="answer">
       <h3>Answer</h3>
+      <p>
+        <strong
+          >Yes, scaling is worth it compute, but with diminishing
+          returns.</strong
+        >
+      </p>
+      <p><strong>Expected Accuracy Gains:</strong></p>
       <ul>
         <li>
-          TF-IDF: (200 × 16,554), vocabulary from concatenated positive reviews
+          1,000 → 3,000 examples: ~2-4 percentage point improvement (42% →
+          44-46%)
         </li>
-        <li>MiniLM: (200 × 384), averaged positive review embeddings</li>
+        <li>
+          3,000 → 7,473 examples: ~1-3 percentage point improvement (44-46% →
+          45-49%)
+        </li>
       </ul>
+      <p><strong>Why:</strong></p>
+      <ul>
+        <li>
+          More data = more pattern diversity, better generalization, stronger
+          reasoning
+        </li>
+        <li>
+          But diminishing returns kick in: GSM8K has redundancy, the model only
+          has 0.14% trainable parameters, and there's a quality vs quantity
+          trade-off
+        </li>
+      </ul>
+      <p>
+        <strong>My strategy:</strong> Scale in two steps (1k → 3k → full) so I
+        can track how scaling behaves and stop early if returns flatten out.
+      </p>
     </div>
 
     <h2 id="q7">Question 7</h2>
     <div class="question-text">
-      <p>For each pipeline, report a summary table that includes:</p>
-      <ul>
-        <li>
-          number of clusters found (for HDBSCAN, also report the fraction of
-          games labeled as noise -1),
-        </li>
-        <li>cluster sizes,</li>
-        <li>
-          for each cluster: the top 3 most common genres (by frequency across
-          games in that cluster).
-        </li>
-      </ul>
+      <p>
+        Now scale up your training data (recommended: 3,000 examples, and
+        optionally the full 7,473). Evaluate each trained model on the same
+        100-question test subset and report the accuracies.
+      </p>
+      <p>
+        Finally, plot accuracy as a function of the number of training examples
+        (x-axis: 0, 1000, 3000; y-axis: accuracy). Describe the trend you
+        observe and comment on diminishing returns in data scaling for SFT.
+      </p>
     </div>
     <div class="answer">
       <h3>Answer</h3>
-      <p><strong>MiniLM Pipelines</strong></p>
-
-      <p><strong>None + K-Means</strong> (K=5)</p>
       <table>
         <thead>
           <tr>
-            <th>Cluster</th>
-            <th>Size</th>
-            <th>Top 3 Genres (purity)</th>
+            <th>Training Examples</th>
+            <th>Accuracy</th>
+            <th>Improvement from Baseline</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>0</td>
-            <td>9</td>
-            <td>Simulation (67%), Sports (67%), Action (33%)</td>
+            <td>0 (baseline)</td>
+            <td>38%</td>
+            <td>-</td>
           </tr>
           <tr>
-            <td>1</td>
-            <td>23</td>
-            <td>Action (69%), Indie (55%), Adventure (50%)</td>
+            <td>1,000</td>
+            <td>41%</td>
+            <td>+3 pp</td>
           </tr>
           <tr>
-            <td>2</td>
-            <td>24</td>
-            <td>Action (74%), Adventure (52%), RPG (48%)</td>
-          </tr>
-          <tr>
-            <td>3</td>
-            <td>58</td>
-            <td>Action (81%), Adventure (48%), RPG (33%)</td>
-          </tr>
-          <tr>
-            <td>4</td>
-            <td>86</td>
-            <td>Adventure (71%), Simulation (54%), Indie (50%)</td>
+            <td>3,000</td>
+            <td>44%</td>
+            <td>+6 pp</td>
           </tr>
         </tbody>
       </table>
 
-      <p><strong>None + Agglomerative</strong> (K=5)</p>
-      <table>
-        <thead>
-          <tr>
-            <th>Cluster</th>
-            <th>Size</th>
-            <th>Top 3 Genres (purity)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>0</td>
-            <td>20</td>
-            <td>Action (63%), Adventure (49%), Indie (49%)</td>
-          </tr>
-          <tr>
-            <td>1</td>
-            <td>33</td>
-            <td>Action (82%), Adventure (45%), RPG (27%)</td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>41</td>
-            <td>Action (55%), Indie (53%), Adventure (50%)</td>
-          </tr>
-          <tr>
-            <td>3</td>
-            <td>44</td>
-            <td>Simulation (70%), Indie (60%), Adventure (55%)</td>
-          </tr>
-          <tr>
-            <td>4</td>
-            <td>62</td>
-            <td>Action (93%), Adventure (52%), RPG (48%)</td>
-          </tr>
-        </tbody>
-      </table>
+      <p>File: <a href="images/Q7_scaling_plot.png">Scaling Plot</a></p>
+      <img src="images/Q7_scaling_plot.png" alt="Scaling plot" />
 
-      <p><strong>SVD + K-Means</strong> (K=5)</p>
-      <table>
-        <thead>
-          <tr>
-            <th>Cluster</th>
-            <th>Size</th>
-            <th>Top 3 Genres (purity)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>0</td>
-            <td>25</td>
-            <td>Action (76%), Adventure (52%), RPG (44%)</td>
-          </tr>
-          <tr>
-            <td>1</td>
-            <td>30</td>
-            <td>Adventure (67%), Simulation (57%), Indie (53%)</td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>40</td>
-            <td>Indie (62%), Action (58%), Adventure (54%)</td>
-          </tr>
-          <tr>
-            <td>3</td>
-            <td>50</td>
-            <td>Action (82%), Indie (38%), Adventure (33%)</td>
-          </tr>
-          <tr>
-            <td>4</td>
-            <td>55</td>
-            <td>Action (80%), Adventure (55%), RPG (35%)</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <p><strong>SVD + Agglomerative</strong> (K=5)</p>
-      <table>
-        <thead>
-          <tr>
-            <th>Cluster</th>
-            <th>Size</th>
-            <th>Top 3 Genres (purity)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>0</td>
-            <td>13</td>
-            <td>Indie (59%), Action (59%), Adventure (43%)</td>
-          </tr>
-          <tr>
-            <td>1</td>
-            <td>32</td>
-            <td>Action (85%), Adventure (56%), RPG (44%)</td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>37</td>
-            <td>Adventure (66%), Simulation (62%), Indie (56%)</td>
-          </tr>
-          <tr>
-            <td>3</td>
-            <td>56</td>
-            <td>Action (100%), Massively Multiplayer (38%), Indie (23%)</td>
-          </tr>
-          <tr>
-            <td>4</td>
-            <td>62</td>
-            <td>Action (64%), Adventure (46%), Indie (38%)</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <p><strong>UMAP + K-Means</strong> (K=5)</p>
-      <table>
-        <thead>
-          <tr>
-            <th>Cluster</th>
-            <th>Size</th>
-            <th>Top 3 Genres (purity)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>0</td>
-            <td>26</td>
-            <td>Action (85%), Adventure (49%), RPG (36%)</td>
-          </tr>
-          <tr>
-            <td>1</td>
-            <td>32</td>
-            <td>Action (64%), Adventure (46%), Indie (39%)</td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>39</td>
-            <td>Simulation (62%), Adventure (54%), Indie (54%)</td>
-          </tr>
-          <tr>
-            <td>3</td>
-            <td>42</td>
-            <td>Indie (62%), Action (60%), Adventure (50%)</td>
-          </tr>
-          <tr>
-            <td>4</td>
-            <td>61</td>
-            <td>Action (84%), Adventure (56%), RPG (34%)</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <p><strong>UMAP + Agglomerative</strong> (K=5)</p>
-      <table>
-        <thead>
-          <tr>
-            <th>Cluster</th>
-            <th>Size</th>
-            <th>Top 3 Genres (purity)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>0</td>
-            <td>22</td>
-            <td>Action (66%), Adventure (52%), Indie (41%)</td>
-          </tr>
-          <tr>
-            <td>1</td>
-            <td>23</td>
-            <td>Action (85%), Adventure (45%), RPG (38%)</td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>30</td>
-            <td>Indie (63%), Action (53%), Adventure (47%)</td>
-          </tr>
-          <tr>
-            <td>3</td>
-            <td>40</td>
-            <td>Simulation (64%), Adventure (55%), Indie (50%)</td>
-          </tr>
-          <tr>
-            <td>4</td>
-            <td>85</td>
-            <td>Action (87%), Adventure (52%), RPG (35%)</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <p><strong>AE + K-Means</strong> (K=5)</p>
-      <table>
-        <thead>
-          <tr>
-            <th>Cluster</th>
-            <th>Size</th>
-            <th>Top 3 Genres (purity)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>0</td>
-            <td>29</td>
-            <td>Indie (67%), Adventure (56%), Action (53%)</td>
-          </tr>
-          <tr>
-            <td>1</td>
-            <td>34</td>
-            <td>Action (84%), Adventure (51%), RPG (30%)</td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>36</td>
-            <td>Action (74%), Adventure (59%), RPG (41%)</td>
-          </tr>
-          <tr>
-            <td>3</td>
-            <td>43</td>
-            <td>Action (79%), Indie (40%), Adventure (38%)</td>
-          </tr>
-          <tr>
-            <td>4</td>
-            <td>58</td>
-            <td>Indie (62%), Adventure (55%), Simulation (55%)</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <p><strong>AE + Agglomerative</strong> (K=5)</p>
-      <table>
-        <thead>
-          <tr>
-            <th>Cluster</th>
-            <th>Size</th>
-            <th>Top 3 Genres (purity)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>0</td>
-            <td>27</td>
-            <td>Indie (68%), Action (58%), Adventure (54%)</td>
-          </tr>
-          <tr>
-            <td>1</td>
-            <td>40</td>
-            <td>Action (85%), Adventure (50%), RPG (28%)</td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>40</td>
-            <td>Action (70%), Adventure (59%), RPG (37%)</td>
-          </tr>
-          <tr>
-            <td>3</td>
-            <td>43</td>
-            <td>Action (77%), Indie (35%), Adventure (35%)</td>
-          </tr>
-          <tr>
-            <td>4</td>
-            <td>50</td>
-            <td>Indie (57%), Adventure (55%), Action (52%)</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <p><strong>None + HDBSCAN</strong> (K=2, 87.5% noise)</p>
-      <table>
-        <thead>
-          <tr>
-            <th>Cluster</th>
-            <th>Size</th>
-            <th>Top 3 Genres (purity)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>0</td>
-            <td>7</td>
-            <td>Action (83%), Adventure (56%), Indie (50%)</td>
-          </tr>
-          <tr>
-            <td>1</td>
-            <td>18</td>
-            <td>
-              Action (100%), Massively Multiplayer (43%), Early Access (29%)
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <p><strong>SVD + HDBSCAN</strong> (K=2, 84.0% noise)</p>
-      <table>
-        <thead>
-          <tr>
-            <th>Cluster</th>
-            <th>Size</th>
-            <th>Top 3 Genres (purity)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>0</td>
-            <td>7</td>
-            <td>Action (72%), Adventure (64%), Indie (52%)</td>
-          </tr>
-          <tr>
-            <td>1</td>
-            <td>25</td>
-            <td>
-              Action (100%), Massively Multiplayer (43%), Early Access (29%)
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <p><strong>UMAP + HDBSCAN</strong> (K=10, 32.0% noise)</p>
-      <table>
-        <thead>
-          <tr>
-            <th>Cluster</th>
-            <th>Size</th>
-            <th>Top 3 Genres (purity)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>0</td>
-            <td>5</td>
-            <td>Action (80%), Racing (80%), Adventure (60%)</td>
-          </tr>
-          <tr>
-            <td>1</td>
-            <td>6</td>
-            <td>Adventure (86%), Simulation (57%), Indie (43%)</td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>6</td>
-            <td>Action (83%), RPG (50%), Adventure (50%)</td>
-          </tr>
-          <tr>
-            <td>3</td>
-            <td>20</td>
-            <td>Simulation (65%), Adventure (60%), Indie (55%)</td>
-          </tr>
-          <tr>
-            <td>4</td>
-            <td>9</td>
-            <td>Casual (80%), Indie (60%), Action (60%)</td>
-          </tr>
-          <tr>
-            <td>5</td>
-            <td>35</td>
-            <td>Action (91%), Adventure (60%), RPG (40%)</td>
-          </tr>
-          <tr>
-            <td>6</td>
-            <td>14</td>
-            <td>
-              Action (100%), Free To Play (30%), Massively Multiplayer (20%)
-            </td>
-          </tr>
-          <tr>
-            <td>7</td>
-            <td>13</td>
-            <td>Action (60%), Indie (53%), Adventure (47%)</td>
-          </tr>
-          <tr>
-            <td>8</td>
-            <td>8</td>
-            <td>Indie (85%), Adventure (60%), Action (60%)</td>
-          </tr>
-          <tr>
-            <td>9</td>
-            <td>20</td>
-            <td>Simulation (86%), Sports (86%), Action (14%)</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <p><strong>AE + HDBSCAN</strong> (K=2, 80.5% noise)</p>
-      <table>
-        <thead>
-          <tr>
-            <th>Cluster</th>
-            <th>Size</th>
-            <th>Top 3 Genres (purity)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>0</td>
-            <td>6</td>
-            <td>Action (76%), Indie (55%), Adventure (52%)</td>
-          </tr>
-          <tr>
-            <td>1</td>
-            <td>33</td>
-            <td>
-              Action (100%), Early Access (33%), Massively Multiplayer (33%)
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <p><strong>TF-IDF Pipelines</strong></p>
-
-      <p><strong>SVD + K-Means</strong> (K=5)</p>
-      <table>
-        <thead>
-          <tr>
-            <th>Cluster</th>
-            <th>Size</th>
-            <th>Top 3 Genres (purity)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>0</td>
-            <td>94</td>
-            <td>Action (80%), Massively Multiplayer (60%), Strategy (40%)</td>
-          </tr>
-          <tr>
-            <td>1</td>
-            <td>35</td>
-            <td>Action (71%), Adventure (57%), RPG (46%)</td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>62</td>
-            <td>Action (60%), Adventure (60%), Indie (43%)</td>
-          </tr>
-          <tr>
-            <td>3</td>
-            <td>5</td>
-            <td>Action (71%), Indie (40%), Adventure (39%)</td>
-          </tr>
-          <tr>
-            <td>4</td>
-            <td>4</td>
-            <td>Simulation (100%), Sports (100%)</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <p><strong>SVD + Agglomerative</strong> (K=5)</p>
-      <table>
-        <thead>
-          <tr>
-            <th>Cluster</th>
-            <th>Size</th>
-            <th>Top 3 Genres (purity)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>0</td>
-            <td>130</td>
-            <td>Action (80%), Indie (45%), Adventure (43%)</td>
-          </tr>
-          <tr>
-            <td>1</td>
-            <td>12</td>
-            <td>Action (67%), Adventure (58%), Indie (58%)</td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>49</td>
-            <td>Action (65%), Adventure (55%), RPG (41%)</td>
-          </tr>
-          <tr>
-            <td>3</td>
-            <td>5</td>
-            <td>Action (80%), Massively Multiplayer (60%), Strategy (40%)</td>
-          </tr>
-          <tr>
-            <td>4</td>
-            <td>4</td>
-            <td>Simulation (100%), Sports (100%)</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <p><strong>SVD + HDBSCAN</strong> (K=2, 3.5% noise)</p>
-      <table>
-        <thead>
-          <tr>
-            <th>Cluster</th>
-            <th>Size</th>
-            <th>Top 3 Genres (purity)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>0</td>
-            <td>5</td>
-            <td>Action (69%), Adventure (52%), Indie (41%)</td>
-          </tr>
-          <tr>
-            <td>1</td>
-            <td>188</td>
-            <td>Action (80%), Massively Multiplayer (60%), Strategy (40%)</td>
-          </tr>
-        </tbody>
-      </table>
+      <p><strong>Analysis:</strong></p>
+      <ul>
+        <li>Consistent improvement as data increases: 38% → 41% → 44%</li>
+        <li>
+          Diminishing returns: 0→1k gives +3pp with 1k examples, 1k→3k gives
+          +3pp with 2k additional examples
+        </li>
+        <li>Extrapolating to full dataset (7,473) might yield ~46-48%</li>
+      </ul>
     </div>
 
     <h2 id="q8">Question 8</h2>
     <div class="question-text">
       <p>
-        Pick one best pipeline (justify your choice), then report two cluster
-        with high purity:
-      </p>
-      <ul>
-        <li>top 3 genres with percentages,</li>
-        <li>cluster genre purity (as defined above),</li>
-        <li>Representative games in the cluster (game name + genres).</li>
-      </ul>
-      <p>
-        Provide a short interpretation: what type of games does these clusters
-        represent?
+        Compare the base model and your best SFT model on the same 3 failure
+        examples you identified in Task 1. For each example, show both models'
+        responses side by side. Does the SFT model fix any of these errors?
       </p>
     </div>
     <div class="answer">
       <h3>Answer</h3>
-      <p>
-        We selected MiniLM + SVD(50) + Agglomerative because it performed the
-        best in Task 1 and shows strong genre purity.
-      </p>
+      <p><strong>Case 1: Janet's Ducks (Ground Truth: 18)</strong></p>
+      <ul>
+        <li>Base Model: 0 (arithmetic error: 13 - 4 = -1)</li>
+        <li>
+          SFT-3k Model: 73.50 (different error: hallucinated 16×3
+          multiplication)
+        </li>
+        <li><strong>Result:</strong> Both failed with different errors</li>
+      </ul>
 
-      <p><strong>Cluster 3 (13 games, 100% pure)</strong></p>
-      <p>Top genres: Action (100%), Massively Multiplayer (38%), Indie (23%)</p>
-      <table>
-        <thead>
-          <tr>
-            <th>Game</th>
-            <th>Genres</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Counter-Strike 2</td>
-            <td>Action, Massively Multiplayer</td>
-          </tr>
-          <tr>
-            <td>Dota 2</td>
-            <td>Action, Massively Multiplayer, RPG</td>
-          </tr>
-          <tr>
-            <td>Team Fortress 2</td>
-            <td>Action, Massively Multiplayer</td>
-          </tr>
-        </tbody>
-      </table>
-      <p>
-        These are competitive online multiplayer first-person-shooter games. All
-        have the Action tag.
-      </p>
+      <p><strong>Case 2: Robe Fabric (Ground Truth: 3)</strong></p>
+      <ul>
+        <li>Base Model: 2.5 (misinterpreted "half that much" as 0.5 bolts)</li>
+        <li>
+          SFT-3k Model: 3 (correctly interpreted as half of 2 bolts = 1 bolt)
+        </li>
+        <li><strong>Result:</strong> SFT fixed this error ✓</li>
+      </ul>
 
-      <p><strong>Cluster 1 (62 games, 85% pure)</strong></p>
-      <p>Top genres: Action (85%), Adventure (56%), RPG (44%)</p>
-      <table>
-        <thead>
-          <tr>
-            <th>Game</th>
-            <th>Genres</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Dying Light</td>
-            <td>Action, RPG</td>
-          </tr>
-          <tr>
-            <td>Black Mesa</td>
-            <td>Action, Adventure, Indie</td>
-          </tr>
-          <tr>
-            <td>Borderlands 3</td>
-            <td>Action, RPG</td>
-          </tr>
-        </tbody>
-      </table>
-      <p>These are mostly narrative-driven action games with RPG elements.</p>
+      <p><strong>Case 3: House Flipping (Ground Truth: 70000)</strong></p>
+      <ul>
+        <li>Base Model: -55500 (applied 0.150 instead of 1.5 for 150%)</li>
+        <li>SFT-3k Model: 69500 (still applied 0.15 instead of 1.5)</li>
+        <li>
+          <strong>Result:</strong> Both failed with similar percentage
+          calculation errors
+        </li>
+      </ul>
+
+      <p>
+        <strong>Summary:</strong> SFT fixed 1/3 problems (language comprehension
+        got better), but arithmetic and percentage reasoning remain hard.
+      </p>
     </div>
 
     <h2 id="q9">Question 9</h2>
     <div class="question-text">
       <p>
-        Report: (i) the assigned cluster ID, (ii) the top 3 genres of that
-        cluster, and (iii) 3 representative games from that cluster. Briefly
-        justify why this constitutes a genre estimate in a multi-genre world.
+        Identify 2 examples where your best SFT model still fails. What types of
+        errors persist?
       </p>
     </div>
     <div class="answer">
       <h3>Answer</h3>
-      <p>The best Task 2 pipeline is MiniLM + SVD + Agglomerative.</p>
-
-      <p><strong>Cluster ID:</strong> 4</p>
-      <p>Top genres: Action (80%), Adventure (55%), RPG (35%)</p>
-      <table>
-        <thead>
-          <tr>
-            <th>Game</th>
-            <th>Genres</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Dying Light</td>
-            <td>Action, RPG</td>
-          </tr>
-          <tr>
-            <td>Black Mesa</td>
-            <td>Action, Adventure, Indie</td>
-          </tr>
-          <tr>
-            <td>Borderlands 3</td>
-            <td>Action, RPG</td>
-          </tr>
-        </tbody>
-      </table>
       <p>
-        This is genre-estimation, because the games themselves are multi-label.
-        Rather than predicting one genre, we assign the held-out game to its
-        nearest cluster and inherit that cluster's genre distribution. The
-        held-out game shares Action / Adventure / RPG characteristics because it
-        clusters semantically with games having those tags.
+        <strong
+          >Failure 1: Janet's Ducks - Multi-step reasoning with hallucinated
+          operations</strong
+        >
       </p>
+      <ul>
+        <li>Extracted Answer: 73.50 (Ground Truth: 18)</li>
+        <li>
+          Error: Model introduced erroneous multiplication (16×3=48) not in
+          problem statement
+        </li>
+        <li>
+          Type:
+          <strong>Multi-step reasoning with hallucinated operations</strong>
+        </li>
+      </ul>
+
+      <p>
+        <strong
+          >Failure 2: House Flipping - Percentage calculation error</strong
+        >
+      </p>
+      <ul>
+        <li>Extracted Answer: -30500 (Ground Truth: 70000)</li>
+        <li>Error: Applied 0.15 (15%) instead of 1.5 (150%)</li>
+        <li>Type: <strong>Arithmetic/Percentage reasoning</strong></li>
+      </ul>
+
+      <p><strong>Persistent error types (ranked by frequency):</strong></p>
+      <ol>
+        <li>
+          Arithmetic/Percentage errors (converting percentages incorrectly)
+        </li>
+        <li>Multi-step reasoning with hallucinated operations</li>
+        <li>Problem comprehension (occasional misinterpretation)</li>
+      </ol>
     </div>
 
     <h2 id="q10">Question 10</h2>
     <div class="question-text">
+      <p>Evaluate k-shot prompting (use k = 3) on:</p>
+      <ol>
+        <li>the base model,</li>
+        <li>your LoRA SFT model trained on 3k examples,</li>
+      </ol>
       <p>
-        For negative reviews: report 3–5 clusters with (i) top terms and (ii)
-        exemplar reviews, and assign a short label to each complaint cluster.
+        Report the k-shot results alongside the corresponding no-demonstration
+        baseline results, and compute the improvement (Δ).
       </p>
     </div>
     <div class="answer">
       <h3>Answer</h3>
-      <p>
-        We used MiniLM + SVD(50) + Agglomerative because it achieved the best
-        performance in Task 1 (V-Measure 0.648, ARI 0.742) and Task 2 (up to
-        100% genre purity).
-      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>Zero-Shot Accuracy</th>
+            <th>3-Shot Accuracy</th>
+            <th>Improvement (Δ)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Base Model</td>
+            <td>38%</td>
+            <td>32%</td>
+            <td>-6 pp</td>
+          </tr>
+          <tr>
+            <td>SFT-3k Model</td>
+            <td>44%</td>
+            <td>50%</td>
+            <td>+6 pp</td>
+          </tr>
+        </tbody>
+      </table>
 
-      <p>
-        <strong>Cluster 0 - Boss-Focused Gameplay Issues (48 reviews)</strong>
-      </p>
-      <p>
-        Terms: game, like, just, boss, fun, games, combat, boring, good, don
-      </p>
-      <blockquote>
-        "First of all it's a beautiful game. The visuals are great, It also has
-        some unique combat that when you get used to it, it's enjoyable. But
-        beyond that...this game is a boss simulator..."
-      </blockquote>
-      <blockquote>
-        "Is a fun game but with a lot of problems. First of all performance is
-        not great and not consistent at all through the chapters. There's a
-        beautiful world to look at but full of invisible walls..."
-      </blockquote>
-      <p>Label: Boss-focused gameplay issues</p>
-
-      <p>
-        <strong
-          >Cluster 1 - Frustrating Combat & Boss Design (21 reviews)</strong
-        >
-      </p>
-      <p>
-        Terms: game, boss, like, just, bosses, combat, design, really, attacks,
-        feel
-      </p>
-      <blockquote>
-        "The other negative reviews have already covered most of it. I can just
-        add that I too find the game very frustrating. I want to love it, but
-        the poor combat design, getting locked into animations far too often..."
-      </blockquote>
-      <blockquote>
-        "I really wanted to like this game, but it falls victim to many poor
-        design decisions and I found the game far more tedious and frustrating
-        than it should be..."
-      </blockquote>
-      <p>Label: Frustrating Combat and Boss Design</p>
-
-      <p>
-        <strong
-          >Cluster 2 - Misogynistic Developers Criticism (6 reviews)</strong
-        >
-      </p>
-      <p>
-        Terms: developers misogynists, developers, country, misogynists, taiwan,
-        taiwan country, game, want, talking, feets
-      </p>
-      <blockquote>
-        "If you want to support a super misogynistic games company then this is
-        the game for you"
-      </blockquote>
-      <blockquote>"The developers are misogynists"</blockquote>
-      <p>Label: Misogynistic Developers Criticism</p>
-
-      <p><strong>Cluster 3 - Wukong Game Criticism (8 reviews)</strong></p>
-      <p>
-        Terms: game, boss, just, like, wukong, story, design, level, black,
-        black myth
-      </p>
-      <blockquote>
-        "Do be aware that the majority of the reviews for Wukong are from China,
-        even those in English, and as such this review will probably trigger
-        some..."
-      </blockquote>
-      <blockquote>
-        "Is Black Myth: Wukong the best game ever made and ever will be made?
-        ...... A sudden uproar of positive feedback for this game brings me
-        here..."
-      </blockquote>
-      <p>Label: Wukong game criticism</p>
-
-      <p><strong>Cluster 4 - Performance Issues (17 reviews)</strong></p>
-      <p>
-        Terms: game, fps, low, crashes, settings, issues, like, amd, 7900xtx,
-        low fps
-      </p>
-      <blockquote>
-        "I wanted to share my recent experience with this where I have seen
-        that's been getting positive reviews. I'm running this on an i7 13th
-        gen, RTX 4080, and 32 gigs RAM, which should be more than capable.
-        However, the game crashes consistently..."
-      </blockquote>
-      <blockquote>
-        "Not really sure what these purchased reviews are all about. Game runs
-        terribly.1440p, Cinematic, 4090, 32GB Ram, 13900kConstant stutters."
-      </blockquote>
-      <p>Label: Performance Issues</p>
+      <p><strong>Key observations:</strong></p>
+      <ul>
+        <li>Few-shot helps SFT (+6 pp) but hurts base model (-6 pp)</li>
+        <li>
+          Combined gains: SFT-3k + few-shot reaches 50%, a 12 pp improvement
+          over baseline
+        </li>
+      </ul>
     </div>
 
     <h2 id="q11">Question 11</h2>
     <div class="question-text">
-      <p>
-        For positive reviews: repeat the same analysis and label 3–5 praise
-        clusters.
-      </p>
+      <p>Analyze the effect of few-shot prompting on each model:</p>
+      <ul>
+        <li>
+          Does few-shot help the base model? If not, why might it perform worse
+          with demonstrations?
+        </li>
+        <li>Does few-shot help the SFT models? By how much?</li>
+        <li>Which model benefits the most from few-shot prompting, and why?</li>
+      </ul>
     </div>
     <div class="answer">
       <h3>Answer</h3>
-      <p>
-        We used MiniLM + SVD(50) + Agglomerative because it achieved the best
-        performance in Task 1 (V-Measure 0.648, ARI 0.742) and Task 2 (up to
-        100% genre purity).
-      </p>
+      <p><strong>Effect on Base Model (-6 pp)</strong></p>
+      <p>Few-shot hurts because:</p>
+      <ol>
+        <li>No reasoning foundation to use demonstrations</li>
+        <li>Attention dilution from context window usage</li>
+        <li>Format confusion from demonstration patterns</li>
+        <li>
+          Negative transfer from reasoning patterns the base model can't follow
+        </li>
+      </ol>
+
+      <p><strong>Effect on SFT Models (+6 pp)</strong></p>
+      <p>Few-shot helps because:</p>
+      <ol>
+        <li>Reinforces step-by-step reasoning patterns from training</li>
+        <li>Consistent format alignment with training</li>
+        <li>Pattern completion guidance</li>
+        <li>Fewer format errors</li>
+      </ol>
 
       <p>
-        <strong>Cluster 0 - Positive Gameplay Experience (49 reviews)</strong>
+        <strong>Which benefits most:</strong> SFT-3k benefits most (+6 pp vs -6
+        pp). Few-shot and SFT work together—SFT teaches reasoning style,
+        few-shot reinforces it.
       </p>
-      <p>
-        Terms: game, like, just, good, games, really, graphics, combat, 10, play
-      </p>
-      <blockquote>
-        "This game has the big awesome set pieces and aesthetic from the old
-        school God of War games, the core gameplay of a Soul-like (albeit a tad
-        more forgiving), really sick and fast paced Sekiro / Bloodborne
-        combat..."
-      </blockquote>
-      <blockquote>
-        "(Review in progress, 8h so far, 2 chapters completed)This game
-        surprised me more than I expected. The level of polish and care put into
-        it is quite impressive and I absolutely loved my time with it so far..."
-      </blockquote>
-      <p>Label: Positive gameplay experience</p>
-
-      <p>
-        <strong
-          >Cluster 1 - Mythical Chinese Game Excellence (15 reviews)</strong
-        >
-      </p>
-      <p>
-        Terms: game, wukong, chinese, myth, good, black, black myth, games, myth
-        wukong, like
-      </p>
-      <blockquote>
-        "Black Myth: Wukong was released under a lot of anticipation after
-        gameplay showcases had been shown over the past few years, leading
-        people to even question if the game would really come out like that.
-        Thankfully, it really did - and overcame all expectations..."
-      </blockquote>
-      <blockquote>
-        "Black Myth Wukong is an absolute masterclass of a game. All the hype,
-        all the praise, all the positive buzz surrounding this game...they're
-        absolutely deserved..."
-      </blockquote>
-      <p>Label: Mythical Chinese Game Excellence</p>
-
-      <p>
-        <strong
-          >Cluster 2 - Perfect 10s and Sweet Baby Praise (16 reviews)</strong
-        >
-      </p>
-      <p>
-        Terms: 10, sweet baby, baby, sweet, ign, game, add, monke, ape, game ape
-      </p>
-      <blockquote>"※This game does not include Sweet Baby"</blockquote>
-      <blockquote>
-        "Story: 10/10Gameplay: 10/10Graphic & Sound: 10/10Animation: 10/10Game's
-        World: 10/10Character: 10/10Combat: 10/10Enemy's AI: 10/10Soundtrack:
-        10/10Game Optimize: 10/10It's Wukong: 10/10OVERALL: 10+/10"
-      </blockquote>
-      <p>Label: Perfect 10s and Sweet Baby praise</p>
-
-      <p>
-        <strong>Cluster 3 - Grind and Repetitive Gameplay (15 reviews)</strong>
-      </p>
-      <p>Terms: good, grind, just, bad, 10, long, average, bugs, game, hard</p>
-      <blockquote>
-        "---{ Graphics }---☑ You forget what reality is☑ Beautiful☑ Good☑ Decent
-        ☑ Bad☑ Don't look too long at it☐ MS-DOS---{ Gameplay }---☑ Very good☐
-        Good☐ It's just gameplay☐ Mehh☐ Watch paint dry instead☐ Just don't..."
-      </blockquote>
-      <p>Label: Grind and repetitive gameplay</p>
-
-      <p><strong>Cluster 4 - Monke Embrace Approved (5 reviews)</strong></p>
-      <p>
-        Terms: monke, reject, approves, monke approves, embrace, embrace monke,
-        modernityreturn monke, modernityreturn, reject modernityreturn, dei
-      </p>
-      <blockquote>"MONKE APPROVES..."</blockquote>
-      <blockquote>"REJECT MODERNITYRETURN TO MONKE"</blockquote>
-      <p>Label: Monke Embrace Approved</p>
     </div>
 
     <h2 id="q12">Question 12</h2>
     <div class="question-text">
       <p>
-        Include your prompting strategy and 3 example of LLM-generated labels
-        for clusters. You can use the same helper code from Project 1 for the
-        Qwen model (Qwen/Qwen3-4B-Instruct-2507).
+        Qualitative reflection (short): Based on your results so far, what do
+        you think is limiting performance? For each of the following, justify
+        with 2–4 concrete observations from your own failures:
       </p>
+      <ul>
+        <li>arithmetic reliability,</li>
+        <li>multi-step planning / long-horizon reasoning,</li>
+        <li>problem comprehension,</li>
+        <li>output consistency / extraction failures,</li>
+        <li>training data quality (solution style, structure, or noise).</li>
+      </ul>
     </div>
     <div class="answer">
       <h3>Answer</h3>
-      <p>Model: Qwen/Qwen3-4B-Instruct-2507</p>
-      <p>Input per cluster: 10 top TF-IDF terms, 2 exemplar reviews</p>
+      <p><strong>1. Arithmetic Reliability (Major limitation)</strong></p>
+      <ul>
+        <li>Simple calculation errors persist (15 + 25 = 7, 13 - 4 = -1)</li>
+        <li>No self-verification of intermediate results</li>
+        <li>Percentage confusion (using 0.15 for 150%)</li>
+      </ul>
 
-      <p><strong>Prompt:</strong></p>
-      <pre>
-You are analyzing Steam review clusters. Input:
-Top Terms: [terms]
-Exemplar Reviews: [reviews]
+      <p><strong>2. Multi-Step Planning (Primary limitation)</strong></p>
+      <ul>
+        <li>Loses track of goals in complex problems</li>
+        <li>Incorrect intermediate steps</li>
+        <li>No explicit planning before execution</li>
+        <li>Trouble with 4+ step problems</li>
+      </ul>
 
-Output a 3-6 word label describing what these reviews have in common.</pre
-      >
-      <br />
+      <p><strong>3. Problem Comprehension (Moderate limitation)</strong></p>
+      <ul>
+        <li>Language ambiguity misinterpretation</li>
+        <li>Missed constraints</li>
+        <li>Hallucinated information</li>
+        <li>~15-20% of errors from initial misunderstanding</li>
+      </ul>
 
-      <p><strong>Example 1 (Negative Cluster 0)</strong></p>
-      <p>
-        Terms: game, like, just, boss, fun, games, combat, boring, good, don
-      </p>
-      <p>
-        Exemplar: "First of all it's a beautiful game. The visuals are great, It
-        also has some unique combat that when you get used to it, it's
-        enjoyable. But beyond that...this game is a boss simulator..."
-      </p>
-      <p>LLM output: "Boss-focused gameplay issues"</p>
+      <p><strong>4. Output Consistency (Minor limitation)</strong></p>
+      <ul>
+        <li>Format variations (units in answers)</li>
+        <li>Incomplete answers</li>
+        <li>Affects ~2-3% of answers</li>
+      </ul>
 
-      <p><strong>Example 2 (Negative Cluster 4)</strong></p>
-      <p>
-        Terms: game, fps, low, crashes, settings, issues, like, amd, 7900xtx,
-        low fps
-      </p>
-      <p>
-        Exemplar: "I'm running this on an i7 13th gen, RTX 4080, and 32 gigs
-        RAM, which should be more than capable. However, the game crashes
-        consistently..."
-      </p>
-      <p>LLM output: "Performance Issues"</p>
+      <p><strong>5. Training Data Quality (Significant limitation)</strong></p>
+      <ul>
+        <li>Inconsistent solution styles</li>
+        <li>No verification signals</li>
+        <li>No error correction examples</li>
+        <li>Scaling paradox: more data didn't help as much as expected</li>
+      </ul>
 
-      <p><strong>Example 3 (Positive Cluster 1)</strong></p>
       <p>
-        Terms: game, wukong, chinese, myth, good, black, black myth, games, myth
-        wukong, like
+        <strong>Ranked importance:</strong> Multi-step reasoning > Training data
+        quality > Arithmetic reliability > Problem comprehension > Output
+        consistency
       </p>
-      <p>
-        Exemplar: "Black Myth: Wukong was released under a lot of anticipation
-        after gameplay showcases had been shown over the past few years, leading
-        people to even question if the game would really come out like that.
-        Thankfully, it really did – and overcame all expectations..."
-      </p>
-      <p>LLM output: "Mythical Chinese Game Excellence"</p>
     </div>
 
-    <!-- Part 2: Image Clustering -->
-    <h2 id="image-clustering">Image Clustering</h2>
-    <hr />
     <h2 id="q13">Question 13</h2>
     <div class="question-text">
       <p>
-        In a brief paragraph discuss: If the VGG network is trained on a dataset
-        with perhaps totally different classes as targets, why would one expect
-        the features derived from such a network to have discriminative power
-        for a custom dataset?
+        Design and implement your favourite strategy to improve upon your best
+        score. In your report, include:
       </p>
+      <ul>
+        <li>
+          (a) <strong>Hypothesis:</strong> what you think will help and why.
+        </li>
+        <li>
+          (b) <strong>Method:</strong> what you changed (prompting, training
+          data, hyperparameters, inference procedure, etc.).
+        </li>
+        <li>
+          (c) <strong>Results:</strong> accuracy on the same 100-question
+          evaluation subset (include your baseline for comparison).
+        </li>
+        <li>
+          (d) <strong>Analysis:</strong> what you learned from the
+          experiment(s), including at least one failure mode or unexpected
+          result.
+        </li>
+      </ul>
     </div>
     <div class="answer">
       <h3>Answer</h3>
+      <p><strong>(a) Hypothesis</strong></p>
       <p>
-        VGG16 learns visual patterns directly, and is not constrained to the
-        specific classes it is trained on. Early layers learn very generic
-        features (ex. edges, corners, color contrast, simple texture, etc.).
-        Middle layers learn reusable patterns. The final layers are
-        task-specific. Assuming the training data is very large and diverse, the
-        network learns general visual primitives that transfer to new unseen
-        tasks well.
+        Self-consistency through majority voting will improve accuracy by
+        reducing random errors and leveraging the model's varying reasoning
+        paths. By sampling multiple solutions and taking majority vote, we can
+        filter out random errors.
+      </p>
+
+      <p><strong>(b) Method</strong></p>
+      <ul>
+        <li><strong>Model:</strong> SFT-3k (best performing checkpoint)</li>
+        <li>
+          <strong>Sampling:</strong> 10 samples per question, temperature=0.3
+        </li>
+        <li><strong>Voting:</strong> Majority vote on extracted answers</li>
+        <li><strong>Cost:</strong> ~10× inference time</li>
+      </ul>
+
+      <p><strong>(c) Results</strong></p>
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Accuracy</th>
+            <th>Improvement</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Baseline (SFT-3k, zero-shot)</td>
+            <td>44%</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <td>Self-Consistency (n=10, temp=0.3)</td>
+            <td>56%</td>
+            <td><strong>+12 pp</strong></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        <strong>Example Success (Eliza's overtime, Ground Truth: 460):</strong>
+      </p>
+      <ul>
+        <li>
+          10 Sampled Answers: [460, 450, 110, 460, 460, 460, 450, 460, 460, 110]
+        </li>
+        <li>Majority Vote: 460 ✓</li>
+      </ul>
+
+      <p><strong>(d) Analysis</strong></p>
+      <p><strong>What worked:</strong></p>
+      <ol>
+        <li>Arithmetic error filtering through voting</li>
+        <li>Reasoning path diversity</li>
+        <li>Consistent problems benefited most</li>
+      </ol>
+
+      <p><strong>Failure Modes:</strong></p>
+      <ol>
+        <li>
+          <strong>Consistent Wrong Reasoning:</strong> Janet's ducks - all
+          samples made different errors, majority vote selected wrong answer
+          (104 vs ground truth 18)
+        </li>
+        <li>
+          <strong>Rare Correct Answers:</strong> James running sprints - only
+          1/5 samples correct, majority selected wrong answer (21 vs 540)
+        </li>
+        <li>
+          <strong>Systematic Misconception:</strong> House flipping - all
+          samples struggled with 150% calculation, different wrong answers but
+          same underlying error
+        </li>
+      </ol>
+
+      <p><strong>Key Learnings:</strong></p>
+      <ol>
+        <li>Self-consistency helps with random errors, not systematic ones</li>
+        <li>Diminishing returns on samples (1→3 captures most benefits)</li>
+        <li>
+          Problem difficulty matters (works best on "sometimes right" problems)
+        </li>
+        <li>
+          Failed to reach 70% goal, suggesting training data quality is bigger
+          bottleneck
+        </li>
+      </ol>
+
+      <p>
+        <strong>Conclusion:</strong> Self-consistency improved accuracy by 12 pp
+        (44% → 56%) but can't fix systematic reasoning gaps. The gap to 70%+
+        requires better training data quality.
       </p>
     </div>
+
+    <!-- Part B: Agentic Data Mining -->
+    <h2 id="part-b">Part B: Agentic Data Mining with ReAct</h2>
+    <hr />
+
+    <blockquote>
+      <strong>Implementation Note:</strong> This implementation uses the
+      Qwen3-4B-Instruct-2507 model with 4-bit quantization (NF4) to fit within
+      GPU memory constraints. The ReAct agent follows a structured approach with
+      Planner, Coder, Executor, and Observer components, using Outlines for
+      structured output generation.
+    </blockquote>
 
     <h2 id="q14">Question 14</h2>
     <div class="question-text">
       <p>
-        In a brief paragraph explain how the helper code base is performing
-        feature extraction.
-      </p>
-    </div>
-    <div class="answer">
-      <h3>Answer</h3>
-      <ol>
-        <li>Load VGG16 from torch.hub with pretrained ImageNet weights</li>
-        <li>
-          Preprocess: resize to 224×224, center crop, normalize with ImageNet
-          mean/std
-        </li>
-        <li>Run through 13 convolutional layers with pooling</li>
-        <li>Apply 7×7 adaptive average pooling</li>
-        <li>Flatten from 512×7×7 to 25,088 elements</li>
-        <li>Pass through first FC layer only → 4096-d embedding</li>
-      </ol>
-      <p>The code discards fc[1] and fc[2], keeping only fc[0] output.</p>
-    </div>
-
-    <h2 id="q15">Question 15</h2>
-    <div class="question-text">
-      <p>
-        How many pixels are there in the original images? How many features does
-        the VGG network extract per image; i.e., what is the dimension of each
-        feature vector for an image sample?
+        Load <code>da-dev-questions.jsonl</code> and
+        <code>da-dev-labels.jsonl</code>. Report the number of questions and
+        labels, the set of keys in a question record, and the set of keys in a
+        label record.
       </p>
     </div>
     <div class="answer">
       <h3>Answer</h3>
       <ul>
-        <li>Original: 224 × 224 × 3 = 150,528 pixels</li>
-        <li>VGG16 output: 4,096 features</li>
-        <li>Dataset: 3,670 images</li>
+        <li><strong>Number of Questions:</strong> 257</li>
+        <li><strong>Number of Labels:</strong> 257</li>
       </ul>
-      <p>Compression: 150,528 → 4,096, which is ~36.8x reduction.</p>
+
+      <p><strong>Question record keys:</strong></p>
+      <ul>
+        <li><code>id</code>: Unique identifier</li>
+        <li><code>question</code>: Natural language question</li>
+        <li><code>concepts</code>: List of data analysis concepts</li>
+        <li><code>file_name</code>: Reference to CSV file</li>
+        <li><code>level</code>: Difficulty level (easy/medium/hard)</li>
+        <li>
+          <code>format</code>: Required answer format with @name[value] slots
+        </li>
+        <li><code>constraints</code>: Additional requirements</li>
+      </ul>
+
+      <p><strong>Example Question Record:</strong></p>
+      <pre>
+{
+  "id": 0,
+  "question": "Calculate the mean fare paid by the passengers.",
+  "concepts": ["Summary Statistics"],
+  "file_name": "test_ave.csv",
+  "level": "easy",
+  "format": "@mean_fare[mean_fare]",
+  "constraints": "Round to 2 decimal places."
+}
+      </pre>
+
+      <p><strong>Label record keys:</strong></p>
+      <ul>
+        <li><code>id</code>: Question ID</li>
+        <li><code>common_answers</code>: List of [name, value] pairs</li>
+      </ul>
+    </div>
+
+    <h2 id="q15">Question 15</h2>
+    <div class="question-text">
+      <p>Pick 3 random question IDs. For each</p>
+      <ul>
+        <li>Print the file name of the referenced CSV.</li>
+        <li>
+          Load the CSV with pandas and print <code>df.shape</code>,
+          <code>df.dtypes</code>, and <code>df.head(3)</code>.
+        </li>
+        <li>Print the corresponding question.</li>
+      </ul>
+    </div>
+    <div class="answer">
+      <h3>Answer</h3>
+      <p><strong>Example 1: Election Data (ID 142)</strong></p>
+      <ul>
+        <li><strong>File:</strong> <code>election2016.csv</code></li>
+        <li><strong>Shape:</strong> 3141 rows × 10 columns</li>
+        <li>
+          <strong>Columns:</strong> votes_dem, votes_gop, total_votes, per_dem,
+          per_gop, diff, per_point_diff, state_abbr, county_name, combined_fips
+        </li>
+        <li>
+          <strong>Question:</strong> "Is there a relationship between the
+          difference in votes received by the Democratic and Republican parties
+          and their percentage point difference?"
+        </li>
+      </ul>
+
+      <p><strong>Example 2: Insurance Data (ID 24)</strong></p>
+      <ul>
+        <li><strong>File:</strong> <code>insurance.csv</code></li>
+        <li><strong>Shape:</strong> 1338 rows × 7 columns</li>
+        <li>
+          <strong>Columns:</strong> age, sex, bmi, children, smoker, region,
+          charges
+        </li>
+        <li>
+          <strong>Question:</strong> "Calculate the mean age of the individuals
+          in the dataset."
+        </li>
+      </ul>
+
+      <p><strong>Example 3: Storm Data (ID 429)</strong></p>
+      <ul>
+        <li><strong>File:</strong> <code>cost_data_with_errors.csv</code></li>
+        <li><strong>Shape:</strong> 818 rows × 11 columns</li>
+        <li>
+          <strong>Columns:</strong> Unnamed: 0, name, dates_active,
+          max_storm_cat, max_sust_wind, min_p, areas_affected, damage_USD,
+          deaths, year, damage_imputed
+        </li>
+        <li>
+          <strong>Question:</strong> "Is there a correlation between the maximum
+          storm category achieved by a storm and the recorded damage in USD?"
+        </li>
+      </ul>
     </div>
 
     <h2 id="q16">Question 16</h2>
     <div class="question-text">
       <p>
-        Are the extracted features dense or sparse? (Compare with the sparse
-        TF-IDF features in text.)
+        Find 2 examples where the required format contains multiple answer slots
+        (e.g., two or more <code>@name[value]</code> fields). Explain:
       </p>
+      <ul>
+        <li>How the dataset represents multi-part answers in the labels.</li>
+        <li>How you plan to evaluate such answers automatically.</li>
+      </ul>
     </div>
     <div class="answer">
       <h3>Answer</h3>
-      <p>VGG16 features are dense.</p>
-      <p>
-        TF-IDF vectors are mostly zeros, because most reviews do not contain
-        every single word in the vocabulary. This causes ~99%+ sparsity.
-      </p>
-      <p>
-        VGG16 works differently. Each of the 4096 neurons receives weighted
-        input from all 25,088 pooled features, so every dimension is non-zero.
-        All dimensions capture information about the entire image.
-      </p>
+      <p><strong>Example 1: Age Group Analysis (ID 6)</strong></p>
+      <ul>
+        <li>
+          <strong>Question:</strong> "Create a new column called 'AgeGroup' that
+          categorizes passengers into four age groups: 'Child' (0-12),
+          'Teenager' (13-19), 'Adult' (20-59), and 'Elderly' (60+). Then
+          calculate the mean fare for each age group."
+        </li>
+        <li>
+          <strong>Format:</strong>
+          <code
+            >@mean_fare_child[mean_fare], @mean_fare_teenager[mean_fare],
+            @mean_fare_adult[mean_fare], @mean_fare_elderly[mean_fare]</code
+          >
+        </li>
+        <li><strong>Slots:</strong> 4</li>
+      </ul>
+
+      <p><strong>Example 2: Multi-Class Distribution (ID 8)</strong></p>
+      <ul>
+        <li>
+          <strong>Question:</strong> "Perform distribution analysis on 'Fare'
+          for each passenger class separately. Calculate mean, median, and
+          standard deviation for each class."
+        </li>
+        <li>
+          <strong>Format:</strong>
+          <code
+            >@mean_fare_class1[mean_fare], @median_fare_class1[median_fare],
+            @std_dev_fare_class1[std_dev], ...</code
+          >
+          (9 total slots)
+        </li>
+      </ul>
+
+      <p><strong>Dataset representation:</strong></p>
+      <ul>
+        <li>Multi-part answers use multiple <code>@name[value]</code> slots</li>
+        <li>Ground truth contains list of [name, value] pairs</li>
+        <li>
+          Example:
+          <code
+            >[["mean_fare_child", "34.56"], ["mean_fare_adult", "42.78"]]</code
+          >
+        </li>
+      </ul>
+
+      <p><strong>Automatic evaluation:</strong></p>
+      <ol>
+        <li>
+          Extract predicted values using regex:
+          <code>r"@(\w+)\[([^\]]+)\]"</code>
+        </li>
+        <li>
+          Compare with ground truth using tolerance (1.1% relative, 0.011
+          absolute)
+        </li>
+        <li>All slots must match for correct answer</li>
+      </ol>
     </div>
 
     <h2 id="q17">Question 17</h2>
     <div class="question-text">
       <p>
-        In order to inspect the high-dimensional features, t-SNE is a popular
-        off-the-shelf choice for visualizing Vision features. Map the features
-        you have extracted onto two dimensions with t-SNE. Then plot the mapped
-        feature vectors along the x and y axes. Color-code the data points with
-        the ground-truth labels. Describe your observation.
+        Unfortunately, the model we are going to use is still not powerful
+        enough to solve all the tasks. Here we are selecting 10 sub-tasks that
+        are proved to be solvable:
       </p>
+      <p>
+        The selected IDs are:
+        <code>SELECTED_IDS = [0, 5, 9, 10, 14, 18, 24, 25, 26, 55]</code>.
+      </p>
+      <ul>
+        <li>Print out and check those tasks.</li>
+      </ul>
     </div>
     <div class="answer">
       <h3>Answer</h3>
-      <p>File: <a href="images/Q17_tsne.png">t-SNE plot</a></p>
-      <img src="images/Q17_tsne.png" alt="t-SNE visualization" />
-      <p><em>Settings: 2 components, perplexity=30, 3,670 points</em></p>
-
-      <p><strong>Spatial Distribution by Quadrant:</strong></p>
       <table>
         <thead>
           <tr>
-            <th>Quadrant</th>
-            <th>Dominant Class</th>
-            <th>Count</th>
-            <th>Key Characteristics</th>
+            <th>ID</th>
+            <th>Question</th>
+            <th>Concepts</th>
+            <th>File</th>
+            <th>Level</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>Upper-Right (Q1)</td>
-            <td>Dandelions (80.5%)</td>
-            <td>815</td>
-            <td>Forms tightest, most cohesive cluster</td>
+            <td>0</td>
+            <td>Calculate the mean fare paid by passengers.</td>
+            <td>Summary Statistics</td>
+            <td>test_ave.csv</td>
+            <td>Easy</td>
           </tr>
           <tr>
-            <td>Upper-Left (Q2)</td>
-            <td>Daisies (56.3%)</td>
-            <td>996</td>
-            <td>Most dispersed, overlaps multiple classes</td>
+            <td>5</td>
+            <td>Generate "FamilySize" feature. Calculate correlation.</td>
+            <td>Feature Engineering</td>
+            <td>test_ave.csv</td>
+            <td>Medium</td>
           </tr>
           <tr>
-            <td>Lower-Left (Q3)</td>
-            <td>Sunflowers (56.9%)</td>
-            <td>724</td>
-            <td>Overlaps with daisies</td>
+            <td>9</td>
+            <td>Calculate mean "Close Price".</td>
+            <td>Summary Statistics</td>
+            <td>GODREJIND.csv</td>
+            <td>Easy</td>
           </tr>
           <tr>
-            <td>Lower-Right (Q4)</td>
-            <td>Roses (49%), Tulips (44%)</td>
-            <td>1,135</td>
-            <td>Heavy overlap - 77% bounding box overlap</td>
+            <td>10</td>
+            <td>
+              Check if "Total Traded Quantity" follows normal distribution.
+            </td>
+            <td>Distribution Analysis</td>
+            <td>GODREJIND.csv</td>
+            <td>Easy</td>
+          </tr>
+          <tr>
+            <td>14</td>
+            <td>Create "Price Range" feature. Calculate stats.</td>
+            <td>Feature Engineering</td>
+            <td>GODREJIND.csv</td>
+            <td>Medium</td>
+          </tr>
+          <tr>
+            <td>18</td>
+            <td>Calculate mean and std of "Mar.2019".</td>
+            <td>Summary Statistics</td>
+            <td>unemployement_industry.csv</td>
+            <td>Easy</td>
+          </tr>
+          <tr>
+            <td>24</td>
+            <td>Calculate mean age.</td>
+            <td>Summary Statistics</td>
+            <td>insurance.csv</td>
+            <td>Easy</td>
+          </tr>
+          <tr>
+            <td>25</td>
+            <td>Check if BMI follows normal distribution.</td>
+            <td>Distribution Analysis</td>
+            <td>insurance.csv</td>
+            <td>Easy</td>
+          </tr>
+          <tr>
+            <td>26</td>
+            <td>Calculate correlation between charges and children.</td>
+            <td>Correlation Analysis</td>
+            <td>insurance.csv</td>
+            <td>Easy</td>
+          </tr>
+          <tr>
+            <td>55</td>
+            <td>Calculate mean cases across all countries and years.</td>
+            <td>Summary Statistics</td>
+            <td>estimated_numbers.csv</td>
+            <td>Easy</td>
           </tr>
         </tbody>
       </table>
-
-      <p>
-        Roses and tulips cluster together due to similar petal arrangements,
-        while dandelions form a distinct cluster due to their unique spherical
-        shape.
-      </p>
     </div>
 
     <h2 id="q18">Question 18</h2>
     <div class="question-text">
       <p>
-        Report the best result (in terms of the adjusted rand index) within the
-        table below. For HDBSCAN, introduce a conservative parameter grid over
-        min_cluster_size and min_samples.
+        Demonstrate (with 5 different prompts) that your planner always returns
+        valid JSON that parses into your Pydantic model without try/except
+        fallbacks. Include at least one case where the planner decides it is
+        done (<code>is_done=true</code>).
       </p>
     </div>
     <div class="answer">
       <h3>Answer</h3>
-      <p><strong>Best:</strong> ARI = 0.5635 (UMAP + HDBSCAN)</p>
+      <p><strong>Pydantic Schema:</strong></p>
+      <pre>
+class PlannerOutput(BaseModel):
+    thought: str = Field(min_length=10, max_length=500)
+    is_done: bool
+    response: str = Field(min_length=1)
+      </pre>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Dim Reduction</th>
-            <th>Clustering</th>
-            <th>Parameters</th>
-            <th>ARI</th>
-            <th>Clusters</th>
-            <th>Noise</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>UMAP</td>
-            <td>HDBSCAN</td>
-            <td>min_cluster_size=50, min_samples=10</td>
-            <td>0.5635</td>
-            <td>10</td>
-            <td>934</td>
-          </tr>
-        </tbody>
-      </table>
+      <p><strong>Prompt 1:</strong> "What is the average age of passengers?"</p>
+      <pre>
+{
+  "thought": "To calculate the average age, I need access to a dataset containing passenger age values.",
+  "is_done": false,
+  "response": "Retrieve the passenger age dataset and compute the mean age."
+}
+      </pre>
 
-      <p>Best ARI by method:</p>
-      <table>
-        <thead>
-          <tr>
-            <th>Method</th>
-            <th>Best Clustering</th>
-            <th>ARI</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>None (4096-d)</td>
-            <td>Agglomerative</td>
-            <td>0.2184</td>
-          </tr>
-          <tr>
-            <td>SVD (50-d)</td>
-            <td>K-Means</td>
-            <td>0.1947</td>
-          </tr>
-          <tr>
-            <td>UMAP (50-d)</td>
-            <td>HDBSCAN</td>
-            <td>0.5635</td>
-          </tr>
-          <tr>
-            <td>Autoencoder (50-d)</td>
-            <td>Agglomerative</td>
-            <td>0.2344</td>
-          </tr>
-        </tbody>
-      </table>
+      <p><strong>Prompt 2:</strong> "How many passengers survived?"</p>
+      <pre>
+{
+  "thought": "To determine survivors, I need access to passenger survival information.",
+  "is_done": false,
+  "response": "Fetch the passenger survival data and count the number of survivors."
+}
+      </pre>
 
-      <p>HDBSCAN grid (on UMAP features):</p>
-      <table>
-        <thead>
-          <tr>
-            <th>min_cluster_size</th>
-            <th>min_samples</th>
-            <th>Clusters</th>
-            <th>Noise</th>
-            <th>ARI</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>5</td>
-            <td>3</td>
-            <td>108</td>
-            <td>1,723</td>
-            <td>0.097</td>
-          </tr>
-          <tr>
-            <td>10</td>
-            <td>3</td>
-            <td>55</td>
-            <td>1,673</td>
-            <td>0.142</td>
-          </tr>
-          <tr>
-            <td>20</td>
-            <td>5</td>
-            <td>21</td>
-            <td>1,137</td>
-            <td>0.408</td>
-          </tr>
-          <tr>
-            <td>50</td>
-            <td>10</td>
-            <td>10</td>
-            <td>934</td>
-            <td>0.564</td>
-          </tr>
-        </tbody>
-      </table>
+      <p>
+        <strong>Prompt 3:</strong> "What is the correlation between age and
+        fare?"
+      </p>
+      <pre>
+{
+  "thought": "To determine correlation between age and fare, I need a dataset with both columns.",
+  "is_done": false,
+  "response": "Retrieve dataset with age and fare columns, compute Pearson correlation."
+}
+      </pre>
+
+      <p>
+        <strong>Prompt 4:</strong> "Show me the distribution of passenger
+        classes."
+      </p>
+      <pre>
+{
+  "thought": "To show distribution of passenger classes, I need to count passengers in each class.",
+  "is_done": false,
+  "response": "Load dataset and count passengers in each class, present distribution."
+}
+      </pre>
+
+      <p>
+        <strong>Prompt 5:</strong> "The mean fare has been calculated as 32.20.
+        Please provide the final answer."
+      </p>
+      <pre>
+{
+  "thought": "The mean fare calculation is complete with result 32.20. I can provide the final answer.",
+  "is_done": true,
+  "response": "@mean_fare[32.20]"
+}
+      </pre>
+
+      <p>
+        <strong>Note:</strong> All 5 outputs are valid JSON. Prompt 5 shows
+        <code>is_done=true</code> when the answer is ready to return.
+      </p>
     </div>
 
     <h2 id="q19">Question 19</h2>
     <div class="question-text">
       <p>
-        Report the test accuracy of the MLP classifier on the original VGG
-        features. Report the same when using the reduced-dimension features (you
-        have freedom in choosing the dimensionality reduction algorithm and its
-        parameters). Does the performance of the model suffer with the
-        reduced-dimension representations? Is it significant? Does the success
-        in classification make sense in the context of the clustering results
-        obtained for the same features in Question 18?
+        Explain why structured output is useful for large-scale data mining
+        pipelines.
       </p>
     </div>
     <div class="answer">
       <h3>Answer</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Feature</th>
-            <th>Dimension</th>
-            <th>Accuracy</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Original VGG16</td>
-            <td>4,096</td>
-            <td>91.01%</td>
-          </tr>
-          <tr>
-            <td>SVD</td>
-            <td>50</td>
-            <td>91.14%</td>
-          </tr>
-          <tr>
-            <td>UMAP</td>
-            <td>50</td>
-            <td>80.79%</td>
-          </tr>
-          <tr>
-            <td>Autoencoder</td>
-            <td>50</td>
-            <td>88.56%</td>
-          </tr>
-        </tbody>
-      </table>
-
       <p>
-        SVD beats the original features (91.14% vs 91.01%, 0.13% gain) while
-        cutting dimensions by 98.8%. UMAP loses 10.2 points. Autoencoder sits in
-        the middle at 88.56%.
+        Structured output is essential for large-scale data mining pipelines for
+        three reasons:
       </p>
-
-      <p>Comparing with clustering:</p>
-      <table>
-        <thead>
-          <tr>
-            <th>Method</th>
-            <th>Clustering ARI</th>
-            <th>Classification Accuracy</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>SVD</td>
-            <td>0.195 (3rd)</td>
-            <td>91.14% (1st)</td>
-          </tr>
-          <tr>
-            <td>UMAP</td>
-            <td>0.564 (1st)</td>
-            <td>80.79% (4th)</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <p>
-        UMAP excels at clustering but struggles with classification. SVD shows
-        the opposite trend.
-      </p>
-      <p>
-        UMAP preserves local neighborhoods (good for density-based clustering)
-        but distorts global structure (bad for linear classifiers). SVD
-        preserves global variance (good for classification) but doesn't build a
-        cluster-friendly manifold. This experiment shows we should use SVD for
-        classification, and UMAP for clustering.
-      </p>
+      <ol>
+        <li>
+          <strong>Reliability at scale:</strong> When processing thousands of
+          tasks, parsing errors from free-form text would cascade into system
+          failures. Structured output (via Outlines + Pydantic) guarantees every
+          planner response is parseable.
+        </li>
+        <li>
+          <strong>Automated orchestration:</strong> Agents need programmatic
+          decisions (e.g., "if <code>is_done=true</code>, return answer; else
+          execute code"). Structured outputs provide machine-readable signals
+          for deterministic control flow.
+        </li>
+        <li>
+          <strong>Error recovery:</strong> In agent systems, recovery requires
+          clear signals about failures. Structured observations enable
+          systematic error handling and retry logic.
+        </li>
+      </ol>
     </div>
 
-    <!-- Part 3: Multi-modal -->
-    <h2 id="multi-modal">Multi-modal</h2>
-    <hr />
-    <blockquote>
-      <strong>Note:</strong> We use the <code>open_clip</code> library instead
-      of the official OpenAI <code>clip</code> library. Both load the same
-      ViT-L-14 model with identical OpenAI pretrained weights, but
-      <code>open_clip</code> is an easily installable Python package (<code
-        >pip install open-clip-torch</code
-      >) with no additional setup required.
-    </blockquote>
     <h2 id="q20">Question 20</h2>
     <div class="question-text">
-      <p>
-        Try to construct various text queries regarding the types of Pokémon
-        (such as "type: Bug", "electric type Pokémon" or "Pokémon with fire
-        abilities") to find the relevant images from the dataset. Once you have
-        found the most suitable template for the queries, please find the top
-        five most relevant Pokémon for the type Bug, Fire, and Grass. For each
-        of the constructed query, please plot the five most relevant Pokémon
-        horizontally in one figure with the following specifications:
-      </p>
+      <p>Run your ReAct agent on the 10 tasks. Report:</p>
       <ul>
-        <li>the title of the figure should be the query you used;</li>
+        <li>Accuracy</li>
         <li>
-          the title of each Pokémon should be the name of the Pokémon and its
-          first and second type.
-        </li>
-      </ul>
-      <p>
-        Repeat this process for the Pokémon of the Dark and Dragon types. Assess
-        the effectiveness of your queries in these cases as well and try to
-        explain any differences.
-      </p>
-    </div>
-    <div class="answer">
-      <h3>Answer</h3>
-      <p><strong>Queries Tried:</strong></p>
-      <ul>
-        <li><code>"type: {type}"</code></li>
-        <li><code>"{type} type Pokemon"</code></li>
-        <li><code>"Pokemon with {type} abilities"</code></li>
-        <li><code>"a photo of a {type} type Pokemon"</code></li>
-      </ul>
-      <p>
-        <strong>Best one:</strong>
-        <code>"a photo of a {type} type Pokemon"</code>. This is likely the best
-        due to most internet photo captions being in this format.
-      </p>
-
-      <p><strong>Top 5 per type:</strong></p>
-      <table>
-        <thead>
-          <tr>
-            <th>Type</th>
-            <th>Top 5 Pokemon</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Bug</td>
-            <td>Yanmega, Ariados, Yanma, Butterfree, Anorith</td>
-          </tr>
-          <tr>
-            <td>Fire</td>
-            <td>Simisear, Magmar, Magmortar, Quilava, Delphox</td>
-          </tr>
-          <tr>
-            <td>Grass</td>
-            <td>Oddish, Tropius, Bulbasaur, Leafeon, Bellsprout</td>
-          </tr>
-          <tr>
-            <td>Dark</td>
-            <td>Umbreon, Darkrai, Pincurchin, Gastly, Salandit</td>
-          </tr>
-          <tr>
-            <td>Dragon</td>
-            <td>Dragonite, Rhydon, Druddigon, Nidorino, Kingdra</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <p>
-        Files: <a href="outputs/Q20_bug.png">Bug</a>,
-        <a href="outputs/Q20_fire.png">Fire</a>,
-        <a href="outputs/Q20_grass.png">Grass</a>,
-        <a href="outputs/Q20_dark.png">Dark</a>,
-        <a href="outputs/Q20_dragon.png">Dragon</a>
-      </p>
-
-      <p><strong>Visualizations:</strong></p>
-      <img src="images/Q20_bug.png" alt="Top 5 Bug type Pokemon" />
-      <img src="images/Q20_fire.png" alt="Top 5 Fire type Pokemon" />
-      <img src="images/Q20_grass.png" alt="Top 5 Grass type Pokemon" />
-      <img src="images/Q20_dark.png" alt="Top 5 Dark type Pokemon" />
-      <img src="images/Q20_dragon.png" alt="Top 5 Dragon type Pokemon" />
-
-      <p>
-        Bug, Fire, and Grass types retrieved pretty coherent results. Fire
-        Pokemon tend to have warm colors (red, orange, yellow) and flame-like
-        features. Grass types are mostly green with plant-like body parts. Bug
-        types have insectoid body structures that CLIP picks up on easily.
-        However, Dark and Dragon were trickier. Dark-type visual identity isn't
-        very consistent. Dragon types are visually all over the place, from
-        serpentine (Kingdra) to dinosaur-like (Dragonite). The fact that Rhydon
-        (Ground/Rock) and Nidorino (Poison) showed up for Dragon queries
-        suggests CLIP associates "dragon-like features" (horns, bulky bodies)
-        with the Dragon type.
-      </p>
-      <p>
-        The performance difference matches the uniformity of appearances within
-        the classes: Bug, Fire, and Grass have clear visual patterns that match
-        how people describe them, and Dark and Dragon are more abstract
-        categories with weaker visual cues.
-      </p>
-    </div>
-
-    <h2 id="q21">Question 21</h2>
-    <div class="question-text">
-      <p>
-        Randomly select 10 Pokémon images from the dataset and use CLIP to find
-        the most relevant types (use your preferred template, e.g., "type:
-        Bug"). For each selected Pokémon, please plot it and indicate:
-      </p>
-      <ul>
-        <li>its name and first and second type;</li>
-        <li>
-          the five most relevant types predicted by CLIP and their predicted
-          similarities.
+          At least 3 qualitative traces (planner thought, code, observation,
+          final answer) that illustrate interesting behaviors: success, failure,
+          recovery from an error.
         </li>
       </ul>
     </div>
     <div class="answer">
       <h3>Answer</h3>
-      <p>Seed: 42</p>
-      <p>
-        Pokemon: Cosmog, Ledyba, Zubat, Wynaut, Spoink, Makuhita, Quagsire,
-        Meganium, Thievul, Espurr
-      </p>
-      <p>File: <a href="images/Q21_predictions.png">predictions</a></p>
-      <img src="images/Q21_predictions.png" alt="CLIP type predictions" />
-
-      <table>
-        <thead>
-          <tr>
-            <th>Pokemon</th>
-            <th>Actual</th>
-            <th>Top-1</th>
-            <th>Top-5</th>
-            <th>Correct?</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Cosmog</td>
-            <td>Psychic</td>
-            <td>Dark (73.68%)</td>
-            <td>Dark, Psychic, Electric, Normal, Poison</td>
-            <td>Top-5</td>
-          </tr>
-          <tr>
-            <td>Ledyba</td>
-            <td>Bug/Flying</td>
-            <td>Bug (78.64%)</td>
-            <td>Bug, Normal, Fighting, Steel, Rock</td>
-            <td>Yes</td>
-          </tr>
-          <tr>
-            <td>Zubat</td>
-            <td>Poison/Flying</td>
-            <td>Dark (57.62%)</td>
-            <td>Dark, Normal, Fighting, Flying, Bug</td>
-            <td>No</td>
-          </tr>
-          <tr>
-            <td>Wynaut</td>
-            <td>Psychic</td>
-            <td>Normal (22.44%)</td>
-            <td>Normal, Water, Psychic, Dark, Ice</td>
-            <td>Top-5</td>
-          </tr>
-          <tr>
-            <td>Spoink</td>
-            <td>Psychic</td>
-            <td>Dark (31.37%)</td>
-            <td>Dark, Normal, Psychic, Fighting, Steel</td>
-            <td>Top-5</td>
-          </tr>
-          <tr>
-            <td>Makuhita</td>
-            <td>Fighting</td>
-            <td>Fighting (59.52%)</td>
-            <td>Fighting, Dark, Normal, Psychic, Electric</td>
-            <td>Yes</td>
-          </tr>
-          <tr>
-            <td>Quagsire</td>
-            <td>Water/Ground</td>
-            <td>Normal (24.69%)</td>
-            <td>Normal, Water, Psychic, Ice, Ground</td>
-            <td>Top-5</td>
-          </tr>
-          <tr>
-            <td>Meganium</td>
-            <td>Grass</td>
-            <td>Dragon (22.35%)</td>
-            <td>Dragon, Poison, Psychic, Normal, Water</td>
-            <td>No</td>
-          </tr>
-          <tr>
-            <td>Thievul</td>
-            <td>Dark</td>
-            <td>Dark (47.24%)</td>
-            <td>Dark, Fire, Fighting, Normal, Psychic</td>
-            <td>Yes</td>
-          </tr>
-          <tr>
-            <td>Espurr</td>
-            <td>Psychic</td>
-            <td>Dark (65.42%)</td>
-            <td>Dark, Normal, Psychic, Ghost, Fairy</td>
-            <td>Top-5</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <p>Top-1: 30%, Top-5: 70%</p>
-      <p>
-        The results line up with what we found in Q20. For example, Zubat
-        (Poison) gets called Dark because its appearance of a purple bat matches
-        Dark-type look. Similarly, Meganium (Grass) gets called Dragon because
-        its dinosaur body looks more "dragon" than "plant."
-      </p>
-    </div>
-
-    <h2 id="q22">Question 22</h2>
-    <div class="question-text">
-      <p>
-        In this question, reuse the exact same CLIP setup from the previous
-        question on all the Pokemon images (same model, same type prompt
-        template, and the same set of candidate types), but instead of returning
-        only the most relevant type, return the top-5 most relevant types for
-        each Pokemon image. Using the ground-truth primary type label Type1,
-        report:
-      </p>
-      <ul>
-        <li>
-          <strong>Accuracy@1 (Acc@1):</strong> the fraction of images whose
-          top-1 predicted type matches the ground-truth primary type (Type1).
-        </li>
-        <li>
-          <strong>Hit@5 (a.k.a. Recall@5):</strong> the fraction of images whose
-          ground-truth primary type appears anywhere in the top-5 predicted
-          types.
-        </li>
-      </ul>
-      <p>
-        In practice, you will likely observe that CLIP's Acc@1 for predicting
-        the primary type (Type1) is relatively low, while Hit@5 is often
-        reasonably good. This gap suggests that CLIP frequently retrieves the
-        correct type somewhere in a short candidate list, but does not reliably
-        rank it as the top-1 prediction. A key reason is that CLIP is a
-        dual-encoder model trained with a contrastive objective: it
-        independently embeds images and text prompts into a shared vector space,
-        and predictions are made purely by embedding similarity (e.g.,
-        dot-product/cosine similarity). This is powerful for coarse semantic
-        alignment, but it lacks an explicit reasoning step and can be sensitive
-        to prompt wording and visually similar concepts.
-      </p>
-    </div>
-    <div class="answer">
-      <h3>Answer</h3>
-      <p>Dataset: 754 Pokemon, 18 candidate types</p>
-
+      <p><strong>Overall performance:</strong></p>
       <table>
         <thead>
           <tr>
@@ -1903,186 +1253,1066 @@ Output a 3-6 word label describing what these reviews have in common.</pre
         </thead>
         <tbody>
           <tr>
-            <td>CLIP Acc@1</td>
-            <td>33.29% (251/754)</td>
+            <td><strong>Accuracy</strong></td>
+            <td>90% (9/10 correct)</td>
           </tr>
           <tr>
-            <td>CLIP Hit@5</td>
-            <td>74.27% (560/754)</td>
+            <td><strong>Correct</strong></td>
+            <td>9 tasks</td>
+          </tr>
+          <tr>
+            <td><strong>Incorrect</strong></td>
+            <td>1 task</td>
           </tr>
         </tbody>
       </table>
 
-      <p>Per-type Acc@1:</p>
+      <p><strong>Per-task results:</strong></p>
       <table>
         <thead>
           <tr>
-            <th>Type</th>
-            <th>Acc@1</th>
-            <th>Type</th>
-            <th>Acc@1</th>
+            <th>Task ID</th>
+            <th>Result</th>
+            <th>Predicted</th>
+            <th>Ground Truth</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>Dark</td>
-            <td>76.67%</td>
-            <td>Bug</td>
-            <td>44.93%</td>
+            <td>0</td>
+            <td>✅</td>
+            <td>@mean_fare[34.65]</td>
+            <td>@mean_fare[34.65]</td>
           </tr>
           <tr>
-            <td>Ice</td>
-            <td>58.33%</td>
-            <td>Rock</td>
-            <td>41.46%</td>
+            <td>5</td>
+            <td>✅</td>
+            <td>@correlation_coefficient[0.21]</td>
+            <td>@correlation_coefficient[0.21]</td>
           </tr>
           <tr>
-            <td>Fire</td>
-            <td>54.55%</td>
-            <td>Dragon</td>
-            <td>36.36%</td>
+            <td>9</td>
+            <td>❌</td>
+            <td>@mean_close_price[583.68]</td>
+            <td>@mean_close_price[570.68]</td>
           </tr>
           <tr>
-            <td>Fairy</td>
-            <td>50.00%</td>
-            <td>Normal</td>
-            <td>23.91%</td>
+            <td>10</td>
+            <td>✅</td>
+            <td>@is_normal[no]</td>
+            <td>@is_normal[no]</td>
           </tr>
           <tr>
-            <td>Water</td>
-            <td>46.23%</td>
-            <td>Poison</td>
-            <td>24.14%</td>
+            <td>14</td>
+            <td>✅</td>
+            <td>
+              @price_range_mean[16.65] @price_range_median[15.67]
+              @price_range_std_dev[6.72]
+            </td>
+            <td>
+              @price_range_mean[16.65] @price_range_median[15.67]
+              @price_range_std_dev[6.72]
+            </td>
           </tr>
           <tr>
-            <td>Fighting</td>
-            <td>46.88%</td>
-            <td>Electric</td>
-            <td>18.42%</td>
+            <td>18</td>
+            <td>✅</td>
+            <td>@mean_mar_2019[171.44] @sd_mar_2019[188.25]</td>
+            <td>@mean_mar_2019[171.44] @sd_mar_2019[188.25]</td>
           </tr>
           <tr>
-            <td>Steel</td>
-            <td>45.83%</td>
-            <td>Psychic</td>
-            <td>10.87%</td>
+            <td>24</td>
+            <td>✅</td>
+            <td>@mean_age[39.21]</td>
+            <td>@mean_age[39.21]</td>
           </tr>
           <tr>
-            <td></td>
-            <td></td>
-            <td>Grass</td>
-            <td>7.59%</td>
+            <td>25</td>
+            <td>✅</td>
+            <td>@bmi_distribution[normal]</td>
+            <td>@bmi_distribution[normal]</td>
           </tr>
           <tr>
-            <td></td>
-            <td></td>
-            <td>Ghost</td>
-            <td>4.00%</td>
+            <td>26</td>
+            <td>✅</td>
+            <td>@correlation_coefficient[0.07]</td>
+            <td>@correlation_coefficient[0.07]</td>
           </tr>
           <tr>
-            <td></td>
-            <td></td>
-            <td>Ground</td>
-            <td>3.70%</td>
-          </tr>
-          <tr>
-            <td></td>
-            <td></td>
-            <td>Flying</td>
-            <td>0.00%</td>
+            <td>55</td>
+            <td>✅</td>
+            <td>@mean_cases[2081990]</td>
+            <td>@mean_cases[2081990]</td>
           </tr>
         </tbody>
       </table>
 
-      <p>Best: Dark (77%), Ice (58%), Fire (55%), Fairy (50%)</p>
-      <p>Worst: Flying (0%), Ground (4%), Ghost (4%), Grass (8%)</p>
+      <hr />
+
+      <p><strong>Trace 1: Success case (Task 0 - Mean Fare)</strong></p>
+      <ul>
+        <li>
+          <strong>Question:</strong> "Calculate the mean fare paid by the
+          passengers."
+        </li>
+        <li>
+          <strong>Thought:</strong> "The DataFrame contains a 'Fare' column of
+          type float64. The mean fare can be computed using pandas' mean()
+          function."
+        </li>
+        <li><strong>Code:</strong></li>
+      </ul>
+      <pre>
+mean_fare = df['Fare'].mean()
+print(f"{mean_fare:.2f}")
+      </pre>
+      <ul>
+        <li>
+          <strong>Observation:</strong> "Code executed successfully and returned
+          the value 34.65."
+        </li>
+        <li><strong>Final Answer:</strong> <code>@mean_fare[34.65]</code></li>
+        <li><strong>Result:</strong> ✅ Correct</li>
+      </ul>
+
+      <hr />
+
+      <p><strong>Trace 2: Failure case (Task 9 - Mean Close Price)</strong></p>
+      <ul>
+        <li>
+          <strong>Question:</strong> "Calculate the mean value of the 'Close
+          Price' column."
+        </li>
+        <li>
+          <strong>Final Answer:</strong> <code>@mean_close_price[583.68]</code>
+        </li>
+        <li>
+          <strong>Ground Truth:</strong> <code>@mean_close_price[570.68]</code>
+        </li>
+        <li><strong>Result:</strong> ❌ Incorrect (off by ~2.3%)</li>
+      </ul>
+      <p>
+        <strong>Analysis:</strong> Numerical precision error. The computed value
+        differs from ground truth due to different data preprocessing or NaN
+        handling.
+      </p>
+
+      <hr />
+
+      <p>
+        <strong>Trace 3: Error recovery case (Task 55 - Mean Cases)</strong>
+      </p>
+      <ul>
+        <li>
+          <strong>Question:</strong> "What is the mean number of cases recorded
+          across all countries and years?"
+        </li>
+      </ul>
+
+      <p><strong>Step 1 (First Attempt):</strong></p>
+      <ul>
+        <li>
+          <strong>Thought:</strong> "The 'No. of cases' column is in string
+          format with ranges (e.g., '630308[495000-801000]'). Need to extract
+          median value."
+        </li>
+        <li><strong>Code:</strong></li>
+      </ul>
+      <pre>
+df['No. of cases'] = df['No. of cases'].str.extract(r'(\d+)').astype('int64')
+mean_cases = df['No. of cases'].mean()
+print(f"{mean_cases:.0f}")
+      </pre>
+      <ul>
+        <li><strong>Result:</strong> ✅ Successful (2081990)</li>
+      </ul>
+
+      <p><strong>Step 2 (Retry - Syntax Error):</strong></p>
+      <ul>
+        <li><strong>Code:</strong></li>
+      </ul>
+      <pre>
+df['No. of cases'] = df['No. of cases'].str.split('\[').str[0].astype(int)
+      </pre>
+      <ul>
+        <li>
+          <strong>Result:</strong> ❌ SyntaxError (invalid escape sequence)
+        </li>
+      </ul>
+
+      <p><strong>Step 3 (Recovery):</strong></p>
+      <ul>
+        <li><strong>Code:</strong></li>
+      </ul>
+      <pre>
+df['No. of cases'] = df['No. of cases'].str.extract(r'(\d+)').astype(int)
+mean_cases = df['No. of cases'].mean()
+print(f"{mean_cases:.0f}")
+      </pre>
+      <ul>
+        <li>
+          <strong>Final Answer:</strong> <code>@mean_cases[2081990]</code>
+        </li>
+        <li><strong>Result:</strong> ✅ Recovered successfully</li>
+      </ul>
+
+      <hr />
+
+      <p><strong>Summary:</strong></p>
+      <table>
+        <thead>
+          <tr>
+            <th>Strength</th>
+            <th>Observation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Structured Output</td>
+            <td>All planner outputs valid JSON</td>
+          </tr>
+          <tr>
+            <td>Error Recovery</td>
+            <td>Recovered from syntax errors with alternative code</td>
+          </tr>
+          <tr>
+            <td>Multi-Step Reasoning</td>
+            <td>Handled feature engineering + correlation (Task 5)</td>
+          </tr>
+          <tr>
+            <td>Data Cleaning</td>
+            <td>Correctly parsed complex string formats (Task 55)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Weakness</th>
+            <th>Observation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Precision Issues</td>
+            <td>Task 9 off by ~2.3% from ground truth</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Part C: Regression Analysis -->
+    <h2 id="part-c">Part C: Regression Analysis</h2>
+    <hr />
+
+    <h2 id="q21">Question 21</h2>
+    <div class="question-text">
+      <p>
+        Perform an exploratory data analysis on the provided Diamonds dataset.
+        Report the following:
+      </p>
+      <ul>
+        <li>
+          <strong>Correlation Analysis:</strong> Plot a heatmap of the Pearson
+          correlation matrix. Report which features have the highest absolute
+          correlation with the target variable (price). Briefly describe what
+          the correlation patterns suggest.
+        </li>
+        <li>
+          <strong>Distribution Analysis:</strong> Plot the histogram of
+          numerical features. Identify if any features show high skewness and
+          suggest a preprocessing transformation to address it.
+        </li>
+        <li>
+          <strong>Categorical Analysis:</strong> Construct box plots of
+          categorical features versus the target variable. Describe any
+          significant trends (e.g., how cut or color affects the price range).
+        </li>
+      </ul>
+    </div>
+    <div class="answer">
+      <h3>Answer</h3>
+      <p><strong>Correlation analysis:</strong></p>
+      <p>
+        File:
+        <a href="images/Q21_correlation_heatmap.png">Correlation Heatmap</a>
+      </p>
+      <img src="images/Q21_correlation_heatmap.png" alt="Correlation Heatmap" />
+
+      <table>
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Correlation with Price</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>carat</td>
+            <td>0.9216 (strongest)</td>
+          </tr>
+          <tr>
+            <td>x</td>
+            <td>0.8844</td>
+          </tr>
+          <tr>
+            <td>y</td>
+            <td>0.8654</td>
+          </tr>
+          <tr>
+            <td>z</td>
+            <td>0.8612</td>
+          </tr>
+          <tr>
+            <td>table</td>
+            <td>0.1271</td>
+          </tr>
+          <tr>
+            <td>depth</td>
+            <td>-0.0106 (weakest)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p><strong>Key observations:</strong></p>
+      <ol>
+        <li>
+          Carat has strongest correlation (0.92) - larger diamonds more valuable
+        </li>
+        <li>
+          Physical dimensions (x, y, z) highly correlated (0.86-0.88) - related
+          to carat weight
+        </li>
+        <li>Depth and table show weak correlations</li>
+        <li>High multicollinearity among x, y, z, carat (>0.95)</li>
+      </ol>
+
+      <hr />
+
+      <p><strong>Distribution analysis:</strong></p>
+      <p>File: <a href="images/Q21_histograms.png">Histograms</a></p>
+      <img src="images/Q21_histograms.png" alt="Histograms" />
+
+      <table>
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Skewness</th>
+            <th>Assessment</th>
+            <th>Transformation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>y</td>
+            <td>2.4342</td>
+            <td>Highly skewed</td>
+            <td>Log</td>
+          </tr>
+          <tr>
+            <td>z</td>
+            <td>1.5224</td>
+            <td>Moderately skewed</td>
+            <td>Log</td>
+          </tr>
+          <tr>
+            <td>carat</td>
+            <td>1.1166</td>
+            <td>Moderately skewed</td>
+            <td>Log</td>
+          </tr>
+          <tr>
+            <td>table</td>
+            <td>0.7969</td>
+            <td>Slightly skewed</td>
+            <td>Optional</td>
+          </tr>
+          <tr>
+            <td>x</td>
+            <td>0.3787</td>
+            <td>Approximately symmetric</td>
+            <td>None</td>
+          </tr>
+          <tr>
+            <td>depth</td>
+            <td>-0.0823</td>
+            <td>Approximately symmetric</td>
+            <td>None</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        <strong>Recommendation:</strong> Apply log transformation to
+        <code>carat</code>, <code>y</code>, <code>z</code> to fix
+        right-skewness.
+      </p>
+
+      <hr />
+
+      <p><strong>Categorical analysis:</strong></p>
+      <p>File: <a href="images/Q21_boxplots.png">Box Plots</a></p>
+      <img src="images/Q21_boxplots.png" alt="Box Plots" />
+
+      <p><strong>Cut vs Price:</strong></p>
+      <table>
+        <thead>
+          <tr>
+            <th>Cut</th>
+            <th>Median Price</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Fair</td>
+            <td>$3,282</td>
+          </tr>
+          <tr>
+            <td>Premium</td>
+            <td>$3,185</td>
+          </tr>
+          <tr>
+            <td>Good</td>
+            <td>$3,050</td>
+          </tr>
+          <tr>
+            <td>Very Good</td>
+            <td>$2,648</td>
+          </tr>
+          <tr>
+            <td>Ideal</td>
+            <td>$1,810</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        <strong>Trend:</strong> "Ideal" cut has lowest median price, "Fair"
+        highest—counterintuitive due to carat correlation.
+      </p>
+
+      <p><strong>Color vs Price:</strong></p>
+      <table>
+        <thead>
+          <tr>
+            <th>Color</th>
+            <th>Median Price</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>J</td>
+            <td>$4,234</td>
+          </tr>
+          <tr>
+            <td>I</td>
+            <td>$3,730</td>
+          </tr>
+          <tr>
+            <td>H</td>
+            <td>$3,460</td>
+          </tr>
+          <tr>
+            <td>G</td>
+            <td>$2,242</td>
+          </tr>
+          <tr>
+            <td>F</td>
+            <td>$2,343</td>
+          </tr>
+          <tr>
+            <td>E</td>
+            <td>$1,739</td>
+          </tr>
+          <tr>
+            <td>D</td>
+            <td>$1,838</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        <strong>Trend:</strong> Lower color grades (J, I, H) higher
+        prices—likely due to carat correlation.
+      </p>
+
+      <p><strong>Clarity vs Price:</strong></p>
+      <table>
+        <thead>
+          <tr>
+            <th>Clarity</th>
+            <th>Median Price</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>SI2</td>
+            <td>$4,072</td>
+          </tr>
+          <tr>
+            <td>I1</td>
+            <td>$3,344</td>
+          </tr>
+          <tr>
+            <td>SI1</td>
+            <td>$2,822</td>
+          </tr>
+          <tr>
+            <td>VS2</td>
+            <td>$2,054</td>
+          </tr>
+          <tr>
+            <td>VS1</td>
+            <td>$2,005</td>
+          </tr>
+          <tr>
+            <td>VVS2</td>
+            <td>$1,311</td>
+          </tr>
+          <tr>
+            <td>VVS1</td>
+            <td>$1,093</td>
+          </tr>
+          <tr>
+            <td>IF</td>
+            <td>$1,080</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        <strong>Trend:</strong> Lower clarity grades higher
+        prices—counterintuitive but explained by carat correlation.
+      </p>
+    </div>
+
+    <h2 id="q22">Question 22</h2>
+    <div class="question-text">
+      <p>Explain the following trade-off questions.</p>
+      <ul>
+        <li>
+          Perform encoding for the categorical features in the Diamonds dataset.
+          Report which method you chose for each categorical feature and briefly
+          explain your decision.
+        </li>
+        <li>
+          Explain the following trade-offs:
+          <ul>
+            <li>What information does one-hot encoding discard?</li>
+            <li>
+              What assumption should hold strongly if we perform the scalar
+              encoding instead?
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+    <div class="answer">
+      <h3>Answer</h3>
+      <p><strong>Encoding decisions:</strong></p>
+      <table>
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Encoding</th>
+            <th>Rationale</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>cut</td>
+            <td>Ordinal</td>
+            <td>Inherent order: Fair < Good < Very Good < Premium < Ideal</td>
+          </tr>
+          <tr>
+            <td>color</td>
+            <td>Ordinal</td>
+            <td>Inherent order: J < I < H < G < F < E < D</td>
+          </tr>
+          <tr>
+            <td>clarity</td>
+            <td>Ordinal</td>
+            <td>
+              Inherent order: I1 < SI2 < SI1 < VS2 < VS1 < VVS2 < VVS1 < IF
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        <strong
+          >Trade-off 1: What information does one-hot encoding discard?</strong
+        >
+      </p>
+      <p>
+        One-hot encoding discards <strong>ordinal relationships</strong> between
+        categories:
+      </p>
+      <ul>
+        <li>Treats "Fair" and "Ideal" as equally different from "Good"</li>
+        <li>Creates N-1 (or N) binary features, increasing dimensionality</li>
+        <li>
+          Loses information that Fair < Good < Very Good < Premium < Ideal
+        </li>
+      </ul>
+
+      <p><strong>Advantages:</strong></p>
+      <ul>
+        <li>No assumption about category relationships</li>
+        <li>Works for truly nominal categories</li>
+      </ul>
+
+      <p><strong>Disadvantages:</strong></p>
+      <ul>
+        <li>Increases feature space (7 features for color vs. 1)</li>
+        <li>Loses ordinal information when it exists</li>
+      </ul>
+
+      <p>
+        <strong
+          >Trade-off 2: What assumption must hold for scalar encoding?</strong
+        >
+      </p>
+      <p>Scalar (ordinal) encoding assumes:</p>
+      <ol>
+        <li>
+          <strong>Ordinal relationship exists:</strong> Categories have
+          meaningful order
+        </li>
+        <li>
+          <strong>Linear spacing:</strong> Distance between consecutive
+          categories is meaningful
+        </li>
+        <li>
+          <strong>Monotonic relationship:</strong> Higher encoded values
+          correspond to consistently higher/lower effects
+        </li>
+      </ol>
+
+      <p>
+        <strong>Violation consequences:</strong> Non-monotonic or incorrect
+        spacing introduces bias.
+      </p>
+
+      <p>
+        For diamonds, we chose ordinal because cut, color, clarity have
+        established quality hierarchies. But the non-monotonic price
+        relationship (due to carat correlation) may hurt model performance.
+      </p>
     </div>
 
     <h2 id="q23">Question 23</h2>
     <div class="question-text">
       <p>
-        VLM Reranking of CLIP Top-5 Candidates. Reuse the exact same CLIP setup
-        and evaluation protocol from the previous question. For each Pokemon
-        image, first use CLIP to obtain the top-5 predicted types (and their
-        probabilities/similarities). Then, use a modern vision-language model
-        (VLM), e.g., Qwen/Qwen3-VL-2B-Instruct, to select the single most likely
-        primary type from only these five candidates. You can check the helper
-        code for how to use Qwen vision language models (please use Google-colab
-        or if you have your local pc with GPU)
+        Standardize feature columns and prepare them for training. Save your
+        standardized version of the dataset as
+        <code>diamonds_standardized.csv</code>.
       </p>
-      <p>
-        Concretely, for each image \(i\), let CLIP return a candidate set
-        \(C_i\) containing the top-5 types. Prompt the VLM with the image and
-        the candidate list \(C_i\), and force the VLM to output exactly one type
-        from \(C_i\) (e.g., as a JSON field
-        <code>{"type1": "..."}</code>). If the VLM output is invalid (not in
-        \(C_i\)), fall back to CLIP's top-1 type.
-      </p>
-      <p>Report:</p>
-      <ul>
-        <li>
-          <strong>Reranked Accuracy@1:</strong> the fraction of images whose
-          final predicted type (after VLM selection) matches the ground-truth
-          Type1.
-        </li>
-        <li>
-          A comparison table of CLIP Acc@1, CLIP Hit@5, and VLM-reranked Acc@1.
-        </li>
-        <li>Briefly discuss: Does VLM reranking help?</li>
-      </ul>
     </div>
     <div class="answer">
       <h3>Answer</h3>
-      <p>Model: Qwen3-VL-2B-Instruct</p>
+      <p><strong>Implementation:</strong></p>
+      <pre>
+from sklearn.preprocessing import StandardScaler, LabelEncoder
 
+# Encode categorical features
+categorical_cols = ['cut', 'color', 'clarity']
+for col in categorical_cols:
+    le = LabelEncoder()
+    df[col + '_encoded'] = le.fit_transform(df[col])
+
+# Select features
+numerical_cols = ['carat', 'depth', 'table', 'x', 'y', 'z']
+encoded_categorical = ['cut_encoded', 'color_encoded', 'clarity_encoded']
+all_features = numerical_cols + encoded_categorical
+
+# Standardize
+scaler = StandardScaler()
+df_standardized = pd.DataFrame(
+    scaler.fit_transform(df[all_features]),
+    columns=all_features
+)
+df_standardized['price'] = df['price'].values
+
+df_standardized.to_csv('diamonds_standardized.csv', index=False)
+      </pre>
+      <p>
+        <strong>Output:</strong> File saved as
+        <code>diamonds_standardized.csv</code>
+      </p>
+    </div>
+
+    <h2 id="q24">Question 24</h2>
+    <div class="question-text">
+      <p>
+        Print the top 5 features using each method (<code
+          >mutual_info_regression</code
+        >
+        and <code>f_regression</code>).
+      </p>
+      <ul>
+        <li>
+          <strong>Agentic Integration:</strong> For this step, load
+          <code>diamonds-questions.jsonl</code> and
+          <code>diamonds-labels.jsonl</code> (question id 0 and 1) and use your
+          ReAct agent from Part 2 to automatically identify and print the top
+          features. If the agent gets stuck, you may manually write the code to
+          compute and print them.
+        </li>
+      </ul>
+      <p>
+        From this point on, you are free to use any combination of features, as
+        long as the performance on the regression model is on par (or slightly
+        worse) than the Neural Network model.
+      </p>
+      <p>
+        Save your selected feature new csv as
+        <code>diamonds_selected.csv</code>.
+      </p>
+    </div>
+    <div class="answer">
+      <h3>Answer</h3>
+      <p><strong>Mutual Information Top 5:</strong></p>
       <table>
         <thead>
           <tr>
-            <th>Method</th>
-            <th>Acc@1</th>
-            <th>Hit@5</th>
+            <th>Rank</th>
+            <th>Feature</th>
+            <th>MI Score</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>CLIP</td>
-            <td>33.29%</td>
-            <td>74.27%</td>
+            <td>1</td>
+            <td>carat</td>
+            <td>1.9622</td>
           </tr>
           <tr>
-            <td>VLM Rerank</td>
-            <td>44.96%</td>
-            <td>—</td>
+            <td>2</td>
+            <td>y</td>
+            <td>1.4912</td>
           </tr>
           <tr>
-            <td>Improvement</td>
-            <td>+11.67%</td>
-            <td>—</td>
+            <td>3</td>
+            <td>x</td>
+            <td>1.4832</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>z</td>
+            <td>1.4329</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td>clarity</td>
+            <td>0.3607</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p><strong>F-Regression Top 5:</strong></p>
+      <table>
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Feature</th>
+            <th>F-Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>carat</td>
+            <td>304050.9059</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>x</td>
+            <td>193740.2791</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>y</td>
+            <td>160914.4818</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>z</td>
+            <td>154922.1211</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td>color</td>
+            <td>1654.4319</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p><strong>Agentic integration:</strong></p>
+      <ul>
+        <li>
+          The ReAct agent was used to identify top features automatically.
+        </li>
+        <li>
+          Agent outputs: <code>@top5_mi[carat, y, x, z, clarity]</code> and
+          <code>@top5_f[carat, x, y, z, color]</code>
+        </li>
+      </ul>
+
+      <p><strong>Analysis:</strong></p>
+      <ul>
+        <li>
+          <strong>Agreement:</strong> Both methods agree on <code>carat</code>,
+          <code>x</code>, <code>y</code>, <code>z</code> as top 4
+        </li>
+        <li>
+          <strong>Difference:</strong> MI ranks <code>clarity</code> 5th;
+          F-regression ranks <code>color</code> 5th
+          <ul>
+            <li>
+              MI captures non-linear dependencies; F-regression measures linear
+              relationships
+            </li>
+            <li>
+              <strong>Selected features:</strong> <code>carat</code>,
+              <code>x</code>, <code>y</code>, <code>z</code>,
+              <code>color</code> (from F-regression top 5)
+            </li>
+          </ul>
+        </li>
+      </ul>
+
+      <p>
+        <strong>Output:</strong> File saved as
+        <code>diamonds_selected.csv</code>
+      </p>
+    </div>
+
+    <h2 id="q25">Question 25</h2>
+    <div class="question-text">
+      <p>
+        <strong>Agentic Integration:</strong> For this step, load
+        <code>diamonds-questions.jsonl</code> and
+        <code>diamonds-labels.jsonl</code> (question ids 2, 3, and 4) and use
+        your ReAct agent from Part 2 to automatically train the models and
+        extract the necessary metrics. If the agent gets stuck, you may manually
+        write the code to complete the training.
+      </p>
+      <p>
+        <strong>Important:</strong> List out the Python code generated by your
+        agent for these tasks. Review the code to ensure it makes sense and
+        correctly implements the requested regression models. Do not blindly
+        trust the agent's output; verify its logic before proceeding.
+      </p>
+      <p>
+        What is the objective function? Train three models: (a) ordinary least
+        squares (linear regression without regularization), (b) Lasso and (c)
+        Ridge regression, and answer the following questions.
+      </p>
+      <ul>
+        <li>
+          Explain how each regularization scheme affects the learned parameter
+          set.
+        </li>
+        <li>
+          Report your choice of the best regularization scheme along with the
+          optimal penalty parameter and explain how you (or your agent) computed
+          it.
+        </li>
+        <li>
+          Some linear regression packages return p-values for different
+          features. What is the meaning of these p-values and how can you infer
+          the most significant features? A qualitative reasoning is sufficient.
+        </li>
+      </ul>
+    </div>
+    <div class="answer">
+      <h3>Answer</h3>
+      <p><strong>Objective Function:</strong></p>
+      <p>
+        $$\min_{\beta} \frac{1}{2n} \sum_{i=1}^{n} (y_i - \beta_0 -
+        \sum_{j=1}^{p} \beta_j x_{ij})^2$$
+      </p>
+
+      <p><strong>Results:</strong></p>
+      <table>
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>Optimal Alpha</th>
+            <th>Validation RMSE</th>
+            <th>Training RMSE</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>OLS</td>
+            <td>N/A</td>
+            <td>1217.58</td>
+            <td>1216.55</td>
+          </tr>
+          <tr>
+            <td>Lasso</td>
+            <td>3.6766</td>
+            <td>1217.13</td>
+            <td>1217.15</td>
+          </tr>
+          <tr>
+            <td>Ridge</td>
+            <td>10000.0</td>
+            <td>1475.95</td>
+            <td>1460.29</td>
           </tr>
         </tbody>
       </table>
 
       <p>
-        Files: <a href="outputs/Q23_metrics.json">metrics</a>,
-        <a href="outputs/Q23_detailed.json">detailed</a>
+        <strong>Best model:</strong> Lasso Regression (α = 3.6766, RMSE =
+        1217.13)
       </p>
 
-      <p>
-        Yes, VLM reranking helps. It bumps Acc@1 from 33.29% to 44.96%, an 11.67
-        percentage point improvement. The VLM works because it can attend
-        jointly over the image and the candidate type names, whereas CLIP
-        encodes them separately and just compares similarity scores. Since CLIP
-        already finds the right type somewhere in the top 5 about 74% of the
-        time, the VLM just needs to pick the best one from that list. It's
-        basically a second opinion that's better at the final decision. Only 1
-        case needed a fallback to CLIP's top-1.
-      </p>
+      <hr />
+
+      <p><strong>How regularization affects learned parameters:</strong></p>
+
+      <p><strong>OLS (No Regularization):</strong></p>
+      <ul>
+        <li>Minimizes only squared error</li>
+        <li>
+          Coefficients can become arbitrarily large with correlated features
+        </li>
+        <li>High variance, prone to overfitting</li>
+      </ul>
+
+      <p><strong>Lasso (L1 Regularization):</strong></p>
+      <p>$$\min_{\beta} \frac{1}{2n} \|y - X\beta\|^2 + \alpha \|\beta\|_1$$</p>
+      <ul>
+        <li>Adds penalty proportional to absolute coefficient values</li>
+        <li>Drives some coefficients to exactly zero (feature selection)</li>
+        <li>Produces sparse solutions</li>
+        <li>With α = 3.68, less important features have zero coefficients</li>
+      </ul>
+
+      <p><strong>Ridge (L2 Regularization):</strong></p>
+      <p>$$\min_{\beta} \frac{1}{2n} \|y - X\beta\|^2 + \alpha \|\beta\|^2$$</p>
+      <ul>
+        <li>Adds penalty proportional to squared coefficient values</li>
+        <li>Shrinks all coefficients toward zero, rarely makes exactly zero</li>
+        <li>
+          Handles multicollinearity by distributing weight among correlated
+          features
+        </li>
+        <li>With α = 10000, all coefficients heavily shrunk (overshrinking)</li>
+      </ul>
+
+      <p><strong>Why Lasso Performed Best:</strong></p>
+      <ol>
+        <li>Feature selection eliminated noisy features</li>
+        <li>
+          With highly correlated features, Lasso selected most predictive subset
+        </li>
+        <li>α = 3.68 provided light regularization without overshrinking</li>
+      </ol>
 
       <p>
-        The major drawback is that VLM can't recover the right answer if CLIP's
-        top-5 never included it in the first place. VLM inference is also much
-        slower (0.6s per image vs CLIP's 0.01s), making this approach less ideal
-        in real-time classification scenarios.
+        <strong>Why Ridge Performed Poorly:</strong> α = 10000 too large,
+        overshrinking caused underfitting.
       </p>
+
+      <hr />
+
+      <p><strong>Optimal alpha computation:</strong></p>
+      <p>
+        Used 10-fold cross-validation with <code>LassoCV</code> and
+        <code>RidgeCV</code>:
+      </p>
+      <pre>
+lasso = LassoCV(cv=10, random_state=42, max_iter=10000)
+lasso.fit(X_train, y_train)
+best_alpha_lasso = lasso.alpha_  # 3.6766
+
+ridge = RidgeCV(alphas=[0.001, 0.01, 0.1, 1, 10, 100, 1000, 10000], cv=10)
+ridge.fit(X_train, y_train)
+best_alpha_ridge = ridge.alpha_  # 10000
+      </pre>
+
+      <hr />
+
+      <p><strong>P-values and feature significance:</strong></p>
+      <p><strong>What p-values mean:</strong></p>
+      <ul>
+        <li>
+          <strong>H₀:</strong> Coefficient β_j = 0 (no linear relationship)
+        </li>
+        <li>
+          <strong>H₁:</strong> Coefficient β_j ≠ 0 (linear relationship exists)
+        </li>
+      </ul>
+
+      <p><strong>Interpretation:</strong></p>
+      <ul>
+        <li>Low p-value (< 0.05): Feature is statistically significant</li>
+        <li>High p-value (> 0.05): Feature may not be significant</li>
+      </ul>
+
+      <p><strong>Most significant features (by expected p-value):</strong></p>
+      <ol>
+        <li><strong>carat</strong> - Lowest p-value (0.92 correlation)</li>
+        <li>
+          <strong>x, y, z</strong> - Low p-values (0.86-0.88 correlations)
+        </li>
+        <li>
+          <strong>table, depth</strong> - Higher p-values (0.13, -0.01
+          correlations)
+        </li>
+      </ol>
+
+      <hr />
+
+      <p>
+        <strong>Agent Integration:</strong> The ReAct agent from Part 2 was used
+        to train and evaluate the models.
+      </p>
+
+      <hr />
+
+      <p><strong>Python Code for Regression Models:</strong></p>
+
+      <p><strong>OLS Regression:</strong></p>
+      <pre>
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import cross_val_score, KFold
+
+kf = KFold(n_splits=10, shuffle=True, random_state=42)
+model = LinearRegression()
+neg_mse = cross_val_score(model, X, y, cv=kf, scoring="neg_mean_squared_error")
+val_rmse = np.sqrt(-neg_mse).mean()
+      </pre>
+
+      <p><strong>Lasso Regression:</strong></p>
+      <pre>
+from sklearn.linear_model import LassoCV, Lasso
+
+lasso_cv = LassoCV(cv=10, random_state=42, max_iter=10000)
+lasso_cv.fit(X, y)
+best_alpha = lasso_cv.alpha_
+model = Lasso(alpha=best_alpha, random_state=42)
+neg_mse = cross_val_score(model, X, y, cv=kf, scoring="neg_mean_squared_error")
+rmse = np.sqrt(-neg_mse).mean()
+      </pre>
+
+      <p><strong>Ridge Regression:</strong></p>
+      <pre>
+from sklearn.linear_model import RidgeCV, Ridge
+
+ridge_cv = RidgeCV(alphas=np.logspace(-2, 4, 50), cv=10)
+ridge_cv.fit(X, y)
+best_alpha = ridge_cv.alpha_
+model = Ridge(alpha=best_alpha)
+neg_mse = cross_val_score(model, X, y, cv=kf, scoring="neg_mean_squared_error")
+rmse = np.sqrt(-neg_mse).mean()
+      </pre>
     </div>
   </body>
 </html>
