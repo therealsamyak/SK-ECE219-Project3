@@ -1,0 +1,2088 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ECE 219 Project 2 Report</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script
+      id="MathJax-script"
+      async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+    ></script>
+  </head>
+  <body>
+    <header>
+      <h1>ECE 219 Project 2 Report</h1>
+      <p class="author">
+        <strong>Contributor:</strong> Samyak Kakatur |
+        <a
+          href="https://github.com/therealsamyak/SK-ECE219-Project2"
+          target="_blank"
+          >GitHub Repository</a
+        >
+      </p>
+    </header>
+
+    <div class="ai-disclaimer">
+      <p>
+        <strong>AI Disclaimer:</strong> AI tools were used to assist with code
+        generation and formatting in this repository. All code has been tested,
+        reviewed, and structured to ensure it works correctly and is easily
+        replicable.
+      </p>
+    </div>
+
+    <nav>
+      <h2>Table of Contents</h2>
+      <hr />
+      <h3><a href="#steam-reviews">Steam Reviews</a></h3>
+      <ul>
+        <li><a href="#q1">Question 1</a></li>
+        <li><a href="#q2">Question 2</a></li>
+        <li><a href="#q3">Question 3</a></li>
+        <li><a href="#q4">Question 4</a></li>
+        <li><a href="#q5">Question 5</a></li>
+        <li><a href="#q6">Question 6</a></li>
+        <li><a href="#q7">Question 7</a></li>
+        <li><a href="#q8">Question 8</a></li>
+        <li><a href="#q9">Question 9</a></li>
+        <li><a href="#q10">Question 10</a></li>
+        <li><a href="#q11">Question 11</a></li>
+        <li><a href="#q12">Question 12</a></li>
+      </ul>
+      <h3><a href="#image-clustering">Image Clustering</a></h3>
+      <ul>
+        <li><a href="#q13">Question 13</a></li>
+        <li><a href="#q14">Question 14</a></li>
+        <li><a href="#q15">Question 15</a></li>
+        <li><a href="#q16">Question 16</a></li>
+        <li><a href="#q17">Question 17</a></li>
+        <li><a href="#q18">Question 18</a></li>
+        <li><a href="#q19">Question 19</a></li>
+      </ul>
+      <h3><a href="#multi-modal">Multi-modal</a></h3>
+      <ul>
+        <li><a href="#q20">Question 20</a></li>
+        <li><a href="#q21">Question 21</a></li>
+        <li><a href="#q22">Question 22</a></li>
+        <li><a href="#q23">Question 23</a></li>
+      </ul>
+    </nav>
+
+    <!-- Part 1: Steam Reviews -->
+    <h2 id="steam-reviews">Steam Reviews</h2>
+    <hr />
+    <h2 id="q1">Question 1</h2>
+    <div class="question-text">
+      <p>
+        Report the number of reviews retained after filtering, and the average
+        length (in tokens) of Short and Long reviews.
+      </p>
+    </div>
+    <div class="answer">
+      <h3>Answer</h3>
+      <ul>
+        <li>Total reviews retained: 20,497 (after discarding middle 50%)</li>
+        <li>
+          Short reviews (≤ q25 = 11 words): 10,463 reviews, avg 6.39 words
+        </li>
+        <li>Long reviews (≥ q75 = 179 words): 10,034 reviews, avg 493 words</li>
+      </ul>
+    </div>
+
+    <h2 id="q2">Question 2</h2>
+    <div class="question-text">
+      <p>
+        Report the dimensions of the TF-IDF matrix and the MiniLM embedding
+        matrix. Briefly explain why TF-IDF is sparse while MiniLM embeddings are
+        dense.
+      </p>
+    </div>
+    <div class="answer">
+      <h3>Answer</h3>
+      <ul>
+        <li>TF-IDF: (20,497 × 25,085), 99.68% sparse</li>
+        <li>MiniLM: (20,497 × 384), dense</li>
+      </ul>
+      <p>
+        TF-IDF scores each vocabulary term independently. However, MiniLM runs
+        the entire sentence through a neural network that outputs a 384-d
+        vector. All dimensions get non-zero values because the model captures
+        meaning from the whole sentence, not by counting words.
+      </p>
+    </div>
+
+    <h2 id="q3">Question 3</h2>
+    <div class="question-text">
+      <p>
+        For each pipeline, report the following clustering agreement metrics
+        with respect to the ground-truth length labels: homogeneity,
+        completeness, v-measure, ARI, AMI. Summarize results in a table and
+        identify the best-performing pipeline.
+      </p>
+    </div>
+    <div class="answer">
+      <h3>Answer</h3>
+      <p><strong>TF-IDF (2 pipelines)</strong></p>
+      <table>
+        <thead>
+          <tr>
+            <th>Pipeline</th>
+            <th>Homogeneity</th>
+            <th>Completeness</th>
+            <th>V-Measure</th>
+            <th>ARI</th>
+            <th>AMI</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>SVD + K-Means</td>
+            <td>0.0301</td>
+            <td>0.161</td>
+            <td>0.0507</td>
+            <td>0.0057</td>
+            <td>0.0507</td>
+          </tr>
+          <tr>
+            <td>SVD + Agglomerative</td>
+            <td>0.0276</td>
+            <td>0.157</td>
+            <td>0.0470</td>
+            <td>0.0050</td>
+            <td>0.0470</td>
+          </tr>
+        </tbody>
+      </table>
+      <p><strong>MiniLM (6 pipelines)</strong></p>
+      <table>
+        <thead>
+          <tr>
+            <th>Pipeline</th>
+            <th>Homogeneity</th>
+            <th>Completeness</th>
+            <th>V-Measure</th>
+            <th>ARI</th>
+            <th>AMI</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>None + K-Means</td>
+            <td>0.509</td>
+            <td>0.509</td>
+            <td>0.509</td>
+            <td>0.613</td>
+            <td>0.509</td>
+          </tr>
+          <tr>
+            <td>None + Agglomerative</td>
+            <td>0.543</td>
+            <td>0.547</td>
+            <td>0.545</td>
+            <td>0.643</td>
+            <td>0.545</td>
+          </tr>
+          <tr>
+            <td>SVD + K-Means</td>
+            <td>0.508</td>
+            <td>0.509</td>
+            <td>0.509</td>
+            <td>0.612</td>
+            <td>0.509</td>
+          </tr>
+          <tr>
+            <td><strong>SVD + Agglomerative</strong></td>
+            <td><strong>0.646</strong></td>
+            <td><strong>0.650</strong></td>
+            <td><strong>0.648</strong></td>
+            <td><strong>0.742</strong></td>
+            <td><strong>0.648</strong></td>
+          </tr>
+          <tr>
+            <td>UMAP + K-Means</td>
+            <td>0.558</td>
+            <td>0.559</td>
+            <td>0.558</td>
+            <td>0.666</td>
+            <td>0.558</td>
+          </tr>
+          <tr>
+            <td>UMAP + Agglomerative</td>
+            <td>0.553</td>
+            <td>0.556</td>
+            <td>0.555</td>
+            <td>0.658</td>
+            <td>0.555</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        <strong>Best:</strong> MiniLM + SVD(50) + Agglomerative. V-Measure
+        0.648, ARI 0.742.
+      </p>
+    </div>
+
+    <h2 id="q4">Question 4</h2>
+    <div class="question-text">
+      <p>
+        Compare TF-IDF and MiniLM performance on this task. Which representation
+        separates Short vs Long reviews more cleanly, and why?
+      </p>
+    </div>
+    <div class="answer">
+      <h3>Answer</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>TF-IDF</th>
+            <th>MiniLM</th>
+            <th>Gap</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>V-Measure</td>
+            <td>0.047</td>
+            <td>0.648</td>
+            <td>13.8x</td>
+          </tr>
+          <tr>
+            <td>ARI</td>
+            <td>0.005</td>
+            <td>0.742</td>
+            <td>148x</td>
+          </tr>
+          <tr>
+            <td>Homogeneity</td>
+            <td>0.028</td>
+            <td>0.646</td>
+            <td>23x</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        MiniLM outperforms TF-IDF on all metrics. The neural network is able to
+        capture sentence structure and semantic meaning, whereas TF-IDF only
+        counts word frequencies. Transformers also treat longer sequences
+        differently, creating distinct representations for different-length
+        inputs.
+      </p>
+
+      <p>
+        SVD works better than UMAP here. Document length affects all dimensions
+        similarly, so UMAP's focus on local neighborhoods doesn't differentiate
+        the clusters effectively.
+      </p>
+    </div>
+
+    <h2 id="q5">Question 5</h2>
+    <div class="question-text">
+      <p>
+        Plots and Visualization: Reduce embeddings to 2D using PCA and create
+        split visualizations.
+      </p>
+    </div>
+    <div class="answer">
+      <h3>Answer</h3>
+      <p>
+        File:
+        <a href="images/Q5_pca_visualizations.png">PCA visualizations</a>
+      </p>
+      <img src="images/Q5_pca_visualizations.png" alt="PCA visualizations" />
+
+      <p>PCA explained variance:</p>
+      <ul>
+        <li>TF-IDF: 4.02% total</li>
+        <li>MiniLM: 11.83% total</li>
+      </ul>
+
+      <p>
+        MiniLM clearly separates Short and Long clusters. TF-IDF is scattered.
+        MiniLM projects better in low dimensions, as its two PCs show 11.83%
+        variance (vs 4.02% for TF-IDF).
+      </p>
+    </div>
+
+    <h2 id="q6">Question 6</h2>
+    <div class="question-text">
+      <p>
+        Report the dimensions of the TF-IDF game matrix and the MiniLM game
+        embedding matrix.
+      </p>
+    </div>
+    <div class="answer">
+      <h3>Answer</h3>
+      <ul>
+        <li>
+          TF-IDF: (200 × 16,554), vocabulary from concatenated positive reviews
+        </li>
+        <li>MiniLM: (200 × 384), averaged positive review embeddings</li>
+      </ul>
+    </div>
+
+    <h2 id="q7">Question 7</h2>
+    <div class="question-text">
+      <p>For each pipeline, report a summary table that includes:</p>
+      <ul>
+        <li>
+          number of clusters found (for HDBSCAN, also report the fraction of
+          games labeled as noise -1),
+        </li>
+        <li>cluster sizes,</li>
+        <li>
+          for each cluster: the top 3 most common genres (by frequency across
+          games in that cluster).
+        </li>
+      </ul>
+    </div>
+    <div class="answer">
+      <h3>Answer</h3>
+      <p><strong>MiniLM Pipelines</strong></p>
+
+      <p><strong>None + K-Means</strong> (K=5)</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Cluster</th>
+            <th>Size</th>
+            <th>Top 3 Genres (purity)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>0</td>
+            <td>9</td>
+            <td>Simulation (67%), Sports (67%), Action (33%)</td>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td>23</td>
+            <td>Action (69%), Indie (55%), Adventure (50%)</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>24</td>
+            <td>Action (74%), Adventure (52%), RPG (48%)</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>58</td>
+            <td>Action (81%), Adventure (48%), RPG (33%)</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>86</td>
+            <td>Adventure (71%), Simulation (54%), Indie (50%)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p><strong>None + Agglomerative</strong> (K=5)</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Cluster</th>
+            <th>Size</th>
+            <th>Top 3 Genres (purity)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>0</td>
+            <td>20</td>
+            <td>Action (63%), Adventure (49%), Indie (49%)</td>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td>33</td>
+            <td>Action (82%), Adventure (45%), RPG (27%)</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>41</td>
+            <td>Action (55%), Indie (53%), Adventure (50%)</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>44</td>
+            <td>Simulation (70%), Indie (60%), Adventure (55%)</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>62</td>
+            <td>Action (93%), Adventure (52%), RPG (48%)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p><strong>SVD + K-Means</strong> (K=5)</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Cluster</th>
+            <th>Size</th>
+            <th>Top 3 Genres (purity)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>0</td>
+            <td>25</td>
+            <td>Action (76%), Adventure (52%), RPG (44%)</td>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td>30</td>
+            <td>Adventure (67%), Simulation (57%), Indie (53%)</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>40</td>
+            <td>Indie (62%), Action (58%), Adventure (54%)</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>50</td>
+            <td>Action (82%), Indie (38%), Adventure (33%)</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>55</td>
+            <td>Action (80%), Adventure (55%), RPG (35%)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p><strong>SVD + Agglomerative</strong> (K=5)</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Cluster</th>
+            <th>Size</th>
+            <th>Top 3 Genres (purity)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>0</td>
+            <td>13</td>
+            <td>Indie (59%), Action (59%), Adventure (43%)</td>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td>32</td>
+            <td>Action (85%), Adventure (56%), RPG (44%)</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>37</td>
+            <td>Adventure (66%), Simulation (62%), Indie (56%)</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>56</td>
+            <td>Action (100%), Massively Multiplayer (38%), Indie (23%)</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>62</td>
+            <td>Action (64%), Adventure (46%), Indie (38%)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p><strong>UMAP + K-Means</strong> (K=5)</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Cluster</th>
+            <th>Size</th>
+            <th>Top 3 Genres (purity)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>0</td>
+            <td>26</td>
+            <td>Action (85%), Adventure (49%), RPG (36%)</td>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td>32</td>
+            <td>Action (64%), Adventure (46%), Indie (39%)</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>39</td>
+            <td>Simulation (62%), Adventure (54%), Indie (54%)</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>42</td>
+            <td>Indie (62%), Action (60%), Adventure (50%)</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>61</td>
+            <td>Action (84%), Adventure (56%), RPG (34%)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p><strong>UMAP + Agglomerative</strong> (K=5)</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Cluster</th>
+            <th>Size</th>
+            <th>Top 3 Genres (purity)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>0</td>
+            <td>22</td>
+            <td>Action (66%), Adventure (52%), Indie (41%)</td>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td>23</td>
+            <td>Action (85%), Adventure (45%), RPG (38%)</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>30</td>
+            <td>Indie (63%), Action (53%), Adventure (47%)</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>40</td>
+            <td>Simulation (64%), Adventure (55%), Indie (50%)</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>85</td>
+            <td>Action (87%), Adventure (52%), RPG (35%)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p><strong>AE + K-Means</strong> (K=5)</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Cluster</th>
+            <th>Size</th>
+            <th>Top 3 Genres (purity)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>0</td>
+            <td>29</td>
+            <td>Indie (67%), Adventure (56%), Action (53%)</td>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td>34</td>
+            <td>Action (84%), Adventure (51%), RPG (30%)</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>36</td>
+            <td>Action (74%), Adventure (59%), RPG (41%)</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>43</td>
+            <td>Action (79%), Indie (40%), Adventure (38%)</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>58</td>
+            <td>Indie (62%), Adventure (55%), Simulation (55%)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p><strong>AE + Agglomerative</strong> (K=5)</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Cluster</th>
+            <th>Size</th>
+            <th>Top 3 Genres (purity)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>0</td>
+            <td>27</td>
+            <td>Indie (68%), Action (58%), Adventure (54%)</td>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td>40</td>
+            <td>Action (85%), Adventure (50%), RPG (28%)</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>40</td>
+            <td>Action (70%), Adventure (59%), RPG (37%)</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>43</td>
+            <td>Action (77%), Indie (35%), Adventure (35%)</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>50</td>
+            <td>Indie (57%), Adventure (55%), Action (52%)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p><strong>None + HDBSCAN</strong> (K=2, 87.5% noise)</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Cluster</th>
+            <th>Size</th>
+            <th>Top 3 Genres (purity)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>0</td>
+            <td>7</td>
+            <td>Action (83%), Adventure (56%), Indie (50%)</td>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td>18</td>
+            <td>
+              Action (100%), Massively Multiplayer (43%), Early Access (29%)
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p><strong>SVD + HDBSCAN</strong> (K=2, 84.0% noise)</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Cluster</th>
+            <th>Size</th>
+            <th>Top 3 Genres (purity)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>0</td>
+            <td>7</td>
+            <td>Action (72%), Adventure (64%), Indie (52%)</td>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td>25</td>
+            <td>
+              Action (100%), Massively Multiplayer (43%), Early Access (29%)
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p><strong>UMAP + HDBSCAN</strong> (K=10, 32.0% noise)</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Cluster</th>
+            <th>Size</th>
+            <th>Top 3 Genres (purity)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>0</td>
+            <td>5</td>
+            <td>Action (80%), Racing (80%), Adventure (60%)</td>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td>6</td>
+            <td>Adventure (86%), Simulation (57%), Indie (43%)</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>6</td>
+            <td>Action (83%), RPG (50%), Adventure (50%)</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>20</td>
+            <td>Simulation (65%), Adventure (60%), Indie (55%)</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>9</td>
+            <td>Casual (80%), Indie (60%), Action (60%)</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td>35</td>
+            <td>Action (91%), Adventure (60%), RPG (40%)</td>
+          </tr>
+          <tr>
+            <td>6</td>
+            <td>14</td>
+            <td>
+              Action (100%), Free To Play (30%), Massively Multiplayer (20%)
+            </td>
+          </tr>
+          <tr>
+            <td>7</td>
+            <td>13</td>
+            <td>Action (60%), Indie (53%), Adventure (47%)</td>
+          </tr>
+          <tr>
+            <td>8</td>
+            <td>8</td>
+            <td>Indie (85%), Adventure (60%), Action (60%)</td>
+          </tr>
+          <tr>
+            <td>9</td>
+            <td>20</td>
+            <td>Simulation (86%), Sports (86%), Action (14%)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p><strong>AE + HDBSCAN</strong> (K=2, 80.5% noise)</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Cluster</th>
+            <th>Size</th>
+            <th>Top 3 Genres (purity)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>0</td>
+            <td>6</td>
+            <td>Action (76%), Indie (55%), Adventure (52%)</td>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td>33</td>
+            <td>
+              Action (100%), Early Access (33%), Massively Multiplayer (33%)
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p><strong>TF-IDF Pipelines</strong></p>
+
+      <p><strong>SVD + K-Means</strong> (K=5)</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Cluster</th>
+            <th>Size</th>
+            <th>Top 3 Genres (purity)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>0</td>
+            <td>94</td>
+            <td>Action (80%), Massively Multiplayer (60%), Strategy (40%)</td>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td>35</td>
+            <td>Action (71%), Adventure (57%), RPG (46%)</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>62</td>
+            <td>Action (60%), Adventure (60%), Indie (43%)</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>5</td>
+            <td>Action (71%), Indie (40%), Adventure (39%)</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>4</td>
+            <td>Simulation (100%), Sports (100%)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p><strong>SVD + Agglomerative</strong> (K=5)</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Cluster</th>
+            <th>Size</th>
+            <th>Top 3 Genres (purity)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>0</td>
+            <td>130</td>
+            <td>Action (80%), Indie (45%), Adventure (43%)</td>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td>12</td>
+            <td>Action (67%), Adventure (58%), Indie (58%)</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>49</td>
+            <td>Action (65%), Adventure (55%), RPG (41%)</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>5</td>
+            <td>Action (80%), Massively Multiplayer (60%), Strategy (40%)</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>4</td>
+            <td>Simulation (100%), Sports (100%)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p><strong>SVD + HDBSCAN</strong> (K=2, 3.5% noise)</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Cluster</th>
+            <th>Size</th>
+            <th>Top 3 Genres (purity)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>0</td>
+            <td>5</td>
+            <td>Action (69%), Adventure (52%), Indie (41%)</td>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td>188</td>
+            <td>Action (80%), Massively Multiplayer (60%), Strategy (40%)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="q8">Question 8</h2>
+    <div class="question-text">
+      <p>
+        Pick one best pipeline (justify your choice), then report two cluster
+        with high purity:
+      </p>
+      <ul>
+        <li>top 3 genres with percentages,</li>
+        <li>cluster genre purity (as defined above),</li>
+        <li>Representative games in the cluster (game name + genres).</li>
+      </ul>
+      <p>
+        Provide a short interpretation: what type of games does these clusters
+        represent?
+      </p>
+    </div>
+    <div class="answer">
+      <h3>Answer</h3>
+      <p>
+        We selected MiniLM + SVD(50) + Agglomerative because it performed the
+        best in Task 1 and shows strong genre purity.
+      </p>
+
+      <p><strong>Cluster 3 (13 games, 100% pure)</strong></p>
+      <p>Top genres: Action (100%), Massively Multiplayer (38%), Indie (23%)</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Game</th>
+            <th>Genres</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Counter-Strike 2</td>
+            <td>Action, Massively Multiplayer</td>
+          </tr>
+          <tr>
+            <td>Dota 2</td>
+            <td>Action, Massively Multiplayer, RPG</td>
+          </tr>
+          <tr>
+            <td>Team Fortress 2</td>
+            <td>Action, Massively Multiplayer</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        These are competitive online multiplayer first-person-shooter games. All
+        have the Action tag.
+      </p>
+
+      <p><strong>Cluster 1 (62 games, 85% pure)</strong></p>
+      <p>Top genres: Action (85%), Adventure (56%), RPG (44%)</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Game</th>
+            <th>Genres</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Dying Light</td>
+            <td>Action, RPG</td>
+          </tr>
+          <tr>
+            <td>Black Mesa</td>
+            <td>Action, Adventure, Indie</td>
+          </tr>
+          <tr>
+            <td>Borderlands 3</td>
+            <td>Action, RPG</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>These are mostly narrative-driven action games with RPG elements.</p>
+    </div>
+
+    <h2 id="q9">Question 9</h2>
+    <div class="question-text">
+      <p>
+        Report: (i) the assigned cluster ID, (ii) the top 3 genres of that
+        cluster, and (iii) 3 representative games from that cluster. Briefly
+        justify why this constitutes a genre estimate in a multi-genre world.
+      </p>
+    </div>
+    <div class="answer">
+      <h3>Answer</h3>
+      <p>The best Task 2 pipeline is MiniLM + SVD + Agglomerative.</p>
+
+      <p><strong>Cluster ID:</strong> 4</p>
+      <p>Top genres: Action (80%), Adventure (55%), RPG (35%)</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Game</th>
+            <th>Genres</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Dying Light</td>
+            <td>Action, RPG</td>
+          </tr>
+          <tr>
+            <td>Black Mesa</td>
+            <td>Action, Adventure, Indie</td>
+          </tr>
+          <tr>
+            <td>Borderlands 3</td>
+            <td>Action, RPG</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        This is genre-estimation, because the games themselves are multi-label.
+        Rather than predicting one genre, we assign the held-out game to its
+        nearest cluster and inherit that cluster's genre distribution. The
+        held-out game shares Action / Adventure / RPG characteristics because it
+        clusters semantically with games having those tags.
+      </p>
+    </div>
+
+    <h2 id="q10">Question 10</h2>
+    <div class="question-text">
+      <p>
+        For negative reviews: report 3–5 clusters with (i) top terms and (ii)
+        exemplar reviews, and assign a short label to each complaint cluster.
+      </p>
+    </div>
+    <div class="answer">
+      <h3>Answer</h3>
+      <p>
+        We used MiniLM + SVD(50) + Agglomerative because it achieved the best
+        performance in Task 1 (V-Measure 0.648, ARI 0.742) and Task 2 (up to
+        100% genre purity).
+      </p>
+
+      <p>
+        <strong>Cluster 0 - Boss-Focused Gameplay Issues (48 reviews)</strong>
+      </p>
+      <p>
+        Terms: game, like, just, boss, fun, games, combat, boring, good, don
+      </p>
+      <blockquote>
+        "First of all it's a beautiful game. The visuals are great, It also has
+        some unique combat that when you get used to it, it's enjoyable. But
+        beyond that...this game is a boss simulator..."
+      </blockquote>
+      <blockquote>
+        "Is a fun game but with a lot of problems. First of all performance is
+        not great and not consistent at all through the chapters. There's a
+        beautiful world to look at but full of invisible walls..."
+      </blockquote>
+      <p>Label: Boss-focused gameplay issues</p>
+
+      <p>
+        <strong
+          >Cluster 1 - Frustrating Combat & Boss Design (21 reviews)</strong
+        >
+      </p>
+      <p>
+        Terms: game, boss, like, just, bosses, combat, design, really, attacks,
+        feel
+      </p>
+      <blockquote>
+        "The other negative reviews have already covered most of it. I can just
+        add that I too find the game very frustrating. I want to love it, but
+        the poor combat design, getting locked into animations far too often..."
+      </blockquote>
+      <blockquote>
+        "I really wanted to like this game, but it falls victim to many poor
+        design decisions and I found the game far more tedious and frustrating
+        than it should be..."
+      </blockquote>
+      <p>Label: Frustrating Combat and Boss Design</p>
+
+      <p>
+        <strong
+          >Cluster 2 - Misogynistic Developers Criticism (6 reviews)</strong
+        >
+      </p>
+      <p>
+        Terms: developers misogynists, developers, country, misogynists, taiwan,
+        taiwan country, game, want, talking, feets
+      </p>
+      <blockquote>
+        "If you want to support a super misogynistic games company then this is
+        the game for you"
+      </blockquote>
+      <blockquote>"The developers are misogynists"</blockquote>
+      <p>Label: Misogynistic Developers Criticism</p>
+
+      <p><strong>Cluster 3 - Wukong Game Criticism (8 reviews)</strong></p>
+      <p>
+        Terms: game, boss, just, like, wukong, story, design, level, black,
+        black myth
+      </p>
+      <blockquote>
+        "Do be aware that the majority of the reviews for Wukong are from China,
+        even those in English, and as such this review will probably trigger
+        some..."
+      </blockquote>
+      <blockquote>
+        "Is Black Myth: Wukong the best game ever made and ever will be made?
+        ...... A sudden uproar of positive feedback for this game brings me
+        here..."
+      </blockquote>
+      <p>Label: Wukong game criticism</p>
+
+      <p><strong>Cluster 4 - Performance Issues (17 reviews)</strong></p>
+      <p>
+        Terms: game, fps, low, crashes, settings, issues, like, amd, 7900xtx,
+        low fps
+      </p>
+      <blockquote>
+        "I wanted to share my recent experience with this where I have seen
+        that's been getting positive reviews. I'm running this on an i7 13th
+        gen, RTX 4080, and 32 gigs RAM, which should be more than capable.
+        However, the game crashes consistently..."
+      </blockquote>
+      <blockquote>
+        "Not really sure what these purchased reviews are all about. Game runs
+        terribly.1440p, Cinematic, 4090, 32GB Ram, 13900kConstant stutters."
+      </blockquote>
+      <p>Label: Performance Issues</p>
+    </div>
+
+    <h2 id="q11">Question 11</h2>
+    <div class="question-text">
+      <p>
+        For positive reviews: repeat the same analysis and label 3–5 praise
+        clusters.
+      </p>
+    </div>
+    <div class="answer">
+      <h3>Answer</h3>
+      <p>
+        We used MiniLM + SVD(50) + Agglomerative because it achieved the best
+        performance in Task 1 (V-Measure 0.648, ARI 0.742) and Task 2 (up to
+        100% genre purity).
+      </p>
+
+      <p>
+        <strong>Cluster 0 - Positive Gameplay Experience (49 reviews)</strong>
+      </p>
+      <p>
+        Terms: game, like, just, good, games, really, graphics, combat, 10, play
+      </p>
+      <blockquote>
+        "This game has the big awesome set pieces and aesthetic from the old
+        school God of War games, the core gameplay of a Soul-like (albeit a tad
+        more forgiving), really sick and fast paced Sekiro / Bloodborne
+        combat..."
+      </blockquote>
+      <blockquote>
+        "(Review in progress, 8h so far, 2 chapters completed)This game
+        surprised me more than I expected. The level of polish and care put into
+        it is quite impressive and I absolutely loved my time with it so far..."
+      </blockquote>
+      <p>Label: Positive gameplay experience</p>
+
+      <p>
+        <strong
+          >Cluster 1 - Mythical Chinese Game Excellence (15 reviews)</strong
+        >
+      </p>
+      <p>
+        Terms: game, wukong, chinese, myth, good, black, black myth, games, myth
+        wukong, like
+      </p>
+      <blockquote>
+        "Black Myth: Wukong was released under a lot of anticipation after
+        gameplay showcases had been shown over the past few years, leading
+        people to even question if the game would really come out like that.
+        Thankfully, it really did - and overcame all expectations..."
+      </blockquote>
+      <blockquote>
+        "Black Myth Wukong is an absolute masterclass of a game. All the hype,
+        all the praise, all the positive buzz surrounding this game...they're
+        absolutely deserved..."
+      </blockquote>
+      <p>Label: Mythical Chinese Game Excellence</p>
+
+      <p>
+        <strong
+          >Cluster 2 - Perfect 10s and Sweet Baby Praise (16 reviews)</strong
+        >
+      </p>
+      <p>
+        Terms: 10, sweet baby, baby, sweet, ign, game, add, monke, ape, game ape
+      </p>
+      <blockquote>"※This game does not include Sweet Baby"</blockquote>
+      <blockquote>
+        "Story: 10/10Gameplay: 10/10Graphic & Sound: 10/10Animation: 10/10Game's
+        World: 10/10Character: 10/10Combat: 10/10Enemy's AI: 10/10Soundtrack:
+        10/10Game Optimize: 10/10It's Wukong: 10/10OVERALL: 10+/10"
+      </blockquote>
+      <p>Label: Perfect 10s and Sweet Baby praise</p>
+
+      <p>
+        <strong>Cluster 3 - Grind and Repetitive Gameplay (15 reviews)</strong>
+      </p>
+      <p>Terms: good, grind, just, bad, 10, long, average, bugs, game, hard</p>
+      <blockquote>
+        "---{ Graphics }---☑ You forget what reality is☑ Beautiful☑ Good☑ Decent
+        ☑ Bad☑ Don't look too long at it☐ MS-DOS---{ Gameplay }---☑ Very good☐
+        Good☐ It's just gameplay☐ Mehh☐ Watch paint dry instead☐ Just don't..."
+      </blockquote>
+      <p>Label: Grind and repetitive gameplay</p>
+
+      <p><strong>Cluster 4 - Monke Embrace Approved (5 reviews)</strong></p>
+      <p>
+        Terms: monke, reject, approves, monke approves, embrace, embrace monke,
+        modernityreturn monke, modernityreturn, reject modernityreturn, dei
+      </p>
+      <blockquote>"MONKE APPROVES..."</blockquote>
+      <blockquote>"REJECT MODERNITYRETURN TO MONKE"</blockquote>
+      <p>Label: Monke Embrace Approved</p>
+    </div>
+
+    <h2 id="q12">Question 12</h2>
+    <div class="question-text">
+      <p>
+        Include your prompting strategy and 3 example of LLM-generated labels
+        for clusters. You can use the same helper code from Project 1 for the
+        Qwen model (Qwen/Qwen3-4B-Instruct-2507).
+      </p>
+    </div>
+    <div class="answer">
+      <h3>Answer</h3>
+      <p>Model: Qwen/Qwen3-4B-Instruct-2507</p>
+      <p>Input per cluster: 10 top TF-IDF terms, 2 exemplar reviews</p>
+
+      <p><strong>Prompt:</strong></p>
+      <pre>
+You are analyzing Steam review clusters. Input:
+Top Terms: [terms]
+Exemplar Reviews: [reviews]
+
+Output a 3-6 word label describing what these reviews have in common.</pre
+      >
+      <br />
+
+      <p><strong>Example 1 (Negative Cluster 0)</strong></p>
+      <p>
+        Terms: game, like, just, boss, fun, games, combat, boring, good, don
+      </p>
+      <p>
+        Exemplar: "First of all it's a beautiful game. The visuals are great, It
+        also has some unique combat that when you get used to it, it's
+        enjoyable. But beyond that...this game is a boss simulator..."
+      </p>
+      <p>LLM output: "Boss-focused gameplay issues"</p>
+
+      <p><strong>Example 2 (Negative Cluster 4)</strong></p>
+      <p>
+        Terms: game, fps, low, crashes, settings, issues, like, amd, 7900xtx,
+        low fps
+      </p>
+      <p>
+        Exemplar: "I'm running this on an i7 13th gen, RTX 4080, and 32 gigs
+        RAM, which should be more than capable. However, the game crashes
+        consistently..."
+      </p>
+      <p>LLM output: "Performance Issues"</p>
+
+      <p><strong>Example 3 (Positive Cluster 1)</strong></p>
+      <p>
+        Terms: game, wukong, chinese, myth, good, black, black myth, games, myth
+        wukong, like
+      </p>
+      <p>
+        Exemplar: "Black Myth: Wukong was released under a lot of anticipation
+        after gameplay showcases had been shown over the past few years, leading
+        people to even question if the game would really come out like that.
+        Thankfully, it really did – and overcame all expectations..."
+      </p>
+      <p>LLM output: "Mythical Chinese Game Excellence"</p>
+    </div>
+
+    <!-- Part 2: Image Clustering -->
+    <h2 id="image-clustering">Image Clustering</h2>
+    <hr />
+    <h2 id="q13">Question 13</h2>
+    <div class="question-text">
+      <p>
+        In a brief paragraph discuss: If the VGG network is trained on a dataset
+        with perhaps totally different classes as targets, why would one expect
+        the features derived from such a network to have discriminative power
+        for a custom dataset?
+      </p>
+    </div>
+    <div class="answer">
+      <h3>Answer</h3>
+      <p>
+        VGG16 learns visual patterns directly, and is not constrained to the
+        specific classes it is trained on. Early layers learn very generic
+        features (ex. edges, corners, color contrast, simple texture, etc.).
+        Middle layers learn reusable patterns. The final layers are
+        task-specific. Assuming the training data is very large and diverse, the
+        network learns general visual primitives that transfer to new unseen
+        tasks well.
+      </p>
+    </div>
+
+    <h2 id="q14">Question 14</h2>
+    <div class="question-text">
+      <p>
+        In a brief paragraph explain how the helper code base is performing
+        feature extraction.
+      </p>
+    </div>
+    <div class="answer">
+      <h3>Answer</h3>
+      <ol>
+        <li>Load VGG16 from torch.hub with pretrained ImageNet weights</li>
+        <li>
+          Preprocess: resize to 224×224, center crop, normalize with ImageNet
+          mean/std
+        </li>
+        <li>Run through 13 convolutional layers with pooling</li>
+        <li>Apply 7×7 adaptive average pooling</li>
+        <li>Flatten from 512×7×7 to 25,088 elements</li>
+        <li>Pass through first FC layer only → 4096-d embedding</li>
+      </ol>
+      <p>The code discards fc[1] and fc[2], keeping only fc[0] output.</p>
+    </div>
+
+    <h2 id="q15">Question 15</h2>
+    <div class="question-text">
+      <p>
+        How many pixels are there in the original images? How many features does
+        the VGG network extract per image; i.e., what is the dimension of each
+        feature vector for an image sample?
+      </p>
+    </div>
+    <div class="answer">
+      <h3>Answer</h3>
+      <ul>
+        <li>Original: 224 × 224 × 3 = 150,528 pixels</li>
+        <li>VGG16 output: 4,096 features</li>
+        <li>Dataset: 3,670 images</li>
+      </ul>
+      <p>Compression: 150,528 → 4,096, which is ~36.8x reduction.</p>
+    </div>
+
+    <h2 id="q16">Question 16</h2>
+    <div class="question-text">
+      <p>
+        Are the extracted features dense or sparse? (Compare with the sparse
+        TF-IDF features in text.)
+      </p>
+    </div>
+    <div class="answer">
+      <h3>Answer</h3>
+      <p>VGG16 features are dense.</p>
+      <p>
+        TF-IDF vectors are mostly zeros, because most reviews do not contain
+        every single word in the vocabulary. This causes ~99%+ sparsity.
+      </p>
+      <p>
+        VGG16 works differently. Each of the 4096 neurons receives weighted
+        input from all 25,088 pooled features, so every dimension is non-zero.
+        All dimensions capture information about the entire image.
+      </p>
+    </div>
+
+    <h2 id="q17">Question 17</h2>
+    <div class="question-text">
+      <p>
+        In order to inspect the high-dimensional features, t-SNE is a popular
+        off-the-shelf choice for visualizing Vision features. Map the features
+        you have extracted onto two dimensions with t-SNE. Then plot the mapped
+        feature vectors along the x and y axes. Color-code the data points with
+        the ground-truth labels. Describe your observation.
+      </p>
+    </div>
+    <div class="answer">
+      <h3>Answer</h3>
+      <p>File: <a href="images/Q17_tsne.png">t-SNE plot</a></p>
+      <img src="images/Q17_tsne.png" alt="t-SNE visualization" />
+      <p><em>Settings: 2 components, perplexity=30, 3,670 points</em></p>
+
+      <p><strong>Spatial Distribution by Quadrant:</strong></p>
+      <table>
+        <thead>
+          <tr>
+            <th>Quadrant</th>
+            <th>Dominant Class</th>
+            <th>Count</th>
+            <th>Key Characteristics</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Upper-Right (Q1)</td>
+            <td>Dandelions (80.5%)</td>
+            <td>815</td>
+            <td>Forms tightest, most cohesive cluster</td>
+          </tr>
+          <tr>
+            <td>Upper-Left (Q2)</td>
+            <td>Daisies (56.3%)</td>
+            <td>996</td>
+            <td>Most dispersed, overlaps multiple classes</td>
+          </tr>
+          <tr>
+            <td>Lower-Left (Q3)</td>
+            <td>Sunflowers (56.9%)</td>
+            <td>724</td>
+            <td>Overlaps with daisies</td>
+          </tr>
+          <tr>
+            <td>Lower-Right (Q4)</td>
+            <td>Roses (49%), Tulips (44%)</td>
+            <td>1,135</td>
+            <td>Heavy overlap - 77% bounding box overlap</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        Roses and tulips cluster together due to similar petal arrangements,
+        while dandelions form a distinct cluster due to their unique spherical
+        shape.
+      </p>
+    </div>
+
+    <h2 id="q18">Question 18</h2>
+    <div class="question-text">
+      <p>
+        Report the best result (in terms of the adjusted rand index) within the
+        table below. For HDBSCAN, introduce a conservative parameter grid over
+        min_cluster_size and min_samples.
+      </p>
+    </div>
+    <div class="answer">
+      <h3>Answer</h3>
+      <p><strong>Best:</strong> ARI = 0.5635 (UMAP + HDBSCAN)</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Dim Reduction</th>
+            <th>Clustering</th>
+            <th>Parameters</th>
+            <th>ARI</th>
+            <th>Clusters</th>
+            <th>Noise</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>UMAP</td>
+            <td>HDBSCAN</td>
+            <td>min_cluster_size=50, min_samples=10</td>
+            <td>0.5635</td>
+            <td>10</td>
+            <td>934</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>Best ARI by method:</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Best Clustering</th>
+            <th>ARI</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>None (4096-d)</td>
+            <td>Agglomerative</td>
+            <td>0.2184</td>
+          </tr>
+          <tr>
+            <td>SVD (50-d)</td>
+            <td>K-Means</td>
+            <td>0.1947</td>
+          </tr>
+          <tr>
+            <td>UMAP (50-d)</td>
+            <td>HDBSCAN</td>
+            <td>0.5635</td>
+          </tr>
+          <tr>
+            <td>Autoencoder (50-d)</td>
+            <td>Agglomerative</td>
+            <td>0.2344</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>HDBSCAN grid (on UMAP features):</p>
+      <table>
+        <thead>
+          <tr>
+            <th>min_cluster_size</th>
+            <th>min_samples</th>
+            <th>Clusters</th>
+            <th>Noise</th>
+            <th>ARI</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>5</td>
+            <td>3</td>
+            <td>108</td>
+            <td>1,723</td>
+            <td>0.097</td>
+          </tr>
+          <tr>
+            <td>10</td>
+            <td>3</td>
+            <td>55</td>
+            <td>1,673</td>
+            <td>0.142</td>
+          </tr>
+          <tr>
+            <td>20</td>
+            <td>5</td>
+            <td>21</td>
+            <td>1,137</td>
+            <td>0.408</td>
+          </tr>
+          <tr>
+            <td>50</td>
+            <td>10</td>
+            <td>10</td>
+            <td>934</td>
+            <td>0.564</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="q19">Question 19</h2>
+    <div class="question-text">
+      <p>
+        Report the test accuracy of the MLP classifier on the original VGG
+        features. Report the same when using the reduced-dimension features (you
+        have freedom in choosing the dimensionality reduction algorithm and its
+        parameters). Does the performance of the model suffer with the
+        reduced-dimension representations? Is it significant? Does the success
+        in classification make sense in the context of the clustering results
+        obtained for the same features in Question 18?
+      </p>
+    </div>
+    <div class="answer">
+      <h3>Answer</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Dimension</th>
+            <th>Accuracy</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Original VGG16</td>
+            <td>4,096</td>
+            <td>91.01%</td>
+          </tr>
+          <tr>
+            <td>SVD</td>
+            <td>50</td>
+            <td>91.14%</td>
+          </tr>
+          <tr>
+            <td>UMAP</td>
+            <td>50</td>
+            <td>80.79%</td>
+          </tr>
+          <tr>
+            <td>Autoencoder</td>
+            <td>50</td>
+            <td>88.56%</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        SVD beats the original features (91.14% vs 91.01%, 0.13% gain) while
+        cutting dimensions by 98.8%. UMAP loses 10.2 points. Autoencoder sits in
+        the middle at 88.56%.
+      </p>
+
+      <p>Comparing with clustering:</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Clustering ARI</th>
+            <th>Classification Accuracy</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>SVD</td>
+            <td>0.195 (3rd)</td>
+            <td>91.14% (1st)</td>
+          </tr>
+          <tr>
+            <td>UMAP</td>
+            <td>0.564 (1st)</td>
+            <td>80.79% (4th)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        UMAP excels at clustering but struggles with classification. SVD shows
+        the opposite trend.
+      </p>
+      <p>
+        UMAP preserves local neighborhoods (good for density-based clustering)
+        but distorts global structure (bad for linear classifiers). SVD
+        preserves global variance (good for classification) but doesn't build a
+        cluster-friendly manifold. This experiment shows we should use SVD for
+        classification, and UMAP for clustering.
+      </p>
+    </div>
+
+    <!-- Part 3: Multi-modal -->
+    <h2 id="multi-modal">Multi-modal</h2>
+    <hr />
+    <blockquote>
+      <strong>Note:</strong> We use the <code>open_clip</code> library instead
+      of the official OpenAI <code>clip</code> library. Both load the same
+      ViT-L-14 model with identical OpenAI pretrained weights, but
+      <code>open_clip</code> is an easily installable Python package (<code
+        >pip install open-clip-torch</code
+      >) with no additional setup required.
+    </blockquote>
+    <h2 id="q20">Question 20</h2>
+    <div class="question-text">
+      <p>
+        Try to construct various text queries regarding the types of Pokémon
+        (such as "type: Bug", "electric type Pokémon" or "Pokémon with fire
+        abilities") to find the relevant images from the dataset. Once you have
+        found the most suitable template for the queries, please find the top
+        five most relevant Pokémon for the type Bug, Fire, and Grass. For each
+        of the constructed query, please plot the five most relevant Pokémon
+        horizontally in one figure with the following specifications:
+      </p>
+      <ul>
+        <li>the title of the figure should be the query you used;</li>
+        <li>
+          the title of each Pokémon should be the name of the Pokémon and its
+          first and second type.
+        </li>
+      </ul>
+      <p>
+        Repeat this process for the Pokémon of the Dark and Dragon types. Assess
+        the effectiveness of your queries in these cases as well and try to
+        explain any differences.
+      </p>
+    </div>
+    <div class="answer">
+      <h3>Answer</h3>
+      <p><strong>Queries Tried:</strong></p>
+      <ul>
+        <li><code>"type: {type}"</code></li>
+        <li><code>"{type} type Pokemon"</code></li>
+        <li><code>"Pokemon with {type} abilities"</code></li>
+        <li><code>"a photo of a {type} type Pokemon"</code></li>
+      </ul>
+      <p>
+        <strong>Best one:</strong>
+        <code>"a photo of a {type} type Pokemon"</code>. This is likely the best
+        due to most internet photo captions being in this format.
+      </p>
+
+      <p><strong>Top 5 per type:</strong></p>
+      <table>
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Top 5 Pokemon</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Bug</td>
+            <td>Yanmega, Ariados, Yanma, Butterfree, Anorith</td>
+          </tr>
+          <tr>
+            <td>Fire</td>
+            <td>Simisear, Magmar, Magmortar, Quilava, Delphox</td>
+          </tr>
+          <tr>
+            <td>Grass</td>
+            <td>Oddish, Tropius, Bulbasaur, Leafeon, Bellsprout</td>
+          </tr>
+          <tr>
+            <td>Dark</td>
+            <td>Umbreon, Darkrai, Pincurchin, Gastly, Salandit</td>
+          </tr>
+          <tr>
+            <td>Dragon</td>
+            <td>Dragonite, Rhydon, Druddigon, Nidorino, Kingdra</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        Files: <a href="outputs/Q20_bug.png">Bug</a>,
+        <a href="outputs/Q20_fire.png">Fire</a>,
+        <a href="outputs/Q20_grass.png">Grass</a>,
+        <a href="outputs/Q20_dark.png">Dark</a>,
+        <a href="outputs/Q20_dragon.png">Dragon</a>
+      </p>
+
+      <p><strong>Visualizations:</strong></p>
+      <img src="images/Q20_bug.png" alt="Top 5 Bug type Pokemon" />
+      <img src="images/Q20_fire.png" alt="Top 5 Fire type Pokemon" />
+      <img src="images/Q20_grass.png" alt="Top 5 Grass type Pokemon" />
+      <img src="images/Q20_dark.png" alt="Top 5 Dark type Pokemon" />
+      <img src="images/Q20_dragon.png" alt="Top 5 Dragon type Pokemon" />
+
+      <p>
+        Bug, Fire, and Grass types retrieved pretty coherent results. Fire
+        Pokemon tend to have warm colors (red, orange, yellow) and flame-like
+        features. Grass types are mostly green with plant-like body parts. Bug
+        types have insectoid body structures that CLIP picks up on easily.
+        However, Dark and Dragon were trickier. Dark-type visual identity isn't
+        very consistent. Dragon types are visually all over the place, from
+        serpentine (Kingdra) to dinosaur-like (Dragonite). The fact that Rhydon
+        (Ground/Rock) and Nidorino (Poison) showed up for Dragon queries
+        suggests CLIP associates "dragon-like features" (horns, bulky bodies)
+        with the Dragon type.
+      </p>
+      <p>
+        The performance difference matches the uniformity of appearances within
+        the classes: Bug, Fire, and Grass have clear visual patterns that match
+        how people describe them, and Dark and Dragon are more abstract
+        categories with weaker visual cues.
+      </p>
+    </div>
+
+    <h2 id="q21">Question 21</h2>
+    <div class="question-text">
+      <p>
+        Randomly select 10 Pokémon images from the dataset and use CLIP to find
+        the most relevant types (use your preferred template, e.g., "type:
+        Bug"). For each selected Pokémon, please plot it and indicate:
+      </p>
+      <ul>
+        <li>its name and first and second type;</li>
+        <li>
+          the five most relevant types predicted by CLIP and their predicted
+          similarities.
+        </li>
+      </ul>
+    </div>
+    <div class="answer">
+      <h3>Answer</h3>
+      <p>Seed: 42</p>
+      <p>
+        Pokemon: Cosmog, Ledyba, Zubat, Wynaut, Spoink, Makuhita, Quagsire,
+        Meganium, Thievul, Espurr
+      </p>
+      <p>File: <a href="images/Q21_predictions.png">predictions</a></p>
+      <img src="images/Q21_predictions.png" alt="CLIP type predictions" />
+
+      <table>
+        <thead>
+          <tr>
+            <th>Pokemon</th>
+            <th>Actual</th>
+            <th>Top-1</th>
+            <th>Top-5</th>
+            <th>Correct?</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Cosmog</td>
+            <td>Psychic</td>
+            <td>Dark (73.68%)</td>
+            <td>Dark, Psychic, Electric, Normal, Poison</td>
+            <td>Top-5</td>
+          </tr>
+          <tr>
+            <td>Ledyba</td>
+            <td>Bug/Flying</td>
+            <td>Bug (78.64%)</td>
+            <td>Bug, Normal, Fighting, Steel, Rock</td>
+            <td>Yes</td>
+          </tr>
+          <tr>
+            <td>Zubat</td>
+            <td>Poison/Flying</td>
+            <td>Dark (57.62%)</td>
+            <td>Dark, Normal, Fighting, Flying, Bug</td>
+            <td>No</td>
+          </tr>
+          <tr>
+            <td>Wynaut</td>
+            <td>Psychic</td>
+            <td>Normal (22.44%)</td>
+            <td>Normal, Water, Psychic, Dark, Ice</td>
+            <td>Top-5</td>
+          </tr>
+          <tr>
+            <td>Spoink</td>
+            <td>Psychic</td>
+            <td>Dark (31.37%)</td>
+            <td>Dark, Normal, Psychic, Fighting, Steel</td>
+            <td>Top-5</td>
+          </tr>
+          <tr>
+            <td>Makuhita</td>
+            <td>Fighting</td>
+            <td>Fighting (59.52%)</td>
+            <td>Fighting, Dark, Normal, Psychic, Electric</td>
+            <td>Yes</td>
+          </tr>
+          <tr>
+            <td>Quagsire</td>
+            <td>Water/Ground</td>
+            <td>Normal (24.69%)</td>
+            <td>Normal, Water, Psychic, Ice, Ground</td>
+            <td>Top-5</td>
+          </tr>
+          <tr>
+            <td>Meganium</td>
+            <td>Grass</td>
+            <td>Dragon (22.35%)</td>
+            <td>Dragon, Poison, Psychic, Normal, Water</td>
+            <td>No</td>
+          </tr>
+          <tr>
+            <td>Thievul</td>
+            <td>Dark</td>
+            <td>Dark (47.24%)</td>
+            <td>Dark, Fire, Fighting, Normal, Psychic</td>
+            <td>Yes</td>
+          </tr>
+          <tr>
+            <td>Espurr</td>
+            <td>Psychic</td>
+            <td>Dark (65.42%)</td>
+            <td>Dark, Normal, Psychic, Ghost, Fairy</td>
+            <td>Top-5</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>Top-1: 30%, Top-5: 70%</p>
+      <p>
+        The results line up with what we found in Q20. For example, Zubat
+        (Poison) gets called Dark because its appearance of a purple bat matches
+        Dark-type look. Similarly, Meganium (Grass) gets called Dragon because
+        its dinosaur body looks more "dragon" than "plant."
+      </p>
+    </div>
+
+    <h2 id="q22">Question 22</h2>
+    <div class="question-text">
+      <p>
+        In this question, reuse the exact same CLIP setup from the previous
+        question on all the Pokemon images (same model, same type prompt
+        template, and the same set of candidate types), but instead of returning
+        only the most relevant type, return the top-5 most relevant types for
+        each Pokemon image. Using the ground-truth primary type label Type1,
+        report:
+      </p>
+      <ul>
+        <li>
+          <strong>Accuracy@1 (Acc@1):</strong> the fraction of images whose
+          top-1 predicted type matches the ground-truth primary type (Type1).
+        </li>
+        <li>
+          <strong>Hit@5 (a.k.a. Recall@5):</strong> the fraction of images whose
+          ground-truth primary type appears anywhere in the top-5 predicted
+          types.
+        </li>
+      </ul>
+      <p>
+        In practice, you will likely observe that CLIP's Acc@1 for predicting
+        the primary type (Type1) is relatively low, while Hit@5 is often
+        reasonably good. This gap suggests that CLIP frequently retrieves the
+        correct type somewhere in a short candidate list, but does not reliably
+        rank it as the top-1 prediction. A key reason is that CLIP is a
+        dual-encoder model trained with a contrastive objective: it
+        independently embeds images and text prompts into a shared vector space,
+        and predictions are made purely by embedding similarity (e.g.,
+        dot-product/cosine similarity). This is powerful for coarse semantic
+        alignment, but it lacks an explicit reasoning step and can be sensitive
+        to prompt wording and visually similar concepts.
+      </p>
+    </div>
+    <div class="answer">
+      <h3>Answer</h3>
+      <p>Dataset: 754 Pokemon, 18 candidate types</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>CLIP Acc@1</td>
+            <td>33.29% (251/754)</td>
+          </tr>
+          <tr>
+            <td>CLIP Hit@5</td>
+            <td>74.27% (560/754)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>Per-type Acc@1:</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Acc@1</th>
+            <th>Type</th>
+            <th>Acc@1</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Dark</td>
+            <td>76.67%</td>
+            <td>Bug</td>
+            <td>44.93%</td>
+          </tr>
+          <tr>
+            <td>Ice</td>
+            <td>58.33%</td>
+            <td>Rock</td>
+            <td>41.46%</td>
+          </tr>
+          <tr>
+            <td>Fire</td>
+            <td>54.55%</td>
+            <td>Dragon</td>
+            <td>36.36%</td>
+          </tr>
+          <tr>
+            <td>Fairy</td>
+            <td>50.00%</td>
+            <td>Normal</td>
+            <td>23.91%</td>
+          </tr>
+          <tr>
+            <td>Water</td>
+            <td>46.23%</td>
+            <td>Poison</td>
+            <td>24.14%</td>
+          </tr>
+          <tr>
+            <td>Fighting</td>
+            <td>46.88%</td>
+            <td>Electric</td>
+            <td>18.42%</td>
+          </tr>
+          <tr>
+            <td>Steel</td>
+            <td>45.83%</td>
+            <td>Psychic</td>
+            <td>10.87%</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td>Grass</td>
+            <td>7.59%</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td>Ghost</td>
+            <td>4.00%</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td>Ground</td>
+            <td>3.70%</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td>Flying</td>
+            <td>0.00%</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>Best: Dark (77%), Ice (58%), Fire (55%), Fairy (50%)</p>
+      <p>Worst: Flying (0%), Ground (4%), Ghost (4%), Grass (8%)</p>
+    </div>
+
+    <h2 id="q23">Question 23</h2>
+    <div class="question-text">
+      <p>
+        VLM Reranking of CLIP Top-5 Candidates. Reuse the exact same CLIP setup
+        and evaluation protocol from the previous question. For each Pokemon
+        image, first use CLIP to obtain the top-5 predicted types (and their
+        probabilities/similarities). Then, use a modern vision-language model
+        (VLM), e.g., Qwen/Qwen3-VL-2B-Instruct, to select the single most likely
+        primary type from only these five candidates. You can check the helper
+        code for how to use Qwen vision language models (please use Google-colab
+        or if you have your local pc with GPU)
+      </p>
+      <p>
+        Concretely, for each image \(i\), let CLIP return a candidate set
+        \(C_i\) containing the top-5 types. Prompt the VLM with the image and
+        the candidate list \(C_i\), and force the VLM to output exactly one type
+        from \(C_i\) (e.g., as a JSON field
+        <code>{"type1": "..."}</code>). If the VLM output is invalid (not in
+        \(C_i\)), fall back to CLIP's top-1 type.
+      </p>
+      <p>Report:</p>
+      <ul>
+        <li>
+          <strong>Reranked Accuracy@1:</strong> the fraction of images whose
+          final predicted type (after VLM selection) matches the ground-truth
+          Type1.
+        </li>
+        <li>
+          A comparison table of CLIP Acc@1, CLIP Hit@5, and VLM-reranked Acc@1.
+        </li>
+        <li>Briefly discuss: Does VLM reranking help?</li>
+      </ul>
+    </div>
+    <div class="answer">
+      <h3>Answer</h3>
+      <p>Model: Qwen3-VL-2B-Instruct</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Acc@1</th>
+            <th>Hit@5</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>CLIP</td>
+            <td>33.29%</td>
+            <td>74.27%</td>
+          </tr>
+          <tr>
+            <td>VLM Rerank</td>
+            <td>44.96%</td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td>Improvement</td>
+            <td>+11.67%</td>
+            <td>—</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        Files: <a href="outputs/Q23_metrics.json">metrics</a>,
+        <a href="outputs/Q23_detailed.json">detailed</a>
+      </p>
+
+      <p>
+        Yes, VLM reranking helps. It bumps Acc@1 from 33.29% to 44.96%, an 11.67
+        percentage point improvement. The VLM works because it can attend
+        jointly over the image and the candidate type names, whereas CLIP
+        encodes them separately and just compares similarity scores. Since CLIP
+        already finds the right type somewhere in the top 5 about 74% of the
+        time, the VLM just needs to pick the best one from that list. It's
+        basically a second opinion that's better at the final decision. Only 1
+        case needed a fallback to CLIP's top-1.
+      </p>
+
+      <p>
+        The major drawback is that VLM can't recover the right answer if CLIP's
+        top-5 never included it in the first place. VLM inference is also much
+        slower (0.6s per image vs CLIP's 0.01s), making this approach less ideal
+        in real-time classification scenarios.
+      </p>
+    </div>
+  </body>
+</html>
