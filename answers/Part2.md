@@ -4,7 +4,11 @@
 
 ## Task 1: Dataset Inspection and Sanity Checks
 
-**QUESTION 14: Load `da-dev-questions.jsonl` and `da-dev-labels.jsonl`. Report the number of questions and labels, the set of keys in a question record, and the set of keys in a label record.**
+**QUESTION 14:** Load `da-dev-questions.jsonl` and `da-dev-labels.jsonl`. Report:
+
+- The number of questions and labels.
+- The set of keys present in a question record (print one example).
+- The set of keys present in a label record (print one example).
 
 **Answer:**
 
@@ -181,7 +185,7 @@ class PlannerOutput(BaseModel):
 
 ---
 
-**QUESTION 19: Explain why structured output is useful for large-scale data mining pipelines.**
+**QUESTION 19:** Explain in a few sentences why structured output is useful for large-scale data mining pipelines.
 
 **Answer:**
 
@@ -197,10 +201,10 @@ Structured output is essential for three reasons:
 
 ## Task 3: Build a ReAct Data Analysis Agent
 
-**QUESTION 20: Run your ReAct agent on the 10 tasks. Report:**
+**QUESTION 20:** Run your ReAct agent on the 10 tasks. Report:
 
 - Accuracy
-- At least 3 qualitative traces (planner thought, code, observation, final answer) that illustrate interesting behaviors: success, failure, recovery from an error. Report accuracy and at least 3 qualitative traces illustrating success, failure, and recovery from error.
+- At least 3 qualitative traces (planner thought, code, observation, final answer) that illustrate interesting behaviors: success, failure, recovery from an error.
 
 **Answer:**
 

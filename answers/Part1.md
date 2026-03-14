@@ -195,7 +195,7 @@ File: [Scaling Plot](outputs/q7_scaling_plot.png)
 
 ---
 
-**QUESTION 9: Identify 2 examples where your best SFT model still fails. What types of errors persist?**
+**QUESTION 9: (5 points)** Identify 2 examples where your best SFT model still fails. What types of errors persist after fine-tuning? Does the model struggle more with arithmetic, multi-step reasoning, or problem comprehension?
 
 **Answer:**
 
