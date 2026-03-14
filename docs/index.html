@@ -84,8 +84,8 @@
       assignment defaults. The assignment specifies per-device batch size of 8
       with gradient accumulation of 4, but the implementation uses per-device
       batch size of 4 with gradient accumulation of 8. This maintains the same
-      effective batch size of 32 (4×8 = 8×4 = 32) while reducing peak memory
-      usage.
+      effective batch size of 32 (\(4 \times 8 = 8 \times 4 = 32\)) while
+      reducing peak memory usage.
     </blockquote>
 
     <h2 id="q1">Question 1</h2>
@@ -105,9 +105,9 @@
       </ul>
       <p>
         The base Qwen2.5-1.5B-Instruct model scored 38% on the GSM8K test set,
-        landing right in the expected 35-40% range. That's our baseline. The
-        model struggles with multi-step reasoning and arithmetic—which isn't
-        surprising for a small language model without specific math training.
+        landing right in the expected 35-40% range. The model struggles with
+        multi-step reasoning and arithmetic, which is expected for a small
+        language model without specific math training.
       </p>
     </div>
 
@@ -150,6 +150,7 @@ Remaining eggs for sale = Remaining eggs after breakfast - Eggs used for baking 
                         = 13 - 4
                         = -1 (This is not possible since it would mean negative eggs)
       </pre>
+      <br />
       <p>
         <strong>Classification:</strong> <strong>Arithmetic Slip</strong> - The
         model correctly sets up the calculation (16 - 3 - 4 = 9) but then makes
@@ -171,6 +172,7 @@ The robe requires half as much white fiber as blue fiber.
 Therefore, the amount of white fiber is (1/2) bolt of blue fiber.
 2 (blue fibers) + 1/2 (white fibers) = 2.5 bolts
       </pre>
+      <br />
       <p>
         <strong>Classification:</strong>
         <strong>Problem Comprehension</strong> - The model misinterpreted "half
@@ -194,6 +196,7 @@ Increase in value = Total cost × Percentage increase
 Increase in value = $130,000 × 0.150 = $49,500
 Profit = $129,500 - $130,000 = -$5,500
       </pre>
+      <br />
       <p>
         <strong>Classification:</strong>
         <strong>Multi-step Reasoning Error</strong> - The model made multiple
@@ -201,14 +204,17 @@ Profit = $129,500 - $130,000 = -$5,500
         price, (2) used 0.150 instead of 1.50 for 150%.
       </p>
 
-      <p><strong>What I kept seeing:</strong></p>
+      <p><strong>Recurring Patterns:</strong></p>
       <ol>
-        <li>Arithmetic errors—correct setup, wrong math</li>
+        <li>Arithmetic errors (correct setup, wrong math)</li>
         <li>
-          Problem comprehension—misreading word problems, especially fractions
-          and percentages
+          Problem comprehension (misreading word problems, especially fractions
+          and percentages)
         </li>
-        <li>Multi-step reasoning—losing the thread halfway through</li>
+        <li>
+          Multi-step reasoning (losing train of thought midway through the
+          problem)
+        </li>
       </ol>
     </div>
 
@@ -268,7 +274,7 @@ Profit = $129,500 - $130,000 = -$5,500
         <li>
           <strong>What it controls:</strong> How many mini-batches of gradients
           to stack up before actually updating weights. Effective batch size =
-          per_device_batch_size × gradient_accumulation_steps.
+          per_device_batch_size \(\times\) gradient_accumulation_steps.
         </li>
         <li>
           <strong>If you increase:</strong> Larger effective batch size, which
@@ -315,12 +321,13 @@ Profit = $129,500 - $130,000 = -$5,500
         </li>
       </ul>
       <p>
-        <strong>Why so few parameters:</strong> LoRA uses low-rank
-        decomposition. Instead of updating a full weight matrix W ∈ ℝ^(d×d)
-        which needs d² parameters, LoRA represents the update as ΔW = BA, where
-        B ∈ ℝ^(d×r) and A ∈ ℝ^(r×d). This cuts parameters from d² to 2dr. With
-        rank r=8 and typical dimension d=2048, that's roughly 128× fewer
-        parameters per adapted layer.
+        LoRA uses low-rank decomposition. Instead of updating a full weight
+        matrix \(W \in \mathbb{R}^{d \times d}\) which needs \(d^2\) parameters,
+        LoRA represents the update as \(\Delta W = BA\), where \(B \in
+        \mathbb{R}^{d \times r}\) and \(A \in \mathbb{R}^{r \times d}\). This
+        cuts parameters from \(d^2\) to \(2dr\). With rank \(r=8\) and typical
+        dimension \(d=2048\), that's roughly \(128\times\) fewer parameters per
+        adapted layer.
       </p>
     </div>
 
@@ -337,12 +344,12 @@ Profit = $129,500 - $130,000 = -$5,500
       <ul>
         <li><strong>SFT-1k Accuracy:</strong> 41%</li>
         <li><strong>Baseline Accuracy:</strong> 38%</li>
-        <li><strong>Improvement:</strong> +3 percentage points</li>
+        <li><strong>Improvement:</strong> +3%</li>
       </ul>
       <p>
-        Going from 38% to 41% (+3 pp) is real progress. Fine-tuning helps even
-        with just 1,000 examples. Training took roughly 40-50 minutes on a T4
-        GPU—and we're only training 0.14% of the parameters.
+        Going from 38% to 41% is better, but not by much. This was smaller than
+        what I expected. I assumed that with 1000 samples to fine-tune, we would
+        get a larger improvement than just 3%.
       </p>
     </div>
 
@@ -360,36 +367,22 @@ Profit = $129,500 - $130,000 = -$5,500
       <h3>Answer</h3>
       <p>
         <strong
-          >Yes, scaling is worth it compute, but with diminishing
-          returns.</strong
+          >Scaling isn't worth the extra compute past a certain
+          threshold.</strong
         >
       </p>
       <p><strong>Expected Accuracy Gains:</strong></p>
       <ul>
-        <li>
-          1,000 → 3,000 examples: ~2-4 percentage point improvement (42% →
-          44-46%)
-        </li>
-        <li>
-          3,000 → 7,473 examples: ~1-3 percentage point improvement (44-46% →
-          45-49%)
-        </li>
-      </ul>
-      <p><strong>Why:</strong></p>
-      <ul>
-        <li>
-          More data = more pattern diversity, better generalization, stronger
-          reasoning
-        </li>
-        <li>
-          But diminishing returns kick in: GSM8K has redundancy, the model only
-          has 0.14% trainable parameters, and there's a quality vs quantity
-          trade-off
-        </li>
+        <li>1,000 → 3,000 examples: ~2-4%</li>
+        <li>3,000 → 7,473 examples: ~1-3% more (5-7% total)</li>
       </ul>
       <p>
-        <strong>My strategy:</strong> Scale in two steps (1k → 3k → full) so I
-        can track how scaling behaves and stop early if returns flatten out.
+        More data = more pattern diversity, better generalization, stronger
+        reasoning. However, GSM8K has redundancy, the model only has 0.14%
+        trainable parameters, and there's a quality vs quantity trade-off. With
+        too much data, there is a chance of overfitting. Scale in one step, but
+        have an early stopping thereshold. Once the improvement starts to be
+        small, we stop early, saving compute and time.
       </p>
     </div>
 
@@ -425,25 +418,25 @@ Profit = $129,500 - $130,000 = -$5,500
           <tr>
             <td>1,000</td>
             <td>41%</td>
-            <td>+3 pp</td>
+            <td>+3%</td>
           </tr>
           <tr>
             <td>3,000</td>
             <td>44%</td>
-            <td>+6 pp</td>
+            <td>+6%</td>
           </tr>
         </tbody>
       </table>
 
-      <p>File: <a href="images/Q7_scaling_plot.png">Scaling Plot</a></p>
+      <p>File: <a href="outputs/q7_scaling_plot.png">Scaling Plot</a></p>
       <img src="images/Q7_scaling_plot.png" alt="Scaling plot" />
 
       <p><strong>Analysis:</strong></p>
       <ul>
         <li>Consistent improvement as data increases: 38% → 41% → 44%</li>
         <li>
-          Diminishing returns: 0→1k gives +3pp with 1k examples, 1k→3k gives
-          +3pp with 2k additional examples
+          Diminishing returns: 0→1k gives +3% with 1k examples, 1k→3k gives +3%
+          with 2k additional examples
         </li>
         <li>Extrapolating to full dataset (7,473) might yield ~46-48%</li>
       </ul>
@@ -460,37 +453,135 @@ Profit = $129,500 - $130,000 = -$5,500
     <div class="answer">
       <h3>Answer</h3>
       <p><strong>Case 1: Janet's Ducks (Ground Truth: 18)</strong></p>
-      <ul>
-        <li>Base Model: 0 (arithmetic error: 13 - 4 = -1)</li>
-        <li>
-          SFT-3k Model: 73.50 (different error: hallucinated 16×3
-          multiplication)
-        </li>
-        <li><strong>Result:</strong> Both failed with different errors</li>
-      </ul>
+      <p>
+        <em>Question:</em> Janet's ducks lay 16 eggs per day. She eats three for
+        breakfast every morning and bakes muffins for her friends every day with
+        four. She sells the remainder at the farmers' market daily for $2 per
+        fresh duck egg. How much in dollars does she make every day at the
+        farmers' market?
+      </p>
+
+      <p><strong>Base Model Response:</strong></p>
+      <pre>
+To determine how much Janet makes every day at the farmers' market, we need to follow these steps:
+
+1. Calculate the total number of eggs laid each day.
+2. Determine how many eggs Janet eats for breakfast.
+3. Subtract the number of eggs eaten from the total number of eggs laid to find out how many eggs are left for baking muffins.
+4. Subtract the number of eggs used for baking muffins from the remaining eggs to find out how many eggs are sold at the farmers' market.
+5. Calculate the revenue from selling the eggs at the farmers' market.
+
+Let's go through each step in detail:
+
+1. Total number of eggs laid each day: 16 eggs/day
+2. Number of eggs eaten for breakfast: 3 eggs/day
+3. Remaining eggs after breakfast: 16 - 3 = 13
+4. Number of eggs used for baking muffins: 4 eggs/day
+5. Remaining eggs for sale: 13 - 4 = -1 (This is not possible since it would mean negative eggs)
+
+Therefore, the amount Janet makes every day at the farmers' market is: \boxed{0}
+      </pre>
+      <p><em>Extracted Answer: 0 (arithmetic error: 13 - 4 = -1)</em></p>
+
+      <p><strong>SFT-3k Model Response:</strong></p>
+      <pre>
+The ducks lay 16*3=48 eggs for Janet to eat.
+She has 48-3=45 eggs left after eating them for breakfast.
+So she gives away 45/4=11.25 eggs to her friends.
+That means there are 48-11.25=36.75 eggs remaining for sale.
+Therefore, she makes 36.75*2=$\boxed{73.50}$ from selling the eggs at the farmers' market.
+      </pre>
+      <p>
+        <em
+          >Extracted Answer: 73.50 (different error: hallucinated 16×3
+          multiplication)</em
+        >
+      </p>
+      <p><strong>Result:</strong> Both failed with different errors</p>
+      <hr />
 
       <p><strong>Case 2: Robe Fabric (Ground Truth: 3)</strong></p>
-      <ul>
-        <li>Base Model: 2.5 (misinterpreted "half that much" as 0.5 bolts)</li>
-        <li>
-          SFT-3k Model: 3 (correctly interpreted as half of 2 bolts = 1 bolt)
-        </li>
-        <li><strong>Result:</strong> SFT fixed this error ✓</li>
-      </ul>
+      <p>
+        <em>Question:</em> A robe takes 2 bolts of blue fiber and half that much
+        white fiber. How many bolts in total does it take?
+      </p>
+
+      <p><strong>Base Model Response:</strong></p>
+      <pre>
+To determine the total number of bolts of fabric needed for the robe, we need to follow these steps:
+
+1. Identify the amount of blue fiber required: 2 bolts of blue fiber.
+2. Determine the amount of white fiber required: half as much white fiber as blue fiber.
+   Therefore, the amount of white fiber is (1/2) bolt of blue fiber.
+3. Calculate the total: 2 (blue fibers) + 1/2 (white fibers) = 2 + 0.5 = 2.5 bolts
+
+Thus, the total number of bolts of fabric needed is \boxed{2.5}.
+      </pre>
+      <p>
+        <em
+          >Extracted Answer: 2.5 (misinterpreted "half that much" as 0.5
+          bolts)</em
+        >
+      </p>
+
+      <p><strong>SFT-3k Model Response:</strong></p>
+      <pre>
+The number of bolts of white fiber is 1/2*2=1 bolt.
+In total, there are 2+1=3 bolts.
+\boxed{3}
+      </pre>
+      <p>
+        <em
+          >Extracted Answer: 3 (correctly interpreted as half of 2 bolts = 1
+          bolt)</em
+        >
+      </p>
+      <p><strong>Result:</strong> SFT fixed this error (Correct)</p>
+      <hr />
 
       <p><strong>Case 3: House Flipping (Ground Truth: 70000)</strong></p>
-      <ul>
-        <li>Base Model: -55500 (applied 0.150 instead of 1.5 for 150%)</li>
-        <li>SFT-3k Model: 69500 (still applied 0.15 instead of 1.5)</li>
-        <li>
-          <strong>Result:</strong> Both failed with similar percentage
-          calculation errors
-        </li>
-      </ul>
+      <p>
+        <em>Question:</em> Josh decides to try flipping a house. He buys a house
+        for $80,000 and then puts in $50,000 in repairs. This increased the
+        value of the house by 150%. How much profit did he make?
+      </p>
 
+      <p><strong>Base Model Response:</strong></p>
+      <pre>
+To calculate Josh's profit from flipping the house:
+
+1. Total cost = $80,000 + $50,000 = $130,000
+2. Increase in value = Total cost × Percentage increase = $130,000 × 0.150 = $49,500
+3. New selling price = Original price + Increase = $80,000 + $49,500 = $129,500
+4. Profit = New selling price - Total cost = $129,500 - $130,000 = -$5,500
+
+Therefore, Josh made a loss of $\boxed{-55500}$ on this flip.
+      </pre>
+      <p>
+        <em
+          >Extracted Answer: -55500 (applied 0.150 instead of 1.5 for 150%)</em
+        >
+      </p>
+
+      <p><strong>SFT-3k Model Response:</strong></p>
+      <pre>
+The house was worth 80,000 + 50,000 = $130,000 after the repairs.
+Its value went up by 150% so it is now worth 130,000 * .15 = $19,500 more.
+So the total value of the house is now 130,000 + 19,500 = $149,500
+He bought the house for 80,000 so his profit is 149,500 - 80,000 = $\boxed{69500}$
+      </pre>
+      <p>
+        <em>Extracted Answer: 69500 (still applied 0.15 instead of 1.5)</em>
+      </p>
+      <p>
+        <strong>Result:</strong> Both failed with similar percentage calculation
+        errors
+      </p>
+
+      <hr />
       <p>
         <strong>Summary:</strong> SFT fixed 1/3 problems (language comprehension
-        got better), but arithmetic and percentage reasoning remain hard.
+        improved), but arithmetic and percentage reasoning remain hard.
       </p>
     </div>
 
@@ -512,8 +603,8 @@ Profit = $129,500 - $130,000 = -$5,500
       <ul>
         <li>Extracted Answer: 73.50 (Ground Truth: 18)</li>
         <li>
-          Error: Model introduced erroneous multiplication (16×3=48) not in
-          problem statement
+          Error: Model introduced erroneous multiplication (\(16 \times 3=48\))
+          not in problem statement
         </li>
         <li>
           Type:
@@ -551,7 +642,7 @@ Profit = $129,500 - $130,000 = -$5,500
       </ol>
       <p>
         Report the k-shot results alongside the corresponding no-demonstration
-        baseline results, and compute the improvement (Δ).
+        baseline results, and compute the improvement (\(\Delta\)).
       </p>
     </div>
     <div class="answer">
@@ -562,7 +653,7 @@ Profit = $129,500 - $130,000 = -$5,500
             <th>Model</th>
             <th>Zero-Shot Accuracy</th>
             <th>3-Shot Accuracy</th>
-            <th>Improvement (Δ)</th>
+            <th>Improvement (\(\Delta\))</th>
           </tr>
         </thead>
         <tbody>
@@ -570,25 +661,16 @@ Profit = $129,500 - $130,000 = -$5,500
             <td>Base Model</td>
             <td>38%</td>
             <td>32%</td>
-            <td>-6 pp</td>
+            <td>-6%</td>
           </tr>
           <tr>
             <td>SFT-3k Model</td>
             <td>44%</td>
             <td>50%</td>
-            <td>+6 pp</td>
+            <td>+6%</td>
           </tr>
         </tbody>
       </table>
-
-      <p><strong>Key observations:</strong></p>
-      <ul>
-        <li>Few-shot helps SFT (+6 pp) but hurts base model (-6 pp)</li>
-        <li>
-          Combined gains: SFT-3k + few-shot reaches 50%, a 12 pp improvement
-          over baseline
-        </li>
-      </ul>
     </div>
 
     <h2 id="q11">Question 11</h2>
@@ -605,7 +687,7 @@ Profit = $129,500 - $130,000 = -$5,500
     </div>
     <div class="answer">
       <h3>Answer</h3>
-      <p><strong>Effect on Base Model (-6 pp)</strong></p>
+      <p><strong>Effect on Base Model (-6%)</strong></p>
       <p>Few-shot hurts because:</p>
       <ol>
         <li>No reasoning foundation to use demonstrations</li>
@@ -616,7 +698,7 @@ Profit = $129,500 - $130,000 = -$5,500
         </li>
       </ol>
 
-      <p><strong>Effect on SFT Models (+6 pp)</strong></p>
+      <p><strong>Effect on SFT Models (+6%)</strong></p>
       <p>Few-shot helps because:</p>
       <ol>
         <li>Reinforces step-by-step reasoning patterns from training</li>
@@ -626,9 +708,8 @@ Profit = $129,500 - $130,000 = -$5,500
       </ol>
 
       <p>
-        <strong>Which benefits most:</strong> SFT-3k benefits most (+6 pp vs -6
-        pp). Few-shot and SFT work together—SFT teaches reasoning style,
-        few-shot reinforces it.
+        SFT-3k benefits most (+6% vs -6%). Few-shot and SFT work together—SFT
+        teaches reasoning style, few-shot reinforces it.
       </p>
     </div>
 
@@ -686,12 +767,6 @@ Profit = $129,500 - $130,000 = -$5,500
         <li>No error correction examples</li>
         <li>Scaling paradox: more data didn't help as much as expected</li>
       </ul>
-
-      <p>
-        <strong>Ranked importance:</strong> Multi-step reasoning > Training data
-        quality > Arithmetic reliability > Problem comprehension > Output
-        consistency
-      </p>
     </div>
 
     <h2 id="q13">Question 13</h2>
@@ -736,7 +811,7 @@ Profit = $129,500 - $130,000 = -$5,500
           <strong>Sampling:</strong> 10 samples per question, temperature=0.3
         </li>
         <li><strong>Voting:</strong> Majority vote on extracted answers</li>
-        <li><strong>Cost:</strong> ~10× inference time</li>
+        <li><strong>Cost:</strong> ~\(10\times\) inference time</li>
       </ul>
 
       <p><strong>(c) Results</strong></p>
@@ -757,7 +832,7 @@ Profit = $129,500 - $130,000 = -$5,500
           <tr>
             <td>Self-Consistency (n=10, temp=0.3)</td>
             <td>56%</td>
-            <td><strong>+12 pp</strong></td>
+            <td><strong>+12%</strong></td>
           </tr>
         </tbody>
       </table>
@@ -769,7 +844,7 @@ Profit = $129,500 - $130,000 = -$5,500
         <li>
           10 Sampled Answers: [460, 450, 110, 460, 460, 460, 450, 460, 460, 110]
         </li>
-        <li>Majority Vote: 460 ✓</li>
+        <li>Majority Vote: 460 (Correct)</li>
       </ul>
 
       <p><strong>(d) Analysis</strong></p>
@@ -806,15 +881,15 @@ Profit = $129,500 - $130,000 = -$5,500
           Problem difficulty matters (works best on "sometimes right" problems)
         </li>
         <li>
-          Failed to reach 70% goal, suggesting training data quality is bigger
+          Failed to reach 70% goal—training data quality is the bigger
           bottleneck
         </li>
       </ol>
 
       <p>
-        <strong>Conclusion:</strong> Self-consistency improved accuracy by 12 pp
-        (44% → 56%) but can't fix systematic reasoning gaps. The gap to 70%+
-        requires better training data quality.
+        Self-consistency improved accuracy by 12% (44% → 56%) but can't fix
+        systematic reasoning gaps. The gap to 70%+ requires better training data
+        quality.
       </p>
     </div>
 
@@ -834,10 +909,15 @@ Profit = $129,500 - $130,000 = -$5,500
     <div class="question-text">
       <p>
         Load <code>da-dev-questions.jsonl</code> and
-        <code>da-dev-labels.jsonl</code>. Report the number of questions and
-        labels, the set of keys in a question record, and the set of keys in a
-        label record.
+        <code>da-dev-labels.jsonl</code>. Report:
       </p>
+      <ul>
+        <li>The number of questions and labels.</li>
+        <li>
+          The set of keys present in a question record (print one example).
+        </li>
+        <li>The set of keys present in a label record (print one example).</li>
+      </ul>
     </div>
     <div class="answer">
       <h3>Answer</h3>
@@ -871,12 +951,23 @@ Profit = $129,500 - $130,000 = -$5,500
   "constraints": "Round to 2 decimal places."
 }
       </pre>
+      <br />
 
       <p><strong>Label record keys:</strong></p>
       <ul>
         <li><code>id</code>: Question ID</li>
         <li><code>common_answers</code>: List of [name, value] pairs</li>
       </ul>
+
+      <p><strong>Example Label Record:</strong></p>
+      <pre>
+{
+  "id": 0,
+  "common_answers": [
+    ["mean_fare", "34.65"]
+  ]
+}
+      </pre>
     </div>
 
     <h2 id="q15">Question 15</h2>
@@ -896,46 +987,96 @@ Profit = $129,500 - $130,000 = -$5,500
       <p><strong>Example 1: Election Data (ID 142)</strong></p>
       <ul>
         <li><strong>File:</strong> <code>election2016.csv</code></li>
-        <li><strong>Shape:</strong> 3141 rows × 10 columns</li>
-        <li>
-          <strong>Columns:</strong> votes_dem, votes_gop, total_votes, per_dem,
-          per_gop, diff, per_point_diff, state_abbr, county_name, combined_fips
-        </li>
         <li>
           <strong>Question:</strong> "Is there a relationship between the
           difference in votes received by the Democratic and Republican parties
           and their percentage point difference?"
         </li>
       </ul>
+      <pre>
+df.shape: (3141, 10)
+
+df.dtypes:
+votes_dem         float64
+votes_gop         float64
+total_votes       float64
+per_dem           float64
+per_gop           float64
+diff               object
+per_point_diff     object
+state_abbr         object
+county_name        object
+combined_fips       int64
+dtype: object
+
+df.head(3):
+   votes_dem  votes_gop  total_votes    per_dem    per_gop    diff per_point_diff state_abbr county_name  combined_fips
+0    93003.0   130413.0     246588.0  0.377159  0.528870  37,410         15.17%         AK      Alaska            2013
+1    93003.0   130413.0     246588.0  0.377159  0.528870  37,410         15.17%         AK      Alaska            2016
+2    93003.0   130413.0     246588.0  0.377159  0.528870  37,410         15.17%         AK      Alaska            2020
+      </pre>
+      <br />
 
       <p><strong>Example 2: Insurance Data (ID 24)</strong></p>
       <ul>
         <li><strong>File:</strong> <code>insurance.csv</code></li>
-        <li><strong>Shape:</strong> 1338 rows × 7 columns</li>
-        <li>
-          <strong>Columns:</strong> age, sex, bmi, children, smoker, region,
-          charges
-        </li>
         <li>
           <strong>Question:</strong> "Calculate the mean age of the individuals
           in the dataset."
         </li>
       </ul>
+      <pre>
+df.shape: (1338, 7)
+
+df.dtypes:
+age           int64
+sex          object
+bmi         float64
+children      int64
+smoker       object
+region       object
+charges     float64
+dtype: object
+
+df.head(3):
+   age     sex   bmi  children smoker     region      charges
+0   19  female  27.9         0    yes  southwest  16884.9240
+1   18    male  33.77        1     no  southeast   1725.5523
+2   28    male  33.00        3     no  southeast   4449.4620
+      </pre>
+      <br />
 
       <p><strong>Example 3: Storm Data (ID 429)</strong></p>
       <ul>
         <li><strong>File:</strong> <code>cost_data_with_errors.csv</code></li>
-        <li><strong>Shape:</strong> 818 rows × 11 columns</li>
-        <li>
-          <strong>Columns:</strong> Unnamed: 0, name, dates_active,
-          max_storm_cat, max_sust_wind, min_p, areas_affected, damage_USD,
-          deaths, year, damage_imputed
-        </li>
         <li>
           <strong>Question:</strong> "Is there a correlation between the maximum
           storm category achieved by a storm and the recorded damage in USD?"
         </li>
       </ul>
+      <pre>
+df.shape: (818, 11)
+
+df.dtypes:
+Unnamed: 0         int64
+name              object
+dates_active      object
+max_storm_cat      int64
+max_sust_wind    float64
+min_p            float64
+areas_affected    object
+damage_USD       float64
+deaths           float64
+year               int64
+damage_imputed     int64
+dtype: object
+
+df.head(3):
+   Unnamed: 0    name           dates_active  max_storm_cat  max_sust_wind   min_p                                    areas_affected  damage_USD  deaths  year  damage_imputed
+0           0  ARLENE   April 19 – 21              1        43.4488   990.0                                                NaN         0.0     0.0  2017                0
+1           1    BRET   June 19 – 20               1        43.4488  1007.0  Guyana, Venezuela, Trinidad and Tobago, Wind...   3000000.0     2.0  2017                0
+2           2   CINDY   June 20 – 23               1        52.1386   991.0  Honduras, Belize, Cayman Islands, Yucatán Pe...  25000000.0     2.0  2017                0
+      </pre>
     </div>
 
     <h2 id="q16">Question 16</h2>
@@ -1042,21 +1183,25 @@ Profit = $129,500 - $130,000 = -$5,500
         <tbody>
           <tr>
             <td>0</td>
-            <td>Calculate the mean fare paid by passengers.</td>
+            <td>Calculate the mean fare paid by the passengers.</td>
             <td>Summary Statistics</td>
             <td>test_ave.csv</td>
             <td>Easy</td>
           </tr>
           <tr>
             <td>5</td>
-            <td>Generate "FamilySize" feature. Calculate correlation.</td>
-            <td>Feature Engineering</td>
+            <td>
+              Generate a new feature called "FamilySize" by summing the "SibSp"
+              and "Parch" columns. Then, calculate the Pearson correlation
+              coefficient (r) between the "FamilySize" and "Fare" columns.
+            </td>
+            <td>Feature Engineering, Correlation Analysis</td>
             <td>test_ave.csv</td>
             <td>Medium</td>
           </tr>
           <tr>
             <td>9</td>
-            <td>Calculate mean "Close Price".</td>
+            <td>Calculate the mean value of the "Close Price" column.</td>
             <td>Summary Statistics</td>
             <td>GODREJIND.csv</td>
             <td>Easy</td>
@@ -1064,7 +1209,8 @@ Profit = $129,500 - $130,000 = -$5,500
           <tr>
             <td>10</td>
             <td>
-              Check if "Total Traded Quantity" follows normal distribution.
+              Check if the "Total Traded Quantity" column adheres to a normal
+              distribution.
             </td>
             <td>Distribution Analysis</td>
             <td>GODREJIND.csv</td>
@@ -1072,42 +1218,59 @@ Profit = $129,500 - $130,000 = -$5,500
           </tr>
           <tr>
             <td>14</td>
-            <td>Create "Price Range" feature. Calculate stats.</td>
-            <td>Feature Engineering</td>
+            <td>
+              Create a new feature called "Price Range" which represents the
+              difference between the "High Price" and "Low Price" for each row.
+              Calculate the mean, median, and standard deviation of this new
+              feature.
+            </td>
+            <td>Feature Engineering, Summary Statistics</td>
             <td>GODREJIND.csv</td>
             <td>Medium</td>
           </tr>
           <tr>
             <td>18</td>
-            <td>Calculate mean and std of "Mar.2019".</td>
+            <td>
+              Calculate the mean and standard deviation of the "Mar.2019"
+              column.
+            </td>
             <td>Summary Statistics</td>
             <td>unemployement_industry.csv</td>
             <td>Easy</td>
           </tr>
           <tr>
             <td>24</td>
-            <td>Calculate mean age.</td>
+            <td>Calculate the mean age of the individuals in the dataset.</td>
             <td>Summary Statistics</td>
             <td>insurance.csv</td>
             <td>Easy</td>
           </tr>
           <tr>
             <td>25</td>
-            <td>Check if BMI follows normal distribution.</td>
+            <td>
+              Check if the distribution of BMI values in the dataset follows a
+              normal distribution.
+            </td>
             <td>Distribution Analysis</td>
             <td>insurance.csv</td>
             <td>Easy</td>
           </tr>
           <tr>
             <td>26</td>
-            <td>Calculate correlation between charges and children.</td>
+            <td>
+              Calculate the correlation coefficient between the charges incurred
+              by individuals and the number of children they have.
+            </td>
             <td>Correlation Analysis</td>
             <td>insurance.csv</td>
             <td>Easy</td>
           </tr>
           <tr>
             <td>55</td>
-            <td>Calculate mean cases across all countries and years.</td>
+            <td>
+              What is the mean number of cases recorded across all countries and
+              years?
+            </td>
             <td>Summary Statistics</td>
             <td>estimated_numbers.csv</td>
             <td>Easy</td>
@@ -1134,72 +1297,87 @@ class PlannerOutput(BaseModel):
     is_done: bool
     response: str = Field(min_length=1)
       </pre>
-
-      <p><strong>Prompt 1:</strong> "What is the average age of passengers?"</p>
-      <pre>
-{
-  "thought": "To calculate the average age, I need access to a dataset containing passenger age values.",
-  "is_done": false,
-  "response": "Retrieve the passenger age dataset and compute the mean age."
-}
-      </pre>
-
-      <p><strong>Prompt 2:</strong> "How many passengers survived?"</p>
-      <pre>
-{
-  "thought": "To determine survivors, I need access to passenger survival information.",
-  "is_done": false,
-  "response": "Fetch the passenger survival data and count the number of survivors."
-}
-      </pre>
+      <br />
 
       <p>
-        <strong>Prompt 3:</strong> "What is the correlation between age and
-        fare?"
+        <strong>Prompt 1:</strong> "The user asks: What is the average age of
+        passengers?"
       </p>
       <pre>
 {
-  "thought": "To determine correlation between age and fare, I need a dataset with both columns.",
+  "thought": "To calculate the average age of passengers, I need access to a dataset containing passenger age values.",
   "is_done": false,
-  "response": "Retrieve dataset with age and fare columns, compute Pearson correlation."
+  "response": "Retrieve the passenger age data from the dataset and compute the mean age."
 }
       </pre>
+      <br />
 
       <p>
-        <strong>Prompt 4:</strong> "Show me the distribution of passenger
-        classes."
+        <strong>Prompt 2:</strong> "The user asks: How many passengers
+        survived?"
       </p>
       <pre>
 {
-  "thought": "To show distribution of passenger classes, I need to count passengers in each class.",
+  "thought": "To determine the number of passengers who survived, I need access to a dataset containing passenger survival information, such as the Titanic dataset.",
   "is_done": false,
-  "response": "Load dataset and count passengers in each class, present distribution."
+  "response": "Fetch the passenger survival dataset and count the number of survivors."
 }
       </pre>
+      <br />
 
       <p>
-        <strong>Prompt 5:</strong> "The mean fare has been calculated as 32.20.
-        Please provide the final answer."
+        <strong>Prompt 3:</strong> "The user asks: What is the correlation
+        between age and fare?"
       </p>
       <pre>
 {
-  "thought": "The mean fare calculation is complete with result 32.20. I can provide the final answer.",
+  "thought": "To determine the correlation between age and fare, I need access to a dataset containing both age and fare values.",
+  "is_done": false,
+  "response": "Retrieve the dataset containing age and fare columns, then compute the Pearson correlation coefficient between age and fare."
+}
+      </pre>
+      <br />
+
+      <p>
+        <strong>Prompt 4:</strong> "The user asks: Show me the distribution of
+        passenger classes."
+      </p>
+      <pre>
+{
+  "thought": "To show the distribution of passenger classes, I need to analyze the 'Pclass' column in the dataset.",
+  "is_done": false,
+  "response": "Load the dataset and count the number of passengers in each passenger class (e.g., 1st, 2nd, 3rd). Then present the distribution in a clear, visual or tabular format."
+}
+      </pre>
+      <br />
+
+      <p>
+        <strong>Prompt 5:</strong> "Calculate the mean fare: @mean_fare[32.20]
+        (final answer)"
+      </p>
+      <pre>
+{
+  "thought": "The mean fare is already provided as 32.20, so no further calculation is needed.",
   "is_done": true,
-  "response": "@mean_fare[32.20]"
+  "response": "}32.20{"
 }
       </pre>
+      <br />
 
       <p>
-        <strong>Note:</strong> All 5 outputs are valid JSON. Prompt 5 shows
-        <code>is_done=true</code> when the answer is ready to return.
+        <strong>Note:</strong> All 5 outputs are valid JSON from the
+        Qwen3-4B-Instruct model with 4-bit quantization. Prompt 5 shows
+        <code>is_done=true</code> when the answer is ready to return. The
+        response format <code>}32.20{</code> is the model's structured output
+        for final answers.
       </p>
     </div>
 
     <h2 id="q19">Question 19</h2>
     <div class="question-text">
       <p>
-        Explain why structured output is useful for large-scale data mining
-        pipelines.
+        Explain in a few sentences why structured output is useful for
+        large-scale data mining pipelines.
       </p>
     </div>
     <div class="answer">
@@ -1280,31 +1458,31 @@ class PlannerOutput(BaseModel):
         <tbody>
           <tr>
             <td>0</td>
-            <td>✅</td>
+            <td>Correct</td>
             <td>@mean_fare[34.65]</td>
             <td>@mean_fare[34.65]</td>
           </tr>
           <tr>
             <td>5</td>
-            <td>✅</td>
+            <td>Correct</td>
             <td>@correlation_coefficient[0.21]</td>
             <td>@correlation_coefficient[0.21]</td>
           </tr>
           <tr>
             <td>9</td>
-            <td>❌</td>
+            <td>Incorrect</td>
             <td>@mean_close_price[583.68]</td>
             <td>@mean_close_price[570.68]</td>
           </tr>
           <tr>
             <td>10</td>
-            <td>✅</td>
+            <td>Correct</td>
             <td>@is_normal[no]</td>
             <td>@is_normal[no]</td>
           </tr>
           <tr>
             <td>14</td>
-            <td>✅</td>
+            <td>Correct</td>
             <td>
               @price_range_mean[16.65] @price_range_median[15.67]
               @price_range_std_dev[6.72]
@@ -1316,31 +1494,31 @@ class PlannerOutput(BaseModel):
           </tr>
           <tr>
             <td>18</td>
-            <td>✅</td>
+            <td>Correct</td>
             <td>@mean_mar_2019[171.44] @sd_mar_2019[188.25]</td>
             <td>@mean_mar_2019[171.44] @sd_mar_2019[188.25]</td>
           </tr>
           <tr>
             <td>24</td>
-            <td>✅</td>
+            <td>Correct</td>
             <td>@mean_age[39.21]</td>
             <td>@mean_age[39.21]</td>
           </tr>
           <tr>
             <td>25</td>
-            <td>✅</td>
+            <td>Correct</td>
             <td>@bmi_distribution[normal]</td>
             <td>@bmi_distribution[normal]</td>
           </tr>
           <tr>
             <td>26</td>
-            <td>✅</td>
+            <td>Correct</td>
             <td>@correlation_coefficient[0.07]</td>
             <td>@correlation_coefficient[0.07]</td>
           </tr>
           <tr>
             <td>55</td>
-            <td>✅</td>
+            <td>Correct</td>
             <td>@mean_cases[2081990]</td>
             <td>@mean_cases[2081990]</td>
           </tr>
@@ -1366,13 +1544,14 @@ class PlannerOutput(BaseModel):
 mean_fare = df['Fare'].mean()
 print(f"{mean_fare:.2f}")
       </pre>
+      <br />
       <ul>
         <li>
           <strong>Observation:</strong> "Code executed successfully and returned
           the value 34.65."
         </li>
         <li><strong>Final Answer:</strong> <code>@mean_fare[34.65]</code></li>
-        <li><strong>Result:</strong> ✅ Correct</li>
+        <li><strong>Result:</strong> Correct</li>
       </ul>
 
       <hr />
@@ -1389,7 +1568,7 @@ print(f"{mean_fare:.2f}")
         <li>
           <strong>Ground Truth:</strong> <code>@mean_close_price[570.68]</code>
         </li>
-        <li><strong>Result:</strong> ❌ Incorrect (off by ~2.3%)</li>
+        <li><strong>Result:</strong> Incorrect (off by ~2.3%)</li>
       </ul>
       <p>
         <strong>Analysis:</strong> Numerical precision error. The computed value
@@ -1423,8 +1602,9 @@ df['No. of cases'] = df['No. of cases'].str.extract(r'(\d+)').astype('int64')
 mean_cases = df['No. of cases'].mean()
 print(f"{mean_cases:.0f}")
       </pre>
+      <br />
       <ul>
-        <li><strong>Result:</strong> ✅ Successful (2081990)</li>
+        <li><strong>Result:</strong> Successful (2081990)</li>
       </ul>
 
       <p><strong>Step 2 (Retry - Syntax Error):</strong></p>
@@ -1434,10 +1614,9 @@ print(f"{mean_cases:.0f}")
       <pre>
 df['No. of cases'] = df['No. of cases'].str.split('\[').str[0].astype(int)
       </pre>
+      <br />
       <ul>
-        <li>
-          <strong>Result:</strong> ❌ SyntaxError (invalid escape sequence)
-        </li>
+        <li><strong>Result:</strong> SyntaxError (invalid escape sequence)</li>
       </ul>
 
       <p><strong>Step 3 (Recovery):</strong></p>
@@ -1449,11 +1628,12 @@ df['No. of cases'] = df['No. of cases'].str.extract(r'(\d+)').astype(int)
 mean_cases = df['No. of cases'].mean()
 print(f"{mean_cases:.0f}")
       </pre>
+      <br />
       <ul>
         <li>
           <strong>Final Answer:</strong> <code>@mean_cases[2081990]</code>
         </li>
-        <li><strong>Result:</strong> ✅ Recovered successfully</li>
+        <li><strong>Result:</strong> Recovered successfully</li>
       </ul>
 
       <hr />
@@ -1536,7 +1716,7 @@ print(f"{mean_cases:.0f}")
       <p><strong>Correlation analysis:</strong></p>
       <p>
         File:
-        <a href="images/Q21_correlation_heatmap.png">Correlation Heatmap</a>
+        <a href="outputs/q21_correlation_heatmap.png">Correlation Heatmap</a>
       </p>
       <img src="images/Q21_correlation_heatmap.png" alt="Correlation Heatmap" />
 
@@ -1575,13 +1755,14 @@ print(f"{mean_cases:.0f}")
         </tbody>
       </table>
 
-      <p><strong>Key observations:</strong></p>
+      <p><strong>Observations:</strong></p>
       <ol>
         <li>
-          Carat has strongest correlation (0.92) - larger diamonds more valuable
+          Carat has strongest correlation (0.92): larger diamonds are more
+          valuable
         </li>
         <li>
-          Physical dimensions (x, y, z) highly correlated (0.86-0.88) - related
+          Physical dimensions (x, y, z) highly correlated (0.86-0.88): related
           to carat weight
         </li>
         <li>Depth and table show weak correlations</li>
@@ -1591,7 +1772,7 @@ print(f"{mean_cases:.0f}")
       <hr />
 
       <p><strong>Distribution analysis:</strong></p>
-      <p>File: <a href="images/Q21_histograms.png">Histograms</a></p>
+      <p>File: <a href="outputs/q21_histograms.png">Histograms</a></p>
       <img src="images/Q21_histograms.png" alt="Histograms" />
 
       <table>
@@ -1652,7 +1833,7 @@ print(f"{mean_cases:.0f}")
       <hr />
 
       <p><strong>Categorical analysis:</strong></p>
-      <p>File: <a href="images/Q21_boxplots.png">Box Plots</a></p>
+      <p>File: <a href="outputs/q21_boxplots.png">Box Plots</a></p>
       <img src="images/Q21_boxplots.png" alt="Box Plots" />
 
       <p><strong>Cut vs Price:</strong></p>
@@ -1688,8 +1869,9 @@ print(f"{mean_cases:.0f}")
       </table>
 
       <p>
-        <strong>Trend:</strong> "Ideal" cut has lowest median price, "Fair"
-        highest—counterintuitive due to carat correlation.
+        <strong>Trend:</strong> "Ideal" cut has lowest median price, "Fair" cut
+        has highest median price, which is counterintuitive due to carat
+        correlation.
       </p>
 
       <p><strong>Color vs Price:</strong></p>
@@ -1733,8 +1915,8 @@ print(f"{mean_cases:.0f}")
       </table>
 
       <p>
-        <strong>Trend:</strong> Lower color grades (J, I, H) higher
-        prices—likely due to carat correlation.
+        <strong>Trend:</strong> Lower color grades (J, I, H) have higher prices
+        (likely due to carat correlation).
       </p>
 
       <p><strong>Clarity vs Price:</strong></p>
@@ -1782,8 +1964,8 @@ print(f"{mean_cases:.0f}")
       </table>
 
       <p>
-        <strong>Trend:</strong> Lower clarity grades higher
-        prices—counterintuitive but explained by carat correlation.
+        <strong>Trend:</strong> Lower clarity grades have higher prices, which
+        is counterintuitive but explained by carat correlation.
       </p>
     </div>
 
@@ -1937,6 +2119,7 @@ df_standardized['price'] = df['price'].values
 
 df_standardized.to_csv('diamonds_standardized.csv', index=False)
       </pre>
+      <br />
       <p>
         <strong>Output:</strong> File saved as
         <code>diamonds_standardized.csv</code>
@@ -2236,6 +2419,7 @@ ridge = RidgeCV(alphas=[0.001, 0.01, 0.1, 1, 10, 100, 1000, 10000], cv=10)
 ridge.fit(X_train, y_train)
 best_alpha_ridge = ridge.alpha_  # 10000
       </pre>
+      <br />
 
       <hr />
 
@@ -2289,6 +2473,7 @@ model = LinearRegression()
 neg_mse = cross_val_score(model, X, y, cv=kf, scoring="neg_mean_squared_error")
 val_rmse = np.sqrt(-neg_mse).mean()
       </pre>
+      <br />
 
       <p><strong>Lasso Regression:</strong></p>
       <pre>
@@ -2301,6 +2486,7 @@ model = Lasso(alpha=best_alpha, random_state=42)
 neg_mse = cross_val_score(model, X, y, cv=kf, scoring="neg_mean_squared_error")
 rmse = np.sqrt(-neg_mse).mean()
       </pre>
+      <br />
 
       <p><strong>Ridge Regression:</strong></p>
       <pre>
@@ -2313,6 +2499,7 @@ model = Ridge(alpha=best_alpha)
 neg_mse = cross_val_score(model, X, y, cv=kf, scoring="neg_mean_squared_error")
 rmse = np.sqrt(-neg_mse).mean()
       </pre>
+      <br />
     </div>
   </body>
 </html>

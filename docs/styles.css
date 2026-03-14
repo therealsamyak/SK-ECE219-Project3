@@ -57,7 +57,7 @@ h1 {
   border: 1px solid #ffc107;
   border-left: 4px solid #ffc107;
   padding: 15px 20px;
-  margin: 20px 0;
+  margin: 20px 0 10px 0;
   border-radius: 5px;
 }
 
@@ -67,7 +67,7 @@ h1 {
 }
 
 nav {
-  padding: 20px 0;
+  padding: 10px 0 20px 0;
   margin-bottom: 20px;
 }
 
@@ -113,8 +113,13 @@ h2[id] {
   scroll-margin-top: 100px;
 }
 
-h2 + hr {
+hr {
   border: none;
+  border-top: 1px solid #ddd;
+  margin: 25px 0;
+}
+
+h2 + hr {
   border-top: 2px solid #2c5aa0;
   margin-top: 0;
   margin-bottom: 25px;

@@ -33,4 +33,4 @@ all:
 	make part3
 
 serve:
-	uv run python -m http.server 8000 --directory docs
+	uv run livereload docs --port 8000
