@@ -2,7 +2,7 @@
 
 > **Note on Hyperparameters:** Due to GPU memory constraints, the batch size and gradient accumulation values were swapped from the assignment defaults. The assignment specifies per-device batch size of 8 with gradient accumulation of 4, but the implementation uses per-device batch size of 4 with gradient accumulation of 8. This maintains the same effective batch size of 32 (4×8 = 8×4 = 32) while reducing peak memory usage.
 
-## Task 1 — Baseline: How Good is the Base Model?
+## Task 1: Baseline: How Good is the Base Model?
 
 **QUESTION 1: (10 points) Run the base Qwen2.5-1.5B-Instruct model on 100 GSM8K test questions and report the accuracy. You should expect approximately 35–40%. (Exact values may vary slightly depending on the prompt format and extraction rule.)**
 
@@ -11,7 +11,7 @@
 - **Base Model Accuracy:** 38%
 - **Number of Test Samples:** 100
 
-The base Qwen2.5-1.5B-Instruct model scored 38% on the GSM8K test set, landing right in the expected 35-40% range. That's our baseline. The model struggles with multi-step reasoning and arithmetic—which isn't surprising for a small language model without specific math training.
+The base Qwen2.5-1.5B-Instruct scored 38% on GSM8K—right in the expected 35-40% range. That's our baseline. The model struggles with multi-step reasoning and arithmetic, which isn't surprising for a 1.5B model without math-specific training.
 
 ---
 
@@ -36,7 +36,7 @@ Classify each failure mode (e.g., arithmetic slip, reasoning/logical error, misu
                           = 13 - 4
                           = -1 (This is not possible since it would mean negative eggs)
   ```
-- **Classification:** **Arithmetic Slip** - The model correctly sets up the calculation (16 - 3 - 4 = 9) but then makes a catastrophic error by concluding this is -1 instead of 9.
+- **Classification:** **Arithmetic Slip**: The model sets up the calculation correctly (16 - 3 - 4 = 9) but somehow concludes this equals -1 instead of 9.
 
 **Failure Case 2: Problem Comprehension**
 
@@ -49,7 +49,7 @@ Classify each failure mode (e.g., arithmetic slip, reasoning/logical error, misu
   Therefore, the amount of white fiber is (1/2) bolt of blue fiber.
   2 (blue fibers) + 1/2 (white fibers) = 2.5 bolts
   ```
-- **Classification:** **Problem Comprehension** - The model misinterpreted "half that much white fiber" as meaning half a bolt total, rather than half of 2 bolts (which is 1 bolt).
+- **Classification:** **Problem Comprehension**: The model read "half that much white fiber" as half a bolt total, not half of 2 bolts (which is 1 bolt).
 
 **Failure Case 3: Multi-step Reasoning Error**
 
@@ -62,16 +62,16 @@ Classify each failure mode (e.g., arithmetic slip, reasoning/logical error, misu
   Increase in value = $130,000 × 0.150 = $49,500
   Profit = $129,500 - $130,000 = -$5,500
   ```
-- **Classification:** **Multi-step Reasoning Error** - The model made multiple errors: (1) applied 150% increase to total cost rather than original price, (2) used 0.150 instead of 1.50 for 150%.
+- **Classification:** **Multi-step Reasoning Error**: Two errors: (1) applied 150% increase to total cost instead of original price, (2) used 0.150 instead of 1.50 for 150%.
 
-**What I kept seeing:**
+**Recurring patterns:**
 1. Arithmetic errors—correct setup, wrong math
 2. Problem comprehension—misreading word problems, especially fractions and percentages
-3. Multi-step reasoning—losing the thread halfway through
+3. Multi-step reasoning—losing track halfway through
 
 ---
 
-## Task 2 — LoRA Fine-Tuning on GSM8K
+## Task 2: LoRA Fine-Tuning on GSM8K
 
 **QUESTION 3: (15 points) Pick the three hyperparameters (LoRA rank, LoRA alpha, Gradient accumulation) from the table above and explain:**
 
@@ -85,21 +85,21 @@ Your answer should reflect practical tradeoffs (e.g., compute/memory, stability,
 
 **LoRA Rank (r)**
 
-- **What it controls:** Size of the low-rank matrices A and B. Basically how much capacity the adapter has.
-- **If you increase:** More parameters to train, better adaptation possible, but uses more memory and risks overfitting.
+- **What it controls:** Size of the low-rank matrices A and B. Basically: adapter capacity.
+- **If you increase:** More parameters to train, potentially better adaptation, but more memory and overfitting risk.
 - **If you decrease:** Fewer parameters, more constrained adaptation, might underfit but generalizes better.
 
 **LoRA Alpha (α)**
 
-- **What it controls:** How strongly the LoRA update gets scaled before merging with original weights. The actual update is scaled by α/r.
+- **What it controls:** Scaling factor for LoRA updates before merging with original weights. The actual update is scaled by α/r.
 - **If you increase:** Adapter has more influence, learning speeds up, but training can become unstable.
-- **If you decrease:** Gentler updates, more stable training, but slower to converge.
+- **If you decrease:** Gentler updates, more stable training, slower convergence.
 
 **Gradient Accumulation**
 
-- **What it controls:** How many mini-batches of gradients to stack up before actually updating weights. Effective batch size = per_device_batch_size × gradient_accumulation_steps.
-- **If you increase:** Larger effective batch size, which often generalizes better, but updates happen less frequently.
-- **If you decrease:** Smaller effective batch size, noisier gradient estimates, faster updates, but training can get unstable.
+- **What it controls:** How many mini-batches of gradients to stack before updating weights. Effective batch size = per_device_batch_size × gradient_accumulation_steps.
+- **If you increase:** Larger effective batch size (often better generalization), but less frequent updates.
+- **If you decrease:** Smaller effective batch size, noisier gradients, faster updates, but can destabilize training.
 
 ---
 
@@ -113,11 +113,11 @@ Briefly explain why this percentage is small and how LoRA achieves this reductio
 
 **Answer:**
 
-- **(a) Base Model Total Parameters:** 1,543,714,304 (approximately 1.54 billion)
-- **(b) Trainable LoRA Parameters:** 2,179,072 (approximately 2.18 million)
-- **(c) Percentage:** 0.141% (only about 1 in 708 parameters is trained)
+- **(a) Base Model Total Parameters:** 1,543,714,304 (~1.54 billion)
+- **(b) Trainable LoRA Parameters:** 2,179,072 (~2.18 million)
+- **(c) Percentage:** 0.141% (about 1 in 708 parameters)
 
-**Why so few parameters:** LoRA uses low-rank decomposition. Instead of updating a full weight matrix W ∈ ℝ^(d×d) which needs d² parameters, LoRA represents the update as ΔW = BA, where B ∈ ℝ^(d×r) and A ∈ ℝ^(r×d). This cuts parameters from d² to 2dr. With rank r=8 and typical dimension d=2048, that's roughly 128× fewer parameters per adapted layer.
+**Why so few parameters:** LoRA uses low-rank decomposition. Instead of updating a full weight matrix W ∈ ℝ^(d×d) (d² parameters), LoRA represents the update as ΔW = BA, where B ∈ ℝ^(d×r) and A ∈ ℝ^(r×d). This cuts parameters from d² to 2dr. With rank r=8 and typical dimension d=2048, that's ~128× fewer parameters per adapted layer.
 
 ---
 
@@ -129,7 +129,7 @@ Briefly explain why this percentage is small and how LoRA achieves this reductio
 - **Baseline Accuracy:** 38%
 - **Improvement:** +3 percentage points
 
-Going from 38% to 41% (+3 pp) is real progress. Fine-tuning helps even with just 1,000 examples. Training took roughly 40-50 minutes on a T4 GPU—and we're only training 0.14% of the parameters.
+Going from 38% to 41% is real progress. Fine-tuning helps even with just 1,000 examples. Training took ~40-50 minutes on a T4 GPU—and we're only training 0.14% of parameters.
 
 ---
 
@@ -137,17 +137,17 @@ Going from 38% to 41% (+3 pp) is real progress. Fine-tuning helps even with just
 
 **Answer:**
 
-**Yes, scaling is worth it compute, but with diminishing returns.**
+**Yes, scaling is worth the compute, but with diminishing returns.**
 
 **Expected Accuracy Gains:**
-- 1,000 → 3,000 examples: ~2-4 percentage point improvement (42% → 44-46%)
-- 3,000 → 7,473 examples: ~1-3 percentage point improvement (44-46% → 45-49%)
+- 1,000 → 3,000 examples: ~2-4 pp improvement (42% → 44-46%)
+- 3,000 → 7,473 examples: ~1-3 pp improvement (44-46% → 45-49%)
 
 **Why:**
 - More data = more pattern diversity, better generalization, stronger reasoning
-- But diminishing returns kick in: GSM8K has redundancy, the model only has 0.14% trainable parameters, and there's a quality vs quantity trade-off
+- But diminishing returns: GSM8K has redundancy, the model only has 0.14% trainable parameters, and there's a quality vs quantity trade-off
 
-**My strategy:** Scale in two steps (1k → 3k → full) so I can track how scaling behaves and stop early if returns flatten out.
+**My strategy:** Scale in two steps (1k → 3k → full) to track how scaling behaves and stop early if returns flatten.
 
 ---
 
@@ -166,7 +166,7 @@ Finally, plot accuracy as a function of the number of training examples (x-axis:
 File: [Scaling Plot](outputs/q7_scaling_plot.png)
 
 **Analysis:**
-- Consistent improvement as data increases: 38% → 41% → 44%
+- Consistent improvement: 38% → 41% → 44%
 - Diminishing returns: 0→1k gives +3pp with 1k examples, 1k→3k gives +3pp with 2k additional examples
 - Extrapolating to full dataset (7,473) might yield ~46-48%
 
@@ -191,7 +191,7 @@ File: [Scaling Plot](outputs/q7_scaling_plot.png)
 - SFT-3k Model: 69500 (still applied 0.15 instead of 1.5)
 - **Result:** Both failed with similar percentage calculation errors
 
-**Summary:** SFT fixed 1/3 problems (language comprehension got better), but arithmetic and percentage reasoning remain hard.
+**Summary:** SFT fixed 1/3 problems (language comprehension improved), but arithmetic and percentage reasoning remain hard.
 
 ---
 
@@ -199,12 +199,12 @@ File: [Scaling Plot](outputs/q7_scaling_plot.png)
 
 **Answer:**
 
-**Failure 1: Janet's Ducks - Multi-step reasoning with hallucinated operations**
+**Failure 1: Janet's Ducks (Multi-step reasoning with hallucinated operations)**
 - Extracted Answer: 73.50 (Ground Truth: 18)
 - Error: Model introduced erroneous multiplication (16×3=48) not in problem statement
 - Type: **Multi-step reasoning with hallucinated operations**
 
-**Failure 2: House Flipping - Percentage calculation error**
+**Failure 2: House Flipping (Percentage calculation error)**
 - Extracted Answer: -30500 (Ground Truth: 70000)
 - Error: Applied 0.15 (15%) instead of 1.5 (150%)
 - Type: **Arithmetic/Percentage reasoning**
@@ -216,7 +216,7 @@ File: [Scaling Plot](outputs/q7_scaling_plot.png)
 
 ---
 
-## Task 3 — Few-Shot Prompting
+## Task 3: Few-Shot Prompting
 
 **QUESTION 10: (20 points) Evaluate k-shot prompting (use k = 3) on:**
 
@@ -266,7 +266,7 @@ Few-shot helps because:
 
 ---
 
-## Task 4 — Beyond Scaling: Quality Matters
+## Task 4: Beyond Scaling: Quality Matters
 
 **QUESTION 12: (10 points) Qualitative reflection (short): Based on your results so far, what do you think is limiting performance? For each of the following, justify with 2–4 concrete observations from your own failures:**
 
@@ -310,7 +310,7 @@ Few-shot helps because:
 
 ---
 
-## Task 5 — Open Challenge: Push Toward the Ceiling
+## Task 5: Open Challenge: Push Toward the Ceiling
 
 **QUESTION 13: Design and implement your favourite strategy to improve upon your best score. In your report, include:**
 
@@ -352,16 +352,16 @@ Self-consistency through majority voting will improve accuracy by reducing rando
 
 **Failure Modes:**
 
-1. **Consistent Wrong Reasoning:** Janet's ducks - all samples made different errors, majority vote selected wrong answer (104 vs ground truth 18)
+1. **Consistent Wrong Reasoning:** Janet's ducks: all samples made different errors, majority vote selected wrong answer (104 vs ground truth 18)
 
-2. **Rare Correct Answers:** James running sprints - only 1/5 samples correct, majority selected wrong answer (21 vs 540)
+2. **Rare Correct Answers:** James running sprints ( only 1/5 samples correct, majority selected wrong answer (21 vs 540)
 
-3. **Systematic Misconception:** House flipping - all samples struggled with 150% calculation, different wrong answers but same underlying error
+3. **Systematic Misconception:** House flipping ( all samples struggled with 150% calculation, different wrong answers but same underlying error)
 
 **Key Learnings:**
 1. Self-consistency helps with random errors, not systematic ones
 2. Diminishing returns on samples (1→3 captures most benefits)
 3. Problem difficulty matters (works best on "sometimes right" problems)
-4. Failed to reach 70% goal, suggesting training data quality is bigger bottleneck
+4. Failed to reach 70% goal—training data quality is the bigger bottleneck
 
 **Conclusion:** Self-consistency improved accuracy by 12 pp (44% → 56%) but can't fix systematic reasoning gaps. The gap to 70%+ requires better training data quality.

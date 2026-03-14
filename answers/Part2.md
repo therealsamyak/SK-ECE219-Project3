@@ -2,7 +2,7 @@
 
 > **Implementation Note:** This implementation uses the Qwen3-4B-Instruct-2507 model with 4-bit quantization (NF4) to fit within GPU memory constraints. The ReAct agent follows a structured approach with Planner, Coder, Executor, and Observer components, using Outlines for structured output generation.
 
-## Task 1 — Dataset Inspection and Sanity Checks
+## Task 1: Dataset Inspection and Sanity Checks
 
 **QUESTION 14: Load `da-dev-questions.jsonl` and `da-dev-labels.jsonl`. Report the number of questions and labels, the set of keys in a question record, and the set of keys in a label record.**
 
@@ -185,7 +185,7 @@ class PlannerOutput(BaseModel):
 
 **Answer:**
 
-Structured output is essential for large-scale data mining pipelines for three reasons:
+Structured output is essential for three reasons:
 
 1. **Reliability at scale:** When processing thousands of tasks, parsing errors from free-form text would cascade into system failures. Structured output (via Outlines + Pydantic) guarantees every planner response is parseable.
 
@@ -195,7 +195,7 @@ Structured output is essential for large-scale data mining pipelines for three r
 
 ---
 
-## Task 3 — Build a ReAct Data Analysis Agent
+## Task 3: Build a ReAct Data Analysis Agent
 
 **QUESTION 20: Run your ReAct agent on the 10 tasks. Report:**
 
