@@ -494,7 +494,6 @@ Therefore, she makes 36.75*2=$\boxed{73.50}$ from selling the eggs at the farmer
         >
       </p>
       <p><b>Result:</b> Both failed with different errors</p>
-      <hr />
 
       <p><b>Case 2: Robe Fabric (Ground Truth: 3)</b></p>
       <p>
@@ -533,7 +532,6 @@ In total, there are 2+1=3 bolts.
         >
       </p>
       <p><b>Result:</b> SFT fixed this error (Correct)</p>
-      <hr />
 
       <p><b>Case 3: House Flipping (Ground Truth: 70000)</b></p>
       <p>
@@ -573,7 +571,6 @@ He bought the house for 80,000 so his profit is 149,500 - 80,000 = $\boxed{69500
         <b>Result:</b> Both failed with similar percentage calculation errors
       </p>
 
-      <hr />
       <p>
         <b>Summary:</b> SFT fixed 1/3 problems (language comprehension
         improved), but arithmetic and percentage reasoning remain hard.
@@ -1501,8 +1498,6 @@ class PlannerOutput(BaseModel):
         </tbody>
       </table>
 
-      <hr />
-
       <p><b>Trace 1: Success case (Task 0 - Mean Fare)</b></p>
       <ul>
         <li>Question: "Calculate the mean fare paid by the passengers."</li>
@@ -1526,8 +1521,6 @@ print(f"{mean_fare:.2f}")
         <li>Result: Correct</li>
       </ul>
 
-      <hr />
-
       <p><b>Trace 2: Failure case (Task 9 - Mean Close Price)</b></p>
       <ul>
         <li>
@@ -1541,8 +1534,6 @@ print(f"{mean_fare:.2f}")
         <b>Analysis:</b> Numerical precision error. The computed value differs
         from ground truth due to different data preprocessing or NaN handling.
       </p>
-
-      <hr />
 
       <p>
         <b>Trace 3: Error recovery case (Task 55 - Mean Cases)</b>
@@ -1687,8 +1678,6 @@ print(f"{mean_cases:.0f}")
         <li>High multicollinearity among x, y, z, carat (>0.95)</li>
       </ol>
 
-      <hr />
-
       <p><b>Distribution analysis:</b></p>
       <p>File: <a href="outputs/q21_histograms.png">Histograms</a></p>
       <img src="images/Q21_histograms.png" alt="Histograms" />
@@ -1746,8 +1735,6 @@ print(f"{mean_cases:.0f}")
         <b>Recommendation:</b> Apply log transformation to <code>carat</code>,
         <code>y</code>, <code>z</code> to fix right-skewness.
       </p>
-
-      <hr />
 
       <p><b>Categorical analysis:</b></p>
       <p>File: <a href="outputs/q21_boxplots.png">Box Plots</a></p>
@@ -2260,8 +2247,6 @@ df_standardized.to_csv('diamonds_standardized.csv', index=False)
         1217.13)
       </p>
 
-      <hr />
-
       <p><b>How regularization affects learned parameters:</b></p>
 
       <p><b>OLS (No Regularization):</b></p>
@@ -2299,8 +2284,6 @@ df_standardized.to_csv('diamonds_standardized.csv', index=False)
         </li>
       </ul>
 
-      <hr />
-
       <p><b>Optimal alpha computation:</b></p>
       <p>
         Used 10-fold cross-validation with <code>LassoCV</code> and
@@ -2316,8 +2299,6 @@ ridge.fit(X_train, y_train)
 best_alpha_ridge = ridge.alpha_  # 10000
       </pre>
       <br />
-
-      <hr />
 
       <p><b>P-values and feature significance:</b></p>
       <ul>
@@ -2345,14 +2326,10 @@ best_alpha_ridge = ridge.alpha_  # 10000
         </li>
       </ol>
 
-      <hr />
-
       <p>
         <b>Agent Integration:</b> The ReAct agent from Part 2 was used to train
         and evaluate the models.
       </p>
-
-      <hr />
 
       <p><b>Python Code for Regression Models:</b></p>
 
