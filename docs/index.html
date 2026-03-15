@@ -191,8 +191,8 @@ Therefore, the amount of white fiber is (1/2) bolt of blue fiber.
         <li>Failure Excerpt:</li>
       </ul>
       <pre>
-Increase in value = Total cost × Percentage increase
-Increase in value = $130,000 × 0.150 = $49,500
+Increase in value = Total cost \(\times\) Percentage increase
+Increase in value = $130,000 \(\times\) 0.150 = $49,500
 Profit = $129,500 - $130,000 = -$5,500
       </pre>
       <br />
@@ -251,11 +251,12 @@ Profit = $129,500 - $130,000 = -$5,500
         </li>
       </ul>
 
-      <p><b>LoRA Alpha (α)</b></p>
+      <p><b>LoRA Alpha (\(\alpha\))</b></p>
       <ul>
         <li>
           What it controls: How strongly the LoRA update gets scaled before
-          merging with original weights. The actual update is scaled by α/r.
+          merging with original weights. The actual update is scaled by
+          \(\alpha\)/r.
         </li>
         <li>
           If you increase: Adapter has more influence, learning speeds up, but
@@ -365,8 +366,8 @@ Profit = $129,500 - $130,000 = -$5,500
       </p>
       <p><b>Expected Accuracy Gains:</b></p>
       <ul>
-        <li>1,000 → 3,000 examples: ~2-4%</li>
-        <li>3,000 → 7,473 examples: ~1-3% more (5-7% total)</li>
+        <li>1,000 \(\rightarrow\) 3,000 examples: ~2-4%</li>
+        <li>3,000 \(\rightarrow\) 7,473 examples: ~1-3% more (5-7% total)</li>
       </ul>
       <p>
         More data = more pattern diversity, better generalization, stronger
@@ -425,10 +426,13 @@ Profit = $129,500 - $130,000 = -$5,500
 
       <p><b>Analysis:</b></p>
       <ul>
-        <li>Consistent improvement as data increases: 38% → 41% → 44%</li>
         <li>
-          Diminishing returns: 0→1k gives +3% with 1k examples, 1k→3k gives +3%
-          with 2k additional examples
+          Consistent improvement as data increases: 38% \(\rightarrow\) 41%
+          \(\rightarrow\) 44%
+        </li>
+        <li>
+          Diminishing returns: 0\(\rightarrow\)1k gives +3% with 1k examples,
+          1k\(\rightarrow\)3k gives +3% with 2k additional examples
         </li>
         <li>Extrapolating to full dataset (7,473) might yield ~46-48%</li>
       </ul>
@@ -485,7 +489,7 @@ Therefore, she makes 36.75*2=$\boxed{73.50}$ from selling the eggs at the farmer
       </pre>
       <p>
         <em
-          >Extracted Answer: 73.50 (different error: hallucinated 16×3
+          >Extracted Answer: 73.50 (different error: hallucinated 16\(\times\)3
           multiplication)</em
         >
       </p>
@@ -543,7 +547,7 @@ In total, there are 2+1=3 bolts.
 To calculate Josh's profit from flipping the house:
 
 1. Total cost = $80,000 + $50,000 = $130,000
-2. Increase in value = Total cost × Percentage increase = $130,000 × 0.150 = $49,500
+2. Increase in value = Total cost \(\times\) Percentage increase = $130,000 \(\times\) 0.150 = $49,500
 3. New selling price = Original price + Increase = $80,000 + $49,500 = $129,500
 4. Profit = New selling price - Total cost = $129,500 - $130,000 = -$5,500
 
@@ -860,7 +864,10 @@ He bought the house for 80,000 so his profit is 149,500 - 80,000 = $\boxed{69500
       <p><b>Key Learnings:</b></p>
       <ol>
         <li>Self-consistency helps with random errors, not systematic ones</li>
-        <li>Diminishing returns on samples (1→3 captures most benefits)</li>
+        <li>
+          Diminishing returns on samples (1\(\rightarrow\)3 captures most
+          benefits)
+        </li>
         <li>
           Problem difficulty matters (works best on "sometimes right" problems)
         </li>
@@ -871,9 +878,9 @@ He bought the house for 80,000 so his profit is 149,500 - 80,000 = $\boxed{69500
       </ol>
 
       <p>
-        Self-consistency improved accuracy by 12% (44% → 56%) but can't fix
-        systematic reasoning gaps. The gap to 70%+ requires better training data
-        quality.
+        Self-consistency improved accuracy by 12% (44% \(\rightarrow\) 56%) but
+        can't fix systematic reasoning gaps. The gap to 70%+ requires better
+        training data quality.
       </p>
     </div>
 
@@ -2248,7 +2255,10 @@ df_standardized.to_csv('diamonds_standardized.csv', index=False)
         </tbody>
       </table>
 
-      <p><b>Best model:</b> Lasso Regression (α = 3.6766, RMSE = 1217.13)</p>
+      <p>
+        <b>Best model:</b> Lasso Regression (\(\alpha\) = 3.6766, RMSE =
+        1217.13)
+      </p>
 
       <hr />
 
@@ -2269,7 +2279,9 @@ df_standardized.to_csv('diamonds_standardized.csv', index=False)
         <li>Adds penalty proportional to absolute coefficient values</li>
         <li>Drives some coefficients to exactly zero (feature selection)</li>
         <li>Produces sparse solutions</li>
-        <li>With α = 3.68, less important features have zero coefficients</li>
+        <li>
+          With \(\alpha\) = 3.68, less important features have zero coefficients
+        </li>
       </ul>
 
       <p><b>Ridge (L2 Regularization):</b></p>
@@ -2281,7 +2293,10 @@ df_standardized.to_csv('diamonds_standardized.csv', index=False)
           Handles multicollinearity by distributing weight among correlated
           features
         </li>
-        <li>With α = 10000, all coefficients heavily shrunk (overshrinking)</li>
+        <li>
+          With \(\alpha\) = 10000, all coefficients heavily shrunk
+          (overshrinking)
+        </li>
       </ul>
 
       <hr />
@@ -2306,8 +2321,13 @@ best_alpha_ridge = ridge.alpha_  # 10000
 
       <p><b>P-values and feature significance:</b></p>
       <ul>
-        <li><b>H₀:</b> Coefficient β_j = 0 (no linear relationship)</li>
-        <li><b>H₁:</b> Coefficient β_j ≠ 0 (linear relationship exists)</li>
+        <li>
+          <b>H\(_0\):</b> Coefficient \(\beta_j\) = 0 (no linear relationship)
+        </li>
+        <li>
+          <b>H\(_1\):</b> Coefficient \(\beta_j\) \(\neq\) 0 (linear
+          relationship exists)
+        </li>
       </ul>
 
       <p><b>Interpretation:</b></p>
