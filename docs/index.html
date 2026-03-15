@@ -1591,51 +1591,6 @@ print(f"{mean_cases:.0f}")
         <li>Final Answer: <code>@mean_cases[2081990]</code></li>
         <li>Result: Recovered successfully</li>
       </ul>
-
-      <hr />
-
-      <p><b>Summary:</b></p>
-      <table>
-        <thead>
-          <tr>
-            <th>Strength</th>
-            <th>Observation</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Structured Output</td>
-            <td>All planner outputs valid JSON</td>
-          </tr>
-          <tr>
-            <td>Error Recovery</td>
-            <td>Recovered from syntax errors with alternative code</td>
-          </tr>
-          <tr>
-            <td>Multi-Step Reasoning</td>
-            <td>Handled feature engineering + correlation (Task 5)</td>
-          </tr>
-          <tr>
-            <td>Data Cleaning</td>
-            <td>Correctly parsed complex string formats (Task 55)</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Weakness</th>
-            <th>Observation</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Precision Issues</td>
-            <td>Task 9 off by ~2.3% from ground truth</td>
-          </tr>
-        </tbody>
-      </table>
     </div>
 
     <!-- Part C: Regression Analysis -->
@@ -2196,28 +2151,21 @@ df_standardized.to_csv('diamonds_standardized.csv', index=False)
       <p><b>Analysis:</b></p>
       <ul>
         <li>
-          <b>Agreement:</b> Both methods agree on <code>carat</code>,
-          <code>x</code>, <code>y</code>, <code>z</code> as top 4
+          Both methods agree on <code>carat</code>, <code>x</code>,
+          <code>y</code>, <code>z</code> as top 4
         </li>
         <li>
-          <b>Difference:</b> MI ranks <code>clarity</code> 5th; F-regression
-          ranks <code>color</code> 5th
-          <ul>
-            <li>
-              MI captures non-linear dependencies; F-regression measures linear
-              relationships
-            </li>
-            <li>
-              <b>Selected features:</b> <code>carat</code>, <code>x</code>,
-              <code>y</code>, <code>z</code>, <code>color</code> (from
-              F-regression top 5)
-            </li>
-          </ul>
+          MI ranks <code>clarity</code> 5th; F-regression ranks
+          <code>color</code> 5th
+        </li>
+        <li>
+          MI captures non-linear dependencies; F-regression measures linear
+          relationships
         </li>
       </ul>
 
       <p>
-        <b>Output:</b> File saved as
+        File saved as
         <code>diamonds_selected.csv</code>
       </p>
     </div>
@@ -2336,20 +2284,6 @@ df_standardized.to_csv('diamonds_standardized.csv', index=False)
         <li>With α = 10000, all coefficients heavily shrunk (overshrinking)</li>
       </ul>
 
-      <p><b>Why Lasso Performed Best:</b></p>
-      <ol>
-        <li>Feature selection eliminated noisy features</li>
-        <li>
-          With highly correlated features, Lasso selected most predictive subset
-        </li>
-        <li>α = 3.68 provided light regularization without overshrinking</li>
-      </ol>
-
-      <p>
-        <b>Why Ridge Performed Poorly:</b> α = 10000 too large, overshrinking
-        caused underfitting.
-      </p>
-
       <hr />
 
       <p><b>Optimal alpha computation:</b></p>
@@ -2371,7 +2305,6 @@ best_alpha_ridge = ridge.alpha_  # 10000
       <hr />
 
       <p><b>P-values and feature significance:</b></p>
-      <p><b>What p-values mean:</b></p>
       <ul>
         <li><b>H₀:</b> Coefficient β_j = 0 (no linear relationship)</li>
         <li><b>H₁:</b> Coefficient β_j ≠ 0 (linear relationship exists)</li>
