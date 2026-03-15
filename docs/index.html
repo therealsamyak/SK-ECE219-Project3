@@ -15,7 +15,7 @@
     <header>
       <h1>ECE 219 Project 3 Report</h1>
       <p class="author">
-        <strong>Contributor:</strong> Samyak Kakatur |
+        <b>Contributor:</b> Samyak Kakatur |
         <a
           href="https://github.com/therealsamyak/SK-ECE219-Project3"
           target="_blank"
@@ -26,10 +26,9 @@
 
     <div class="ai-disclaimer">
       <p>
-        <strong>AI Disclaimer:</strong> AI tools were used to assist with code
-        generation and formatting in this repository. All code has been tested,
-        reviewed, and structured to ensure it works correctly and is easily
-        replicable.
+        <b>AI Disclaimer:</b> AI tools were used to assist with code generation
+        and formatting in this repository. All code has been tested, reviewed,
+        and structured to ensure it works correctly and is easily replicable.
       </p>
     </div>
 
@@ -79,13 +78,13 @@
     <hr />
 
     <blockquote>
-      <strong>Note on Hyperparameters:</strong> Due to GPU memory constraints,
-      the batch size and gradient accumulation values were swapped from the
-      assignment defaults. The assignment specifies per-device batch size of 8
-      with gradient accumulation of 4, but the implementation uses per-device
-      batch size of 4 with gradient accumulation of 8. This maintains the same
-      effective batch size of 32 (\(4 \times 8 = 8 \times 4 = 32\)) while
-      reducing peak memory usage.
+      Note on Hyperparameters: Due to GPU memory constraints, the batch size and
+      gradient accumulation values were swapped from the assignment defaults.
+      The assignment specifies per-device batch size of 8 with gradient
+      accumulation of 4, but the implementation uses per-device batch size of 4
+      with gradient accumulation of 8. This maintains the same effective batch
+      size of 32 (\(4 \times 8 = 8 \times 4 = 32\)) while reducing peak memory
+      usage.
     </blockquote>
 
     <h2 id="q1">Question 1</h2>
@@ -100,8 +99,8 @@
     <div class="answer">
       <h3>Answer</h3>
       <ul>
-        <li><strong>Base Model Accuracy:</strong> 38%</li>
-        <li><strong>Number of Test Samples:</strong> 100</li>
+        <li>Base Model Accuracy: 38%</li>
+        <li>Number of Test Samples: 100</li>
       </ul>
       <p>
         The base Qwen2.5-1.5B-Instruct model scored 38% on the GSM8K test set,
@@ -132,18 +131,18 @@
     </div>
     <div class="answer">
       <h3>Answer</h3>
-      <p><strong>Failure Case 1: Arithmetic Error</strong></p>
+      <p><b>Failure Case 1: Arithmetic Error</b></p>
       <ul>
         <li>
-          <strong>Question:</strong> Janet's ducks lay 16 eggs per day. She eats
-          three for breakfast every morning and bakes muffins for her friends
-          every day with four. She sells the remainder at the farmers' market
-          daily for $2 per fresh duck egg. How much in dollars does she make
-          every day at the farmers' market?
+          Question: Janet's ducks lay 16 eggs per day. She eats three for
+          breakfast every morning and bakes muffins for her friends every day
+          with four. She sells the remainder at the farmers' market daily for $2
+          per fresh duck egg. How much in dollars does she make every day at the
+          farmers' market?
         </li>
-        <li><strong>Ground Truth:</strong> 18</li>
-        <li><strong>Extracted Answer:</strong> 0</li>
-        <li><strong>Failure Excerpt:</strong></li>
+        <li>Ground Truth: 18</li>
+        <li>Extracted Answer: 0</li>
+        <li>Failure Excerpt:</li>
       </ul>
       <pre>
 Remaining eggs for sale = Remaining eggs after breakfast - Eggs used for baking muffins
@@ -152,20 +151,20 @@ Remaining eggs for sale = Remaining eggs after breakfast - Eggs used for baking 
       </pre>
       <br />
       <p>
-        <strong>Classification:</strong> <strong>Arithmetic Slip</strong> - The
-        model correctly sets up the calculation (16 - 3 - 4 = 9) but then makes
-        a catastrophic error by concluding this is -1 instead of 9.
+        <b>Classification:</b> <b>Arithmetic Slip</b> - The model correctly sets
+        up the calculation (16 - 3 - 4 = 9) but then makes a catastrophic error
+        by concluding this is -1 instead of 9.
       </p>
 
-      <p><strong>Failure Case 2: Problem Comprehension</strong></p>
+      <p><b>Failure Case 2: Problem Comprehension</b></p>
       <ul>
         <li>
-          <strong>Question:</strong> A robe takes 2 bolts of blue fiber and half
-          that much white fiber. How many bolts in total does it take?
+          Question: A robe takes 2 bolts of blue fiber and half that much white
+          fiber. How many bolts in total does it take?
         </li>
-        <li><strong>Ground Truth:</strong> 3</li>
-        <li><strong>Extracted Answer:</strong> 2.5</li>
-        <li><strong>Failure Excerpt:</strong></li>
+        <li>Ground Truth: 3</li>
+        <li>Extracted Answer: 2.5</li>
+        <li>Failure Excerpt:</li>
       </ul>
       <pre>
 The robe requires half as much white fiber as blue fiber.
@@ -174,22 +173,22 @@ Therefore, the amount of white fiber is (1/2) bolt of blue fiber.
       </pre>
       <br />
       <p>
-        <strong>Classification:</strong>
-        <strong>Problem Comprehension</strong> - The model misinterpreted "half
-        that much white fiber" as meaning half a bolt total, rather than half of
-        2 bolts (which is 1 bolt).
+        <b>Classification:</b>
+        <b>Problem Comprehension</b> - The model misinterpreted "half that much
+        white fiber" as meaning half a bolt total, rather than half of 2 bolts
+        (which is 1 bolt).
       </p>
 
-      <p><strong>Failure Case 3: Multi-step Reasoning Error</strong></p>
+      <p><b>Failure Case 3: Multi-step Reasoning Error</b></p>
       <ul>
         <li>
-          <strong>Question:</strong> Josh decides to try flipping a house. He
-          buys a house for $80,000 and then puts in $50,000 in repairs. This
-          increased the value of the house by 150%. How much profit did he make?
+          Question: Josh decides to try flipping a house. He buys a house for
+          $80,000 and then puts in $50,000 in repairs. This increased the value
+          of the house by 150%. How much profit did he make?
         </li>
-        <li><strong>Ground Truth:</strong> 70000</li>
-        <li><strong>Extracted Answer:</strong> -55500</li>
-        <li><strong>Failure Excerpt:</strong></li>
+        <li>Ground Truth: 70000</li>
+        <li>Extracted Answer: -55500</li>
+        <li>Failure Excerpt:</li>
       </ul>
       <pre>
 Increase in value = Total cost × Percentage increase
@@ -198,13 +197,13 @@ Profit = $129,500 - $130,000 = -$5,500
       </pre>
       <br />
       <p>
-        <strong>Classification:</strong>
-        <strong>Multi-step Reasoning Error</strong> - The model made multiple
-        errors: (1) applied 150% increase to total cost rather than original
-        price, (2) used 0.150 instead of 1.50 for 150%.
+        <b>Classification:</b>
+        <b>Multi-step Reasoning Error</b> - The model made multiple errors: (1)
+        applied 150% increase to total cost rather than original price, (2) used
+        0.150 instead of 1.50 for 150%.
       </p>
 
-      <p><strong>Recurring Patterns:</strong></p>
+      <p><b>Recurring Patterns:</b></p>
       <ol>
         <li>Arithmetic errors (correct setup, wrong math)</li>
         <li>
@@ -236,54 +235,52 @@ Profit = $129,500 - $130,000 = -$5,500
     </div>
     <div class="answer">
       <h3>Answer</h3>
-      <p><strong>LoRA Rank (r)</strong></p>
+      <p><b>LoRA Rank (r)</b></p>
       <ul>
         <li>
-          <strong>What it controls:</strong> Size of the low-rank matrices A and
-          B. Basically how much capacity the adapter has.
+          What it controls: Size of the low-rank matrices A and B. Basically how
+          much capacity the adapter has.
         </li>
         <li>
-          <strong>If you increase:</strong> More parameters to train, better
-          adaptation possible, but uses more memory and risks overfitting.
+          If you increase: More parameters to train, better adaptation possible,
+          but uses more memory and risks overfitting.
         </li>
         <li>
-          <strong>If you decrease:</strong> Fewer parameters, more constrained
-          adaptation, might underfit but generalizes better.
+          If you decrease: Fewer parameters, more constrained adaptation, might
+          underfit but generalizes better.
         </li>
       </ul>
 
-      <p><strong>LoRA Alpha (α)</strong></p>
+      <p><b>LoRA Alpha (α)</b></p>
       <ul>
         <li>
-          <strong>What it controls:</strong> How strongly the LoRA update gets
-          scaled before merging with original weights. The actual update is
-          scaled by α/r.
+          What it controls: How strongly the LoRA update gets scaled before
+          merging with original weights. The actual update is scaled by α/r.
         </li>
         <li>
-          <strong>If you increase:</strong> Adapter has more influence, learning
-          speeds up, but training can become unstable.
+          If you increase: Adapter has more influence, learning speeds up, but
+          training can become unstable.
         </li>
         <li>
-          <strong>If you decrease:</strong> Gentler updates, more stable
-          training, but slower to converge.
+          If you decrease: Gentler updates, more stable training, but slower to
+          converge.
         </li>
       </ul>
 
-      <p><strong>Gradient Accumulation</strong></p>
+      <p><b>Gradient Accumulation</b></p>
       <ul>
         <li>
-          <strong>What it controls:</strong> How many mini-batches of gradients
-          to stack up before actually updating weights. Effective batch size =
+          What it controls: How many mini-batches of gradients to stack up
+          before actually updating weights. Effective batch size =
           per_device_batch_size \(\times\) gradient_accumulation_steps.
         </li>
         <li>
-          <strong>If you increase:</strong> Larger effective batch size, which
-          often generalizes better, but updates happen less frequently.
+          If you increase: Larger effective batch size, which often generalizes
+          better, but updates happen less frequently.
         </li>
         <li>
-          <strong>If you decrease:</strong> Smaller effective batch size,
-          noisier gradient estimates, faster updates, but training can get
-          unstable.
+          If you decrease: Smaller effective batch size, noisier gradient
+          estimates, faster updates, but training can get unstable.
         </li>
       </ul>
     </div>
@@ -308,16 +305,14 @@ Profit = $129,500 - $130,000 = -$5,500
       <h3>Answer</h3>
       <ul>
         <li>
-          <strong>(a) Base Model Total Parameters:</strong> 1,543,714,304
-          (approximately 1.54 billion)
+          (a) Base Model Total Parameters: 1,543,714,304 (approximately 1.54
+          billion)
         </li>
         <li>
-          <strong>(b) Trainable LoRA Parameters:</strong> 2,179,072
-          (approximately 2.18 million)
+          (b) Trainable LoRA Parameters: 2,179,072 (approximately 2.18 million)
         </li>
         <li>
-          <strong>(c) Percentage:</strong> 0.141% (only about 1 in 708
-          parameters is trained)
+          (c) Percentage: 0.141% (only about 1 in 708 parameters is trained)
         </li>
       </ul>
       <p>
@@ -342,9 +337,9 @@ Profit = $129,500 - $130,000 = -$5,500
     <div class="answer">
       <h3>Answer</h3>
       <ul>
-        <li><strong>SFT-1k Accuracy:</strong> 41%</li>
-        <li><strong>Baseline Accuracy:</strong> 38%</li>
-        <li><strong>Improvement:</strong> +3%</li>
+        <li>SFT-1k Accuracy: 41%</li>
+        <li>Baseline Accuracy: 38%</li>
+        <li>Improvement: +3%</li>
       </ul>
       <p>
         Going from 38% to 41% is better, but not by much. This was smaller than
@@ -366,12 +361,9 @@ Profit = $129,500 - $130,000 = -$5,500
     <div class="answer">
       <h3>Answer</h3>
       <p>
-        <strong
-          >Scaling isn't worth the extra compute past a certain
-          threshold.</strong
-        >
+        <b>Scaling isn't worth the extra compute past a certain threshold.</b>
       </p>
-      <p><strong>Expected Accuracy Gains:</strong></p>
+      <p><b>Expected Accuracy Gains:</b></p>
       <ul>
         <li>1,000 → 3,000 examples: ~2-4%</li>
         <li>3,000 → 7,473 examples: ~1-3% more (5-7% total)</li>
@@ -431,7 +423,7 @@ Profit = $129,500 - $130,000 = -$5,500
       <p>File: <a href="outputs/q7_scaling_plot.png">Scaling Plot</a></p>
       <img src="images/Q7_scaling_plot.png" alt="Scaling plot" />
 
-      <p><strong>Analysis:</strong></p>
+      <p><b>Analysis:</b></p>
       <ul>
         <li>Consistent improvement as data increases: 38% → 41% → 44%</li>
         <li>
@@ -452,7 +444,7 @@ Profit = $129,500 - $130,000 = -$5,500
     </div>
     <div class="answer">
       <h3>Answer</h3>
-      <p><strong>Case 1: Janet's Ducks (Ground Truth: 18)</strong></p>
+      <p><b>Case 1: Janet's Ducks (Ground Truth: 18)</b></p>
       <p>
         <em>Question:</em> Janet's ducks lay 16 eggs per day. She eats three for
         breakfast every morning and bakes muffins for her friends every day with
@@ -461,7 +453,7 @@ Profit = $129,500 - $130,000 = -$5,500
         farmers' market?
       </p>
 
-      <p><strong>Base Model Response:</strong></p>
+      <p><b>Base Model Response:</b></p>
       <pre>
 To determine how much Janet makes every day at the farmers' market, we need to follow these steps:
 
@@ -483,7 +475,7 @@ Therefore, the amount Janet makes every day at the farmers' market is: \boxed{0}
       </pre>
       <p><em>Extracted Answer: 0 (arithmetic error: 13 - 4 = -1)</em></p>
 
-      <p><strong>SFT-3k Model Response:</strong></p>
+      <p><b>SFT-3k Model Response:</b></p>
       <pre>
 The ducks lay 16*3=48 eggs for Janet to eat.
 She has 48-3=45 eggs left after eating them for breakfast.
@@ -497,16 +489,16 @@ Therefore, she makes 36.75*2=$\boxed{73.50}$ from selling the eggs at the farmer
           multiplication)</em
         >
       </p>
-      <p><strong>Result:</strong> Both failed with different errors</p>
+      <p><b>Result:</b> Both failed with different errors</p>
       <hr />
 
-      <p><strong>Case 2: Robe Fabric (Ground Truth: 3)</strong></p>
+      <p><b>Case 2: Robe Fabric (Ground Truth: 3)</b></p>
       <p>
         <em>Question:</em> A robe takes 2 bolts of blue fiber and half that much
         white fiber. How many bolts in total does it take?
       </p>
 
-      <p><strong>Base Model Response:</strong></p>
+      <p><b>Base Model Response:</b></p>
       <pre>
 To determine the total number of bolts of fabric needed for the robe, we need to follow these steps:
 
@@ -524,7 +516,7 @@ Thus, the total number of bolts of fabric needed is \boxed{2.5}.
         >
       </p>
 
-      <p><strong>SFT-3k Model Response:</strong></p>
+      <p><b>SFT-3k Model Response:</b></p>
       <pre>
 The number of bolts of white fiber is 1/2*2=1 bolt.
 In total, there are 2+1=3 bolts.
@@ -536,17 +528,17 @@ In total, there are 2+1=3 bolts.
           bolt)</em
         >
       </p>
-      <p><strong>Result:</strong> SFT fixed this error (Correct)</p>
+      <p><b>Result:</b> SFT fixed this error (Correct)</p>
       <hr />
 
-      <p><strong>Case 3: House Flipping (Ground Truth: 70000)</strong></p>
+      <p><b>Case 3: House Flipping (Ground Truth: 70000)</b></p>
       <p>
         <em>Question:</em> Josh decides to try flipping a house. He buys a house
         for $80,000 and then puts in $50,000 in repairs. This increased the
         value of the house by 150%. How much profit did he make?
       </p>
 
-      <p><strong>Base Model Response:</strong></p>
+      <p><b>Base Model Response:</b></p>
       <pre>
 To calculate Josh's profit from flipping the house:
 
@@ -563,7 +555,7 @@ Therefore, Josh made a loss of $\boxed{-55500}$ on this flip.
         >
       </p>
 
-      <p><strong>SFT-3k Model Response:</strong></p>
+      <p><b>SFT-3k Model Response:</b></p>
       <pre>
 The house was worth 80,000 + 50,000 = $130,000 after the repairs.
 Its value went up by 150% so it is now worth 130,000 * .15 = $19,500 more.
@@ -574,13 +566,12 @@ He bought the house for 80,000 so his profit is 149,500 - 80,000 = $\boxed{69500
         <em>Extracted Answer: 69500 (still applied 0.15 instead of 1.5)</em>
       </p>
       <p>
-        <strong>Result:</strong> Both failed with similar percentage calculation
-        errors
+        <b>Result:</b> Both failed with similar percentage calculation errors
       </p>
 
       <hr />
       <p>
-        <strong>Summary:</strong> SFT fixed 1/3 problems (language comprehension
+        <b>Summary:</b> SFT fixed 1/3 problems (language comprehension
         improved), but arithmetic and percentage reasoning remain hard.
       </p>
     </div>
@@ -595,9 +586,9 @@ He bought the house for 80,000 so his profit is 149,500 - 80,000 = $\boxed{69500
     <div class="answer">
       <h3>Answer</h3>
       <p>
-        <strong
+        <b
           >Failure 1: Janet's Ducks - Multi-step reasoning with hallucinated
-          operations</strong
+          operations</b
         >
       </p>
       <ul>
@@ -608,22 +599,20 @@ He bought the house for 80,000 so his profit is 149,500 - 80,000 = $\boxed{69500
         </li>
         <li>
           Type:
-          <strong>Multi-step reasoning with hallucinated operations</strong>
+          <b>Multi-step reasoning with hallucinated operations</b>
         </li>
       </ul>
 
       <p>
-        <strong
-          >Failure 2: House Flipping - Percentage calculation error</strong
-        >
+        <b>Failure 2: House Flipping - Percentage calculation error</b>
       </p>
       <ul>
         <li>Extracted Answer: -30500 (Ground Truth: 70000)</li>
         <li>Error: Applied 0.15 (15%) instead of 1.5 (150%)</li>
-        <li>Type: <strong>Arithmetic/Percentage reasoning</strong></li>
+        <li>Type: <b>Arithmetic/Percentage reasoning</b></li>
       </ul>
 
-      <p><strong>Persistent error types (ranked by frequency):</strong></p>
+      <p><b>Persistent error types (ranked by frequency):</b></p>
       <ol>
         <li>
           Arithmetic/Percentage errors (converting percentages incorrectly)
@@ -687,7 +676,7 @@ He bought the house for 80,000 so his profit is 149,500 - 80,000 = $\boxed{69500
     </div>
     <div class="answer">
       <h3>Answer</h3>
-      <p><strong>Effect on Base Model (-6%)</strong></p>
+      <p><b>Effect on Base Model (-6%)</b></p>
       <p>Few-shot hurts because:</p>
       <ol>
         <li>No reasoning foundation to use demonstrations</li>
@@ -698,7 +687,7 @@ He bought the house for 80,000 so his profit is 149,500 - 80,000 = $\boxed{69500
         </li>
       </ol>
 
-      <p><strong>Effect on SFT Models (+6%)</strong></p>
+      <p><b>Effect on SFT Models (+6%)</b></p>
       <p>Few-shot helps because:</p>
       <ol>
         <li>Reinforces step-by-step reasoning patterns from training</li>
@@ -730,14 +719,14 @@ He bought the house for 80,000 so his profit is 149,500 - 80,000 = $\boxed{69500
     </div>
     <div class="answer">
       <h3>Answer</h3>
-      <p><strong>1. Arithmetic Reliability (Major limitation)</strong></p>
+      <p><b>1. Arithmetic Reliability (Major limitation)</b></p>
       <ul>
         <li>Simple calculation errors persist (15 + 25 = 7, 13 - 4 = -1)</li>
         <li>No self-verification of intermediate results</li>
         <li>Percentage confusion (using 0.15 for 150%)</li>
       </ul>
 
-      <p><strong>2. Multi-Step Planning (Primary limitation)</strong></p>
+      <p><b>2. Multi-Step Planning (Primary limitation)</b></p>
       <ul>
         <li>Loses track of goals in complex problems</li>
         <li>Incorrect intermediate steps</li>
@@ -745,7 +734,7 @@ He bought the house for 80,000 so his profit is 149,500 - 80,000 = $\boxed{69500
         <li>Trouble with 4+ step problems</li>
       </ul>
 
-      <p><strong>3. Problem Comprehension (Moderate limitation)</strong></p>
+      <p><b>3. Problem Comprehension (Moderate limitation)</b></p>
       <ul>
         <li>Language ambiguity misinterpretation</li>
         <li>Missed constraints</li>
@@ -753,14 +742,14 @@ He bought the house for 80,000 so his profit is 149,500 - 80,000 = $\boxed{69500
         <li>~15-20% of errors from initial misunderstanding</li>
       </ul>
 
-      <p><strong>4. Output Consistency (Minor limitation)</strong></p>
+      <p><b>4. Output Consistency (Minor limitation)</b></p>
       <ul>
         <li>Format variations (units in answers)</li>
         <li>Incomplete answers</li>
         <li>Affects ~2-3% of answers</li>
       </ul>
 
-      <p><strong>5. Training Data Quality (Significant limitation)</strong></p>
+      <p><b>5. Training Data Quality (Significant limitation)</b></p>
       <ul>
         <li>Inconsistent solution styles</li>
         <li>No verification signals</li>
@@ -776,27 +765,24 @@ He bought the house for 80,000 so his profit is 149,500 - 80,000 = $\boxed{69500
         score. In your report, include:
       </p>
       <ul>
+        <li>(a) <b>Hypothesis:</b> what you think will help and why.</li>
         <li>
-          (a) <strong>Hypothesis:</strong> what you think will help and why.
+          (b) <b>Method:</b> what you changed (prompting, training data,
+          hyperparameters, inference procedure, etc.).
         </li>
         <li>
-          (b) <strong>Method:</strong> what you changed (prompting, training
-          data, hyperparameters, inference procedure, etc.).
+          (c) <b>Results:</b> accuracy on the same 100-question evaluation
+          subset (include your baseline for comparison).
         </li>
         <li>
-          (c) <strong>Results:</strong> accuracy on the same 100-question
-          evaluation subset (include your baseline for comparison).
-        </li>
-        <li>
-          (d) <strong>Analysis:</strong> what you learned from the
-          experiment(s), including at least one failure mode or unexpected
-          result.
+          (d) <b>Analysis:</b> what you learned from the experiment(s),
+          including at least one failure mode or unexpected result.
         </li>
       </ul>
     </div>
     <div class="answer">
       <h3>Answer</h3>
-      <p><strong>(a) Hypothesis</strong></p>
+      <p><b>(a) Hypothesis</b></p>
       <p>
         Self-consistency through majority voting will improve accuracy by
         reducing random errors and leveraging the model's varying reasoning
@@ -804,17 +790,15 @@ He bought the house for 80,000 so his profit is 149,500 - 80,000 = $\boxed{69500
         filter out random errors.
       </p>
 
-      <p><strong>(b) Method</strong></p>
+      <p><b>(b) Method</b></p>
       <ul>
-        <li><strong>Model:</strong> SFT-3k (best performing checkpoint)</li>
-        <li>
-          <strong>Sampling:</strong> 10 samples per question, temperature=0.3
-        </li>
-        <li><strong>Voting:</strong> Majority vote on extracted answers</li>
-        <li><strong>Cost:</strong> ~\(10\times\) inference time</li>
+        <li>Model: SFT-3k (best performing checkpoint)</li>
+        <li>Sampling: 10 samples per question, temperature=0.3</li>
+        <li>Voting: Majority vote on extracted answers</li>
+        <li>Cost: ~\(10\times\) inference time</li>
       </ul>
 
-      <p><strong>(c) Results</strong></p>
+      <p><b>(c) Results</b></p>
       <table>
         <thead>
           <tr>
@@ -832,13 +816,13 @@ He bought the house for 80,000 so his profit is 149,500 - 80,000 = $\boxed{69500
           <tr>
             <td>Self-Consistency (n=10, temp=0.3)</td>
             <td>56%</td>
-            <td><strong>+12%</strong></td>
+            <td><b>+12%</b></td>
           </tr>
         </tbody>
       </table>
 
       <p>
-        <strong>Example Success (Eliza's overtime, Ground Truth: 460):</strong>
+        <b>Example Success (Eliza's overtime, Ground Truth: 460):</b>
       </p>
       <ul>
         <li>
@@ -847,33 +831,33 @@ He bought the house for 80,000 so his profit is 149,500 - 80,000 = $\boxed{69500
         <li>Majority Vote: 460 (Correct)</li>
       </ul>
 
-      <p><strong>(d) Analysis</strong></p>
-      <p><strong>What worked:</strong></p>
+      <p><b>(d) Analysis</b></p>
+      <p><b>What worked:</b></p>
       <ol>
         <li>Arithmetic error filtering through voting</li>
         <li>Reasoning path diversity</li>
         <li>Consistent problems benefited most</li>
       </ol>
 
-      <p><strong>Failure Modes:</strong></p>
+      <p><b>Failure Modes:</b></p>
       <ol>
         <li>
-          <strong>Consistent Wrong Reasoning:</strong> Janet's ducks - all
-          samples made different errors, majority vote selected wrong answer
-          (104 vs ground truth 18)
+          <b>Consistent Wrong Reasoning:</b> Janet's ducks - all samples made
+          different errors, majority vote selected wrong answer (104 vs ground
+          truth 18)
         </li>
         <li>
-          <strong>Rare Correct Answers:</strong> James running sprints - only
-          1/5 samples correct, majority selected wrong answer (21 vs 540)
+          <b>Rare Correct Answers:</b> James running sprints - only 1/5 samples
+          correct, majority selected wrong answer (21 vs 540)
         </li>
         <li>
-          <strong>Systematic Misconception:</strong> House flipping - all
-          samples struggled with 150% calculation, different wrong answers but
-          same underlying error
+          <b>Systematic Misconception:</b> House flipping - all samples
+          struggled with 150% calculation, different wrong answers but same
+          underlying error
         </li>
       </ol>
 
-      <p><strong>Key Learnings:</strong></p>
+      <p><b>Key Learnings:</b></p>
       <ol>
         <li>Self-consistency helps with random errors, not systematic ones</li>
         <li>Diminishing returns on samples (1→3 captures most benefits)</li>
@@ -898,11 +882,9 @@ He bought the house for 80,000 so his profit is 149,500 - 80,000 = $\boxed{69500
     <hr />
 
     <blockquote>
-      <strong>Implementation Note:</strong> This implementation uses the
-      Qwen3-4B-Instruct-2507 model with 4-bit quantization (NF4) to fit within
-      GPU memory constraints. The ReAct agent follows a structured approach with
-      Planner, Coder, Executor, and Observer components, using Outlines for
-      structured output generation.
+      The implementation uses Qwen3-4B-Instruct-2507 with 4-bit quantization.
+      The ReAct agent has Planner, Coder, Executor, and Observer components with
+      Outlines for structured output.
     </blockquote>
 
     <h2 id="q14">Question 14</h2>
@@ -922,11 +904,11 @@ He bought the house for 80,000 so his profit is 149,500 - 80,000 = $\boxed{69500
     <div class="answer">
       <h3>Answer</h3>
       <ul>
-        <li><strong>Number of Questions:</strong> 257</li>
-        <li><strong>Number of Labels:</strong> 257</li>
+        <li>Number of Questions: 257</li>
+        <li>Number of Labels: 257</li>
       </ul>
 
-      <p><strong>Question record keys:</strong></p>
+      <p><b>Question record keys:</b></p>
       <ul>
         <li><code>id</code>: Unique identifier</li>
         <li><code>question</code>: Natural language question</li>
@@ -939,7 +921,7 @@ He bought the house for 80,000 so his profit is 149,500 - 80,000 = $\boxed{69500
         <li><code>constraints</code>: Additional requirements</li>
       </ul>
 
-      <p><strong>Example Question Record:</strong></p>
+      <p><b>Example Question Record:</b></p>
       <pre>
 {
   "id": 0,
@@ -953,13 +935,13 @@ He bought the house for 80,000 so his profit is 149,500 - 80,000 = $\boxed{69500
       </pre>
       <br />
 
-      <p><strong>Label record keys:</strong></p>
+      <p><b>Label record keys:</b></p>
       <ul>
         <li><code>id</code>: Question ID</li>
         <li><code>common_answers</code>: List of [name, value] pairs</li>
       </ul>
 
-      <p><strong>Example Label Record:</strong></p>
+      <p><b>Example Label Record:</b></p>
       <pre>
 {
   "id": 0,
@@ -984,13 +966,13 @@ He bought the house for 80,000 so his profit is 149,500 - 80,000 = $\boxed{69500
     </div>
     <div class="answer">
       <h3>Answer</h3>
-      <p><strong>Example 1: Election Data (ID 142)</strong></p>
+      <p><b>Example 1: Election Data (ID 142)</b></p>
       <ul>
-        <li><strong>File:</strong> <code>election2016.csv</code></li>
+        <li>File: <code>election2016.csv</code></li>
         <li>
-          <strong>Question:</strong> "Is there a relationship between the
-          difference in votes received by the Democratic and Republican parties
-          and their percentage point difference?"
+          Question: "Is there a relationship between the difference in votes
+          received by the Democratic and Republican parties and their percentage
+          point difference?"
         </li>
       </ul>
       <pre>
@@ -1017,12 +999,11 @@ df.head(3):
       </pre>
       <br />
 
-      <p><strong>Example 2: Insurance Data (ID 24)</strong></p>
+      <p><b>Example 2: Insurance Data (ID 24)</b></p>
       <ul>
-        <li><strong>File:</strong> <code>insurance.csv</code></li>
+        <li>File: <code>insurance.csv</code></li>
         <li>
-          <strong>Question:</strong> "Calculate the mean age of the individuals
-          in the dataset."
+          Question: "Calculate the mean age of the individuals in the dataset."
         </li>
       </ul>
       <pre>
@@ -1046,12 +1027,12 @@ df.head(3):
       </pre>
       <br />
 
-      <p><strong>Example 3: Storm Data (ID 429)</strong></p>
+      <p><b>Example 3: Storm Data (ID 429)</b></p>
       <ul>
-        <li><strong>File:</strong> <code>cost_data_with_errors.csv</code></li>
+        <li>File: <code>cost_data_with_errors.csv</code></li>
         <li>
-          <strong>Question:</strong> "Is there a correlation between the maximum
-          storm category achieved by a storm and the recorded damage in USD?"
+          Question: "Is there a correlation between the maximum storm category
+          achieved by a storm and the recorded damage in USD?"
         </li>
       </ul>
       <pre>
@@ -1092,33 +1073,33 @@ df.head(3):
     </div>
     <div class="answer">
       <h3>Answer</h3>
-      <p><strong>Example 1: Age Group Analysis (ID 6)</strong></p>
+      <p><b>Example 1: Age Group Analysis (ID 6)</b></p>
       <ul>
         <li>
-          <strong>Question:</strong> "Create a new column called 'AgeGroup' that
-          categorizes passengers into four age groups: 'Child' (0-12),
-          'Teenager' (13-19), 'Adult' (20-59), and 'Elderly' (60+). Then
-          calculate the mean fare for each age group."
+          Question: "Create a new column called 'AgeGroup' that categorizes
+          passengers into four age groups: 'Child' (0-12), 'Teenager' (13-19),
+          'Adult' (20-59), and 'Elderly' (60+). Then calculate the mean fare for
+          each age group."
         </li>
         <li>
-          <strong>Format:</strong>
+          Format:
           <code
             >@mean_fare_child[mean_fare], @mean_fare_teenager[mean_fare],
             @mean_fare_adult[mean_fare], @mean_fare_elderly[mean_fare]</code
           >
         </li>
-        <li><strong>Slots:</strong> 4</li>
+        <li>Slots: 4</li>
       </ul>
 
-      <p><strong>Example 2: Multi-Class Distribution (ID 8)</strong></p>
+      <p><b>Example 2: Multi-Class Distribution (ID 8)</b></p>
       <ul>
         <li>
-          <strong>Question:</strong> "Perform distribution analysis on 'Fare'
-          for each passenger class separately. Calculate mean, median, and
-          standard deviation for each class."
+          Question: "Perform distribution analysis on 'Fare' for each passenger
+          class separately. Calculate mean, median, and standard deviation for
+          each class."
         </li>
         <li>
-          <strong>Format:</strong>
+          Format:
           <code
             >@mean_fare_class1[mean_fare], @median_fare_class1[median_fare],
             @std_dev_fare_class1[std_dev], ...</code
@@ -1127,7 +1108,7 @@ df.head(3):
         </li>
       </ul>
 
-      <p><strong>Dataset representation:</strong></p>
+      <p><b>Dataset representation:</b></p>
       <ul>
         <li>Multi-part answers use multiple <code>@name[value]</code> slots</li>
         <li>Ground truth contains list of [name, value] pairs</li>
@@ -1139,7 +1120,7 @@ df.head(3):
         </li>
       </ul>
 
-      <p><strong>Automatic evaluation:</strong></p>
+      <p><b>Automatic evaluation:</b></p>
       <ol>
         <li>
           Extract predicted values using regex:
@@ -1290,7 +1271,7 @@ df.head(3):
     </div>
     <div class="answer">
       <h3>Answer</h3>
-      <p><strong>Pydantic Schema:</strong></p>
+      <p><b>Pydantic Schema:</b></p>
       <pre>
 class PlannerOutput(BaseModel):
     thought: str = Field(min_length=10, max_length=500)
@@ -1300,8 +1281,7 @@ class PlannerOutput(BaseModel):
       <br />
 
       <p>
-        <strong>Prompt 1:</strong> "The user asks: What is the average age of
-        passengers?"
+        <b>Prompt 1:</b> "The user asks: What is the average age of passengers?"
       </p>
       <pre>
 {
@@ -1312,10 +1292,7 @@ class PlannerOutput(BaseModel):
       </pre>
       <br />
 
-      <p>
-        <strong>Prompt 2:</strong> "The user asks: How many passengers
-        survived?"
-      </p>
+      <p><b>Prompt 2:</b> "The user asks: How many passengers survived?"</p>
       <pre>
 {
   "thought": "To determine the number of passengers who survived, I need access to a dataset containing passenger survival information, such as the Titanic dataset.",
@@ -1326,8 +1303,8 @@ class PlannerOutput(BaseModel):
       <br />
 
       <p>
-        <strong>Prompt 3:</strong> "The user asks: What is the correlation
-        between age and fare?"
+        <b>Prompt 3:</b> "The user asks: What is the correlation between age and
+        fare?"
       </p>
       <pre>
 {
@@ -1339,8 +1316,8 @@ class PlannerOutput(BaseModel):
       <br />
 
       <p>
-        <strong>Prompt 4:</strong> "The user asks: Show me the distribution of
-        passenger classes."
+        <b>Prompt 4:</b> "The user asks: Show me the distribution of passenger
+        classes."
       </p>
       <pre>
 {
@@ -1352,25 +1329,17 @@ class PlannerOutput(BaseModel):
       <br />
 
       <p>
-        <strong>Prompt 5:</strong> "Calculate the mean fare: @mean_fare[32.20]
-        (final answer)"
+        <b>Prompt 5:</b> "Calculate the mean fare: @mean_fare[32.20] (final
+        answer)"
       </p>
       <pre>
 {
   "thought": "The mean fare is already provided as 32.20, so no further calculation is needed.",
   "is_done": true,
-  "response": "}32.20{"
+  "response": "@mean_fare[32.20]"
 }
       </pre>
       <br />
-
-      <p>
-        <strong>Note:</strong> All 5 outputs are valid JSON from the
-        Qwen3-4B-Instruct model with 4-bit quantization. Prompt 5 shows
-        <code>is_done=true</code> when the answer is ready to return. The
-        response format <code>}32.20{</code> is the model's structured output
-        for final answers.
-      </p>
     </div>
 
     <h2 id="q19">Question 19</h2>
@@ -1388,21 +1357,21 @@ class PlannerOutput(BaseModel):
       </p>
       <ol>
         <li>
-          <strong>Reliability at scale:</strong> When processing thousands of
-          tasks, parsing errors from free-form text would cascade into system
-          failures. Structured output (via Outlines + Pydantic) guarantees every
-          planner response is parseable.
+          <b>Reliability at scale:</b> When processing thousands of tasks,
+          parsing errors from free-form text would cascade into system failures.
+          Structured output (via Outlines + Pydantic) guarantees every planner
+          response is parseable.
         </li>
         <li>
-          <strong>Automated orchestration:</strong> Agents need programmatic
-          decisions (e.g., "if <code>is_done=true</code>, return answer; else
-          execute code"). Structured outputs provide machine-readable signals
-          for deterministic control flow.
+          <b>Automated orchestration:</b> Agents need programmatic decisions
+          (e.g., "if <code>is_done=true</code>, return answer; else execute
+          code"). Structured outputs provide machine-readable signals for
+          deterministic control flow.
         </li>
         <li>
-          <strong>Error recovery:</strong> In agent systems, recovery requires
-          clear signals about failures. Structured observations enable
-          systematic error handling and retry logic.
+          <b>Error recovery:</b> In agent systems, recovery requires clear
+          signals about failures. Structured observations enable systematic
+          error handling and retry logic.
         </li>
       </ol>
     </div>
@@ -1421,7 +1390,7 @@ class PlannerOutput(BaseModel):
     </div>
     <div class="answer">
       <h3>Answer</h3>
-      <p><strong>Overall performance:</strong></p>
+      <p><b>Overall performance:</b></p>
       <table>
         <thead>
           <tr>
@@ -1431,21 +1400,21 @@ class PlannerOutput(BaseModel):
         </thead>
         <tbody>
           <tr>
-            <td><strong>Accuracy</strong></td>
+            <td><b>Accuracy</b></td>
             <td>90% (9/10 correct)</td>
           </tr>
           <tr>
-            <td><strong>Correct</strong></td>
+            <td><b>Correct</b></td>
             <td>9 tasks</td>
           </tr>
           <tr>
-            <td><strong>Incorrect</strong></td>
+            <td><b>Incorrect</b></td>
             <td>1 task</td>
           </tr>
         </tbody>
       </table>
 
-      <p><strong>Per-task results:</strong></p>
+      <p><b>Per-task results:</b></p>
       <table>
         <thead>
           <tr>
@@ -1527,18 +1496,14 @@ class PlannerOutput(BaseModel):
 
       <hr />
 
-      <p><strong>Trace 1: Success case (Task 0 - Mean Fare)</strong></p>
+      <p><b>Trace 1: Success case (Task 0 - Mean Fare)</b></p>
       <ul>
+        <li>Question: "Calculate the mean fare paid by the passengers."</li>
         <li>
-          <strong>Question:</strong> "Calculate the mean fare paid by the
-          passengers."
+          Thought: "The DataFrame contains a 'Fare' column of type float64. The
+          mean fare can be computed using pandas' mean() function."
         </li>
-        <li>
-          <strong>Thought:</strong> "The DataFrame contains a 'Fare' column of
-          type float64. The mean fare can be computed using pandas' mean()
-          function."
-        </li>
-        <li><strong>Code:</strong></li>
+        <li>Code:</li>
       </ul>
       <pre>
 mean_fare = df['Fare'].mean()
@@ -1547,55 +1512,48 @@ print(f"{mean_fare:.2f}")
       <br />
       <ul>
         <li>
-          <strong>Observation:</strong> "Code executed successfully and returned
-          the value 34.65."
+          Observation: "Code executed successfully and returned the value
+          34.65."
         </li>
-        <li><strong>Final Answer:</strong> <code>@mean_fare[34.65]</code></li>
-        <li><strong>Result:</strong> Correct</li>
+        <li>Final Answer: <code>@mean_fare[34.65]</code></li>
+        <li>Result: Correct</li>
       </ul>
 
       <hr />
 
-      <p><strong>Trace 2: Failure case (Task 9 - Mean Close Price)</strong></p>
+      <p><b>Trace 2: Failure case (Task 9 - Mean Close Price)</b></p>
       <ul>
         <li>
-          <strong>Question:</strong> "Calculate the mean value of the 'Close
-          Price' column."
+          Question: "Calculate the mean value of the 'Close Price' column."
         </li>
-        <li>
-          <strong>Final Answer:</strong> <code>@mean_close_price[583.68]</code>
-        </li>
-        <li>
-          <strong>Ground Truth:</strong> <code>@mean_close_price[570.68]</code>
-        </li>
-        <li><strong>Result:</strong> Incorrect (off by ~2.3%)</li>
+        <li>Final Answer: <code>@mean_close_price[583.68]</code></li>
+        <li>Ground Truth: <code>@mean_close_price[570.68]</code></li>
+        <li>Result: Incorrect (off by ~2.3%)</li>
       </ul>
       <p>
-        <strong>Analysis:</strong> Numerical precision error. The computed value
-        differs from ground truth due to different data preprocessing or NaN
-        handling.
+        <b>Analysis:</b> Numerical precision error. The computed value differs
+        from ground truth due to different data preprocessing or NaN handling.
       </p>
 
       <hr />
 
       <p>
-        <strong>Trace 3: Error recovery case (Task 55 - Mean Cases)</strong>
+        <b>Trace 3: Error recovery case (Task 55 - Mean Cases)</b>
       </p>
       <ul>
         <li>
-          <strong>Question:</strong> "What is the mean number of cases recorded
-          across all countries and years?"
+          Question: "What is the mean number of cases recorded across all
+          countries and years?"
         </li>
       </ul>
 
-      <p><strong>Step 1 (First Attempt):</strong></p>
+      <p><b>Step 1 (First Attempt):</b></p>
       <ul>
         <li>
-          <strong>Thought:</strong> "The 'No. of cases' column is in string
-          format with ranges (e.g., '630308[495000-801000]'). Need to extract
-          median value."
+          Thought: "The 'No. of cases' column is in string format with ranges
+          (e.g., '630308[495000-801000]'). Need to extract median value."
         </li>
-        <li><strong>Code:</strong></li>
+        <li>Code:</li>
       </ul>
       <pre>
 df['No. of cases'] = df['No. of cases'].str.extract(r'(\d+)').astype('int64')
@@ -1604,24 +1562,24 @@ print(f"{mean_cases:.0f}")
       </pre>
       <br />
       <ul>
-        <li><strong>Result:</strong> Successful (2081990)</li>
+        <li>Result: Successful (2081990)</li>
       </ul>
 
-      <p><strong>Step 2 (Retry - Syntax Error):</strong></p>
+      <p><b>Step 2 (Retry - Syntax Error):</b></p>
       <ul>
-        <li><strong>Code:</strong></li>
+        <li>Code:</li>
       </ul>
       <pre>
 df['No. of cases'] = df['No. of cases'].str.split('\[').str[0].astype(int)
       </pre>
       <br />
       <ul>
-        <li><strong>Result:</strong> SyntaxError (invalid escape sequence)</li>
+        <li>Result: SyntaxError (invalid escape sequence)</li>
       </ul>
 
-      <p><strong>Step 3 (Recovery):</strong></p>
+      <p><b>Step 3 (Recovery):</b></p>
       <ul>
-        <li><strong>Code:</strong></li>
+        <li>Code:</li>
       </ul>
       <pre>
 df['No. of cases'] = df['No. of cases'].str.extract(r'(\d+)').astype(int)
@@ -1630,15 +1588,13 @@ print(f"{mean_cases:.0f}")
       </pre>
       <br />
       <ul>
-        <li>
-          <strong>Final Answer:</strong> <code>@mean_cases[2081990]</code>
-        </li>
-        <li><strong>Result:</strong> Recovered successfully</li>
+        <li>Final Answer: <code>@mean_cases[2081990]</code></li>
+        <li>Result: Recovered successfully</li>
       </ul>
 
       <hr />
 
-      <p><strong>Summary:</strong></p>
+      <p><b>Summary:</b></p>
       <table>
         <thead>
           <tr>
@@ -1694,26 +1650,26 @@ print(f"{mean_cases:.0f}")
       </p>
       <ul>
         <li>
-          <strong>Correlation Analysis:</strong> Plot a heatmap of the Pearson
-          correlation matrix. Report which features have the highest absolute
-          correlation with the target variable (price). Briefly describe what
-          the correlation patterns suggest.
+          <b>Correlation Analysis:</b> Plot a heatmap of the Pearson correlation
+          matrix. Report which features have the highest absolute correlation
+          with the target variable (price). Briefly describe what the
+          correlation patterns suggest.
         </li>
         <li>
-          <strong>Distribution Analysis:</strong> Plot the histogram of
-          numerical features. Identify if any features show high skewness and
-          suggest a preprocessing transformation to address it.
+          <b>Distribution Analysis:</b> Plot the histogram of numerical
+          features. Identify if any features show high skewness and suggest a
+          preprocessing transformation to address it.
         </li>
         <li>
-          <strong>Categorical Analysis:</strong> Construct box plots of
-          categorical features versus the target variable. Describe any
-          significant trends (e.g., how cut or color affects the price range).
+          <b>Categorical Analysis:</b> Construct box plots of categorical
+          features versus the target variable. Describe any significant trends
+          (e.g., how cut or color affects the price range).
         </li>
       </ul>
     </div>
     <div class="answer">
       <h3>Answer</h3>
-      <p><strong>Correlation analysis:</strong></p>
+      <p><b>Correlation analysis:</b></p>
       <p>
         File:
         <a href="outputs/q21_correlation_heatmap.png">Correlation Heatmap</a>
@@ -1755,7 +1711,7 @@ print(f"{mean_cases:.0f}")
         </tbody>
       </table>
 
-      <p><strong>Observations:</strong></p>
+      <p><b>Observations:</b></p>
       <ol>
         <li>
           Carat has strongest correlation (0.92): larger diamonds are more
@@ -1771,7 +1727,7 @@ print(f"{mean_cases:.0f}")
 
       <hr />
 
-      <p><strong>Distribution analysis:</strong></p>
+      <p><b>Distribution analysis:</b></p>
       <p>File: <a href="outputs/q21_histograms.png">Histograms</a></p>
       <img src="images/Q21_histograms.png" alt="Histograms" />
 
@@ -1825,18 +1781,17 @@ print(f"{mean_cases:.0f}")
       </table>
 
       <p>
-        <strong>Recommendation:</strong> Apply log transformation to
-        <code>carat</code>, <code>y</code>, <code>z</code> to fix
-        right-skewness.
+        <b>Recommendation:</b> Apply log transformation to <code>carat</code>,
+        <code>y</code>, <code>z</code> to fix right-skewness.
       </p>
 
       <hr />
 
-      <p><strong>Categorical analysis:</strong></p>
+      <p><b>Categorical analysis:</b></p>
       <p>File: <a href="outputs/q21_boxplots.png">Box Plots</a></p>
       <img src="images/Q21_boxplots.png" alt="Box Plots" />
 
-      <p><strong>Cut vs Price:</strong></p>
+      <p><b>Cut vs Price:</b></p>
       <table>
         <thead>
           <tr>
@@ -1869,12 +1824,12 @@ print(f"{mean_cases:.0f}")
       </table>
 
       <p>
-        <strong>Trend:</strong> "Ideal" cut has lowest median price, "Fair" cut
-        has highest median price, which is counterintuitive due to carat
+        <b>Trend:</b> "Ideal" cut has lowest median price, "Fair" cut has
+        highest median price, which is counterintuitive due to carat
         correlation.
       </p>
 
-      <p><strong>Color vs Price:</strong></p>
+      <p><b>Color vs Price:</b></p>
       <table>
         <thead>
           <tr>
@@ -1915,11 +1870,11 @@ print(f"{mean_cases:.0f}")
       </table>
 
       <p>
-        <strong>Trend:</strong> Lower color grades (J, I, H) have higher prices
-        (likely due to carat correlation).
+        <b>Trend:</b> Lower color grades (J, I, H) have higher prices (likely
+        due to carat correlation).
       </p>
 
-      <p><strong>Clarity vs Price:</strong></p>
+      <p><b>Clarity vs Price:</b></p>
       <table>
         <thead>
           <tr>
@@ -1964,8 +1919,8 @@ print(f"{mean_cases:.0f}")
       </table>
 
       <p>
-        <strong>Trend:</strong> Lower clarity grades have higher prices, which
-        is counterintuitive but explained by carat correlation.
+        <b>Trend:</b> Lower clarity grades have higher prices, which is
+        counterintuitive but explained by carat correlation.
       </p>
     </div>
 
@@ -1992,7 +1947,7 @@ print(f"{mean_cases:.0f}")
     </div>
     <div class="answer">
       <h3>Answer</h3>
-      <p><strong>Encoding decisions:</strong></p>
+      <p><b>Encoding decisions:</b></p>
       <table>
         <thead>
           <tr>
@@ -2023,12 +1978,10 @@ print(f"{mean_cases:.0f}")
       </table>
 
       <p>
-        <strong
-          >Trade-off 1: What information does one-hot encoding discard?</strong
-        >
+        <b>Trade-off 1: What information does one-hot encoding discard?</b>
       </p>
       <p>
-        One-hot encoding discards <strong>ordinal relationships</strong> between
+        One-hot encoding discards <b>ordinal relationships</b> between
         categories:
       </p>
       <ul>
@@ -2039,42 +1992,39 @@ print(f"{mean_cases:.0f}")
         </li>
       </ul>
 
-      <p><strong>Advantages:</strong></p>
+      <p><b>Advantages:</b></p>
       <ul>
         <li>No assumption about category relationships</li>
         <li>Works for truly nominal categories</li>
       </ul>
 
-      <p><strong>Disadvantages:</strong></p>
+      <p><b>Disadvantages:</b></p>
       <ul>
         <li>Increases feature space (7 features for color vs. 1)</li>
         <li>Loses ordinal information when it exists</li>
       </ul>
 
       <p>
-        <strong
-          >Trade-off 2: What assumption must hold for scalar encoding?</strong
-        >
+        <b>Trade-off 2: What assumption must hold for scalar encoding?</b>
       </p>
       <p>Scalar (ordinal) encoding assumes:</p>
       <ol>
         <li>
-          <strong>Ordinal relationship exists:</strong> Categories have
-          meaningful order
+          <b>Ordinal relationship exists:</b> Categories have meaningful order
         </li>
         <li>
-          <strong>Linear spacing:</strong> Distance between consecutive
-          categories is meaningful
+          <b>Linear spacing:</b> Distance between consecutive categories is
+          meaningful
         </li>
         <li>
-          <strong>Monotonic relationship:</strong> Higher encoded values
-          correspond to consistently higher/lower effects
+          <b>Monotonic relationship:</b> Higher encoded values correspond to
+          consistently higher/lower effects
         </li>
       </ol>
 
       <p>
-        <strong>Violation consequences:</strong> Non-monotonic or incorrect
-        spacing introduces bias.
+        <b>Violation consequences:</b> Non-monotonic or incorrect spacing
+        introduces bias.
       </p>
 
       <p>
@@ -2094,7 +2044,7 @@ print(f"{mean_cases:.0f}")
     </div>
     <div class="answer">
       <h3>Answer</h3>
-      <p><strong>Implementation:</strong></p>
+      <p><b>Implementation:</b></p>
       <pre>
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 
@@ -2121,7 +2071,7 @@ df_standardized.to_csv('diamonds_standardized.csv', index=False)
       </pre>
       <br />
       <p>
-        <strong>Output:</strong> File saved as
+        <b>Output:</b> File saved as
         <code>diamonds_standardized.csv</code>
       </p>
     </div>
@@ -2136,7 +2086,7 @@ df_standardized.to_csv('diamonds_standardized.csv', index=False)
       </p>
       <ul>
         <li>
-          <strong>Agentic Integration:</strong> For this step, load
+          <b>Agentic Integration:</b> For this step, load
           <code>diamonds-questions.jsonl</code> and
           <code>diamonds-labels.jsonl</code> (question id 0 and 1) and use your
           ReAct agent from Part 2 to automatically identify and print the top
@@ -2156,7 +2106,7 @@ df_standardized.to_csv('diamonds_standardized.csv', index=False)
     </div>
     <div class="answer">
       <h3>Answer</h3>
-      <p><strong>Mutual Information Top 5:</strong></p>
+      <p><b>Mutual Information Top 5:</b></p>
       <table>
         <thead>
           <tr>
@@ -2194,7 +2144,7 @@ df_standardized.to_csv('diamonds_standardized.csv', index=False)
         </tbody>
       </table>
 
-      <p><strong>F-Regression Top 5:</strong></p>
+      <p><b>F-Regression Top 5:</b></p>
       <table>
         <thead>
           <tr>
@@ -2232,7 +2182,7 @@ df_standardized.to_csv('diamonds_standardized.csv', index=False)
         </tbody>
       </table>
 
-      <p><strong>Agentic integration:</strong></p>
+      <p><b>Agentic integration:</b></p>
       <ul>
         <li>
           The ReAct agent was used to identify top features automatically.
@@ -2243,31 +2193,31 @@ df_standardized.to_csv('diamonds_standardized.csv', index=False)
         </li>
       </ul>
 
-      <p><strong>Analysis:</strong></p>
+      <p><b>Analysis:</b></p>
       <ul>
         <li>
-          <strong>Agreement:</strong> Both methods agree on <code>carat</code>,
+          <b>Agreement:</b> Both methods agree on <code>carat</code>,
           <code>x</code>, <code>y</code>, <code>z</code> as top 4
         </li>
         <li>
-          <strong>Difference:</strong> MI ranks <code>clarity</code> 5th;
-          F-regression ranks <code>color</code> 5th
+          <b>Difference:</b> MI ranks <code>clarity</code> 5th; F-regression
+          ranks <code>color</code> 5th
           <ul>
             <li>
               MI captures non-linear dependencies; F-regression measures linear
               relationships
             </li>
             <li>
-              <strong>Selected features:</strong> <code>carat</code>,
-              <code>x</code>, <code>y</code>, <code>z</code>,
-              <code>color</code> (from F-regression top 5)
+              <b>Selected features:</b> <code>carat</code>, <code>x</code>,
+              <code>y</code>, <code>z</code>, <code>color</code> (from
+              F-regression top 5)
             </li>
           </ul>
         </li>
       </ul>
 
       <p>
-        <strong>Output:</strong> File saved as
+        <b>Output:</b> File saved as
         <code>diamonds_selected.csv</code>
       </p>
     </div>
@@ -2275,7 +2225,7 @@ df_standardized.to_csv('diamonds_standardized.csv', index=False)
     <h2 id="q25">Question 25</h2>
     <div class="question-text">
       <p>
-        <strong>Agentic Integration:</strong> For this step, load
+        <b>Agentic Integration:</b> For this step, load
         <code>diamonds-questions.jsonl</code> and
         <code>diamonds-labels.jsonl</code> (question ids 2, 3, and 4) and use
         your ReAct agent from Part 2 to automatically train the models and
@@ -2283,10 +2233,10 @@ df_standardized.to_csv('diamonds_standardized.csv', index=False)
         write the code to complete the training.
       </p>
       <p>
-        <strong>Important:</strong> List out the Python code generated by your
-        agent for these tasks. Review the code to ensure it makes sense and
-        correctly implements the requested regression models. Do not blindly
-        trust the agent's output; verify its logic before proceeding.
+        <b>Important:</b> List out the Python code generated by your agent for
+        these tasks. Review the code to ensure it makes sense and correctly
+        implements the requested regression models. Do not blindly trust the
+        agent's output; verify its logic before proceeding.
       </p>
       <p>
         What is the objective function? Train three models: (a) ordinary least
@@ -2312,13 +2262,13 @@ df_standardized.to_csv('diamonds_standardized.csv', index=False)
     </div>
     <div class="answer">
       <h3>Answer</h3>
-      <p><strong>Objective Function:</strong></p>
+      <p><b>Objective Function:</b></p>
       <p>
         $$\min_{\beta} \frac{1}{2n} \sum_{i=1}^{n} (y_i - \beta_0 -
         \sum_{j=1}^{p} \beta_j x_{ij})^2$$
       </p>
 
-      <p><strong>Results:</strong></p>
+      <p><b>Results:</b></p>
       <table>
         <thead>
           <tr>
@@ -2350,16 +2300,13 @@ df_standardized.to_csv('diamonds_standardized.csv', index=False)
         </tbody>
       </table>
 
-      <p>
-        <strong>Best model:</strong> Lasso Regression (α = 3.6766, RMSE =
-        1217.13)
-      </p>
+      <p><b>Best model:</b> Lasso Regression (α = 3.6766, RMSE = 1217.13)</p>
 
       <hr />
 
-      <p><strong>How regularization affects learned parameters:</strong></p>
+      <p><b>How regularization affects learned parameters:</b></p>
 
-      <p><strong>OLS (No Regularization):</strong></p>
+      <p><b>OLS (No Regularization):</b></p>
       <ul>
         <li>Minimizes only squared error</li>
         <li>
@@ -2368,7 +2315,7 @@ df_standardized.to_csv('diamonds_standardized.csv', index=False)
         <li>High variance, prone to overfitting</li>
       </ul>
 
-      <p><strong>Lasso (L1 Regularization):</strong></p>
+      <p><b>Lasso (L1 Regularization):</b></p>
       <p>$$\min_{\beta} \frac{1}{2n} \|y - X\beta\|^2 + \alpha \|\beta\|_1$$</p>
       <ul>
         <li>Adds penalty proportional to absolute coefficient values</li>
@@ -2377,7 +2324,7 @@ df_standardized.to_csv('diamonds_standardized.csv', index=False)
         <li>With α = 3.68, less important features have zero coefficients</li>
       </ul>
 
-      <p><strong>Ridge (L2 Regularization):</strong></p>
+      <p><b>Ridge (L2 Regularization):</b></p>
       <p>$$\min_{\beta} \frac{1}{2n} \|y - X\beta\|^2 + \alpha \|\beta\|^2$$</p>
       <ul>
         <li>Adds penalty proportional to squared coefficient values</li>
@@ -2389,7 +2336,7 @@ df_standardized.to_csv('diamonds_standardized.csv', index=False)
         <li>With α = 10000, all coefficients heavily shrunk (overshrinking)</li>
       </ul>
 
-      <p><strong>Why Lasso Performed Best:</strong></p>
+      <p><b>Why Lasso Performed Best:</b></p>
       <ol>
         <li>Feature selection eliminated noisy features</li>
         <li>
@@ -2399,13 +2346,13 @@ df_standardized.to_csv('diamonds_standardized.csv', index=False)
       </ol>
 
       <p>
-        <strong>Why Ridge Performed Poorly:</strong> α = 10000 too large,
-        overshrinking caused underfitting.
+        <b>Why Ridge Performed Poorly:</b> α = 10000 too large, overshrinking
+        caused underfitting.
       </p>
 
       <hr />
 
-      <p><strong>Optimal alpha computation:</strong></p>
+      <p><b>Optimal alpha computation:</b></p>
       <p>
         Used 10-fold cross-validation with <code>LassoCV</code> and
         <code>RidgeCV</code>:
@@ -2423,47 +2370,40 @@ best_alpha_ridge = ridge.alpha_  # 10000
 
       <hr />
 
-      <p><strong>P-values and feature significance:</strong></p>
-      <p><strong>What p-values mean:</strong></p>
+      <p><b>P-values and feature significance:</b></p>
+      <p><b>What p-values mean:</b></p>
       <ul>
-        <li>
-          <strong>H₀:</strong> Coefficient β_j = 0 (no linear relationship)
-        </li>
-        <li>
-          <strong>H₁:</strong> Coefficient β_j ≠ 0 (linear relationship exists)
-        </li>
+        <li><b>H₀:</b> Coefficient β_j = 0 (no linear relationship)</li>
+        <li><b>H₁:</b> Coefficient β_j ≠ 0 (linear relationship exists)</li>
       </ul>
 
-      <p><strong>Interpretation:</strong></p>
+      <p><b>Interpretation:</b></p>
       <ul>
         <li>Low p-value (< 0.05): Feature is statistically significant</li>
         <li>High p-value (> 0.05): Feature may not be significant</li>
       </ul>
 
-      <p><strong>Most significant features (by expected p-value):</strong></p>
+      <p><b>Most significant features (by expected p-value):</b></p>
       <ol>
-        <li><strong>carat</strong> - Lowest p-value (0.92 correlation)</li>
+        <li><b>carat</b> - Lowest p-value (0.92 correlation)</li>
+        <li><b>x, y, z</b> - Low p-values (0.86-0.88 correlations)</li>
         <li>
-          <strong>x, y, z</strong> - Low p-values (0.86-0.88 correlations)
-        </li>
-        <li>
-          <strong>table, depth</strong> - Higher p-values (0.13, -0.01
-          correlations)
+          <b>table, depth</b> - Higher p-values (0.13, -0.01 correlations)
         </li>
       </ol>
 
       <hr />
 
       <p>
-        <strong>Agent Integration:</strong> The ReAct agent from Part 2 was used
-        to train and evaluate the models.
+        <b>Agent Integration:</b> The ReAct agent from Part 2 was used to train
+        and evaluate the models.
       </p>
 
       <hr />
 
-      <p><strong>Python Code for Regression Models:</strong></p>
+      <p><b>Python Code for Regression Models:</b></p>
 
-      <p><strong>OLS Regression:</strong></p>
+      <p><b>OLS Regression:</b></p>
       <pre>
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import cross_val_score, KFold
@@ -2475,7 +2415,7 @@ val_rmse = np.sqrt(-neg_mse).mean()
       </pre>
       <br />
 
-      <p><strong>Lasso Regression:</strong></p>
+      <p><b>Lasso Regression:</b></p>
       <pre>
 from sklearn.linear_model import LassoCV, Lasso
 
@@ -2488,7 +2428,7 @@ rmse = np.sqrt(-neg_mse).mean()
       </pre>
       <br />
 
-      <p><strong>Ridge Regression:</strong></p>
+      <p><b>Ridge Regression:</b></p>
       <pre>
 from sklearn.linear_model import RidgeCV, Ridge
 
